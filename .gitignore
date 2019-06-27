@@ -3,3 +3,5 @@
 *.htaccess
 /env*
 *.wsgi
+*~
+**/*~

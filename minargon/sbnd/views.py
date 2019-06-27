@@ -38,6 +38,10 @@ def index():
 def introduction():
     return render_template('introduction.html')
 
+@app.route('/inhibit_master')
+def inhibit_master():
+    return render_template('inhibit_master.html')
+
 @app.route('/docs/')
 @app.route('/docs/<filename>')
 @app.route('/docs/<dir>/<filename>')

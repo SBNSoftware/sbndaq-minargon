@@ -1,0 +1,176 @@
+{% extends "layout.html" %}
+
+{% block title %}InhibitMaster Status{% endblock %}
+
+{% block body %}
+{{ super() }}
+
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
+<style>
+.status {
+  font-size: 18pt; color: white; text-align: center; font-weight: bold;
+  vertical-align: middle;
+  height: 50px; width: 200px; border: solid 1px black;
+}
+.status-default { background: gray; }
+.status-off { background: #900; }
+.status-on { background: #090; }
+</style>
+
+<h2>
+InhibitMaster State:
+</h2>
+<p>
+<div id="InhibitMaster" class="status status-default">?</div>
+</p>
+
+<h2>
+Frontend states:
+</h2>
+
+<ul>
+<li>TestFrontEnd1: <div id="TestFrontEnd1" class="status status-default">?</div></li>
+<li>TestFrontEnd2: <div id="TestFrontEnd2" class="status status-default">?</div></li>
+</ul>
+{%endblock%}
+
+{% block script %}
+<script langauge="javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<script language="javascript">
+
+var entities = [ { id:"InhibitMaster", key:$SCRIPT_ROOT+"/online/IM_key/INHIBITMSG"},
+                 { id:"TestFrontEnd1", key:"STATUSMSG_TestFrontEnd1"},
+                 { id:"TestFrontEnd2", key:"STATUSMSG_TestFrontEnd2"} ];
+
+setInterval(function() {
+
+  var entity;
+  for (entity in entities){
+
+    console.log(entity.id)
+
+     $.getJSON($SCRIPT_ROOT+'/online/IM_key/STATUSMSG_TestFrontEnd1')
+      .then(function(r) {
+
+        switch(r.process){
+          case 'InhibitMaster':
+            mytext = r.status == 'GOOD' ? 'No Inhibit' : 'INHIBITING';
+            $('#InhibitMaster').text(mytext);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#InhibitMaster').attr('class', 'status ' + css);
+            break;
+          case 'TestFrontEnd1':
+            $('#TestFrontEnd1').text(r.status);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#TestFrontEnd1').attr('class', 'status ' + css);
+            break;
+          case 'TestFrontEnd2':
+            $('#TestFrontEnd2').text(r.status);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#TestFrontEnd2').attr('class', 'status ' + css);
+            break;
+        }
+      })
+      .fail(function() {
+      });
+
+    $.getJSON($SCRIPT_ROOT+'/online/IM_key/INHIBITMSG')
+      .then(function(r) {
+
+        switch(r.process){
+          case 'InhibitMaster':
+            mytext = r.status == 'GOOD' ? 'No Inhibit' : 'INHIBITING';
+            $('#InhibitMaster').text(mytext);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#InhibitMaster').attr('class', 'status ' + css);
+            break;
+          case 'TestFrontEnd1':
+            $('#TestFrontEnd1').text(r.status);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#TestFrontEnd1').attr('class', 'status ' + css);
+            break;
+          case 'TestFrontEnd2':
+            $('#TestFrontEnd2').text(r.status);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#TestFrontEnd2').attr('class', 'status ' + css);
+            break;
+        }
+      })
+      .fail(function() {
+      });
+
+     $.getJSON($SCRIPT_ROOT+'/online/IM_key/STATUSMSG_TestFrontEnd2')
+      .then(function(r) {
+
+        switch(r.process){
+          case 'InhibitMaster':
+            mytext = r.status == 'GOOD' ? 'No Inhibit' : 'INHIBITING';
+            $('#InhibitMaster').text(mytext);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#InhibitMaster').attr('class', 'status ' + css);
+            break;
+          case 'TestFrontEnd1':
+            $('#TestFrontEnd1').text(r.status);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#TestFrontEnd1').attr('class', 'status ' + css);
+            break;
+          case 'TestFrontEnd2':
+            $('#TestFrontEnd2').text(r.status);
+            css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+            $('#TestFrontEnd2').attr('class', 'status ' + css);
+            break;
+        }
+      })
+      .fail(function() {
+      });
+  }
+/*
+    };
+    $.getJSON($SCRIPT_ROOT+'/online/IM_key/STATUSMSG_TestFrontEnd1', {'name': 'testfield'}, function(r) {
+
+      switch(r.process){
+        case 'InhibitMaster':
+          mytext = r.status == 'GOOD' ? 'No Inhibit' : 'INHIBITING';
+          $('#InhibitMaster').text(mytext);
+          css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+          $('#InhibitMaster').attr('class', 'status ' + css);
+          break;
+        case 'TestFrontEnd1':
+          $('#TestFrontEnd1').text(r.status);
+          css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+          $('#TestFrontEnd1').attr('class', 'status ' + css);
+          break;
+        case 'TestFrontEnd2':
+          $('#TestFrontEnd2').text(r.status);
+          css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+          $('#TestFrontEnd2').attr('class', 'status ' + css);
+          break;
+      }
+    };
+    $.getJSON($SCRIPT_ROOT+'/online/IM_key/STATUSMSG_TestFrontEnd2', {'name': 'testfield'}, function(r) {
+
+      switch(r.process){
+        case 'InhibitMaster':
+          mytext = r.status == 'GOOD' ? 'No Inhibit' : 'INHIBITING';
+          $('#InhibitMaster').text(mytext);
+          css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+          $('#InhibitMaster').attr('class', 'status ' + css);
+          break;
+        case 'TestFrontEnd1':
+          $('#TestFrontEnd1').text(r.status);
+          css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+          $('#TestFrontEnd1').attr('class', 'status ' + css);
+          break;
+        case 'TestFrontEnd2':
+          $('#TestFrontEnd2').text(r.status);
+          css = r.status == 'GOOD' ? 'status-on' : 'status-off';
+          $('#TestFrontEnd2').attr('class', 'status ' + css);
+          break;
+      }
+    //}
+  };)*/
+}, 1000);
+//document.getElementById("statustext").innerHTML = "YAY!";
+</script>
+{% endblock %}

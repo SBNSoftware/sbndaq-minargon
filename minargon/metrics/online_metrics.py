@@ -79,6 +79,56 @@ def front_end_key_api(data):
     return ret
 
 # get data from a stream
+@app.route('/<redis>/pubsub_SubAndQuery/<name>')
+@redis_route
+def pubsub_SubAndQuery(redis, name):
+    p = redis_api.get_subscriber(redis,[name])
+    while True:
+        msg_dict = p.get_message(timeout=5.0)
+        value = 'None'
+        if msg_dict!=None:
+            value = msg_dict['data']
+            print value
+            return jsonify(value=value.split("_")[1].decode('utf-8'))
+
+# get data from a stream
+@app.route('/<redis>/pubsub_SubscribeAllInhibitMaster')
+@redis_route
+def pubsub_SubscribeAllInhibitMaster(redis):
+    #p = redis_api.get_psubscriber(redis,["INHIBITMSG","STATUSMSG*"])
+    p = redis.pubsub(ignore_subscribe_messages=True)
+    p.subscribe("INHIBITMSG")
+    p.psubscribe("STATUSMSG*")
+    while True:
+        msg_dict = p.get_message(timeout=5.0)
+        value = 'None'
+        if msg_dict!=None:
+            value = msg_dict['data']
+            print value
+            if (msg_dict['channel']=="INHIBITMSG"):
+                return jsonify(value=value.split("_")[1].decode('utf-8'),
+                               source="INHIBITMASTER")
+            else:
+                print value.split("_")[2].decode('utf-8')
+                return jsonify(value=value.split("_")[3].decode('utf-8'),
+                               source=value.split("_")[1].decode('utf-8'))
+
+# get a simple key from InhibitMaster
+@app.route("/<redis>/IM_key/<keyname>")
+@redis_route
+def IM_key(redis, keyname):
+    print "Made it here"
+    val = redis.get("IM:"+keyname)
+    print "IM:"+keyname,val
+    msg_list = val.split("_")
+    return jsonify(type=msg_list[0],
+                   process=msg_list[1],
+                   marker=msg_list[2],
+                   status=msg_list[3],
+                   time=msg_list[4],
+                   full_message=val)
+
+# get data from a stream
 @app.route('/<redis>/stream/<name>')
 @redis_route
 def stream(redis, name):

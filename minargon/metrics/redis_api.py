@@ -15,6 +15,23 @@ def get_key(rdb, key):
         redis_data = 0 
     return redis_data
 
+#subscribe to a set of channels and return subscriber
+def get_subscriber(rdb,channels):
+    p = rdb.pubsub(ignore_subscribe_messages=True)
+    for ch in channels:
+        p.subscribe(ch)
+    return p
+
+#subscribe to a channel pattern and return subscriber
+def get_psubscriber(rdb,patterns):
+    p = rdb.pubsub(ignore_subscribe_messages=True)
+    for pat in patterns:
+        p.psubscribe(pat)
+    return p
+
+def get_subscriber_msg(p):
+    return p.get_message()['data']
+
 # get most recent data point from a set of streams
 def get_last_streams(rdb, stream_list,count=1):
     ret = {}
