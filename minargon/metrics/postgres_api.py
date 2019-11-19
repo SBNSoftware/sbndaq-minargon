@@ -70,24 +70,28 @@ p_databases = {}
 
 # get the connections from the config
 for connection_name, config in postgres_instances.items():
-	key = config["epics_secret_key"]
 	database_name = config["name"]
 	host = config["host"]
 	port = config["port"]
-        try:
-		with open(key) as f:
-			u = (f.readline()).strip() # strip: removes leading and trailing chars
-			p = (f.readline()).strip()
-	except IOError as err:
-		connection = PostgresConnectionError().register_fileopen_error(err, connection_name)
-		success = False
-		p_databases[connection_name] = (connection, config, success)
-		continue
+        if "epics_secret_key" in config:
+		key = config["epics_secret_key"]
+        	try:
+			with open(key) as f:
+				user = (f.readline()).strip() # strip: removes leading and trailing chars
+				password = (f.readline()).strip()
+		except IOError as err:
+			connection = PostgresConnectionError().register_fileopen_error(err, connection_name)
+			success = False
+			p_databases[connection_name] = (connection, config, success)
+			continue
+	else:
+		user = config.get("user", None)
+		password = config.get("password", None)
 	
         config["web_name"] = connection_name
 	# Connect to the database
 	try:
-		connection = psycopg2.connect(database=database_name, user=u, password=p, host=host, port=port)
+		connection = psycopg2.connect(database=database_name, user=user, password=password, host=host, port=port)
 		success = True
 	except psycopg2.OperationalError as err:
 		connection = PostgresConnectionError().register_postgres_error(err, connection_name)
@@ -105,7 +109,11 @@ def postgres_route(func):
 		if connection in p_databases:
 			connection, config, success = p_databases[connection]
 			if success:
-				return func((connection,config), *args, **kwargs)
+            			try:
+					return func((connection,config), *args, **kwargs)
+				except (psycopg2.ProgrammingError, psycopg2.InternalError) as err:
+					error = PostgresConnectionError().register_postgres_error(err, config["name"]).with_front_end(front_end_abort)
+					return abort(503, error) 
 			else:
                                 error = connection.with_front_end(front_end_abort)
 				return abort(503, error)
