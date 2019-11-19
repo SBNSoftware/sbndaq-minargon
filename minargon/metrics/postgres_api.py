@@ -152,6 +152,40 @@ def postgres_query(ID, start_t, stop_t, connection, config):
 
 	return data
 
+@app.route("/<connection>/archiver")
+@postgres_route
+def archiver(connection):
+	database = connection[1]["name"]
+	connection = connection[0]
+
+	# return nothing if no connection
+	if connection is None:
+		return {}
+	cursor = connection.cursor(cursor_factory=RealDictCursor) 
+	#query="""SELECT SMPL_TIME, SMPL_VALUE FROM tpc_rms_mean_monitor WHERE CHANNEL_ID=0"""
+	query="""SELECT * FROM monitor_map;"""
+	cursor.execute(query)
+	data = cursor.fetchall()
+	#except:
+	#	print "Error! Rolling back connection"
+	#	cursor.execute("ROLLBACK")
+	#	connection.commit()
+	#	data = []
+	print data
+	
+	# Format the data from database query
+	#ret = {}
+	#warningRange = []
+	#DispRange = []
+	#for row in data:
+	#	warningRange.append(row['low_warn_lmt'])
+	#	warningRange.append(row['high_warn_lmt'])
+	#	DispRange.append(row['low_disp_rng'])
+	#	DispRange.append(row['high_disp_rng'])
+	return "Hi!"
+
+	
+
 #________________________________________________________________________________________________
 # Gets the sample step size in unix miliseconds
 @app.route("/<connection>/ps_step/<ID>")
