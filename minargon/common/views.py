@@ -1,19 +1,15 @@
 from minargon import app
 from flask import send_file, render_template, jsonify, request, redirect, url_for, flash
 from minargon.metrics import postgres_api
-import numpy as np
 from minargon.tools import parseiso
 from minargon.metrics import online_metrics, redis_api
 import os.path
 from datetime import date, datetime
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-#from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from StringIO import StringIO
-from scipy.sparse import csr_matrix
+from scipy.sparse import lil_matrix
 from scipy.sparse import coo_matrix
-import time
-import seaborn as sns
 """
 	Routes intented to be seen by the user	
 """
@@ -21,10 +17,10 @@ import seaborn as sns
 Channel_downsamplefactor = 5
 ADC_downsamplefactor     = 5
 
-channeldownsample = csr_matrix((5600/Channel_downsamplefactor,5600))
+channeldownsample = csr_matrix((49024/Channel_downsamplefactor,49024))
 adcdownsample = csr_matrix((4000000,4000000/ADC_downsamplefactor))
-for i in range(5600/Channel_downsamplefactor):
-	for j in range(5600):
+for i in range(49024/Channel_downsamplefactor):
+	for j in range(49024):
 		channeldownsample[i,j] = 1
 
 for k in range(4000000):
@@ -35,9 +31,9 @@ for k in range(4000000):
 @online_metrics.redis_route
 def plots(rconnect,TPC):
     TPC = int(TPC)
-    waveform_set0 = csr_matrix((49024, 4000000))
-    offsets = [6656,18912,31168,43424]
-    this_offset = offsets[TPC]
+    waveform_set0 = lil_matrix((5600, 4100))
+    offset = [6656,18912,31168,43424]
+    this_offset = offset[TPC]
     for i in range(0,5601):
 	#m,n,o,p = i+6656,i+18912,i+31168,i+43424
         waveforms, offsets, periods = redis_api.get_waveform(rconnect, "snapshot:sparse_waveform:wire:%d" % (i+this_offset))
@@ -46,8 +42,7 @@ def plots(rconnect,TPC):
                 for a in range(len(waveforms)):
                     b = 0
                     for b in range(len(waveforms[a])):
-                        waveform_set0[i+this_offset,offsets[a]+b]=waveforms[a][b]
-
+                        waveform_set0[i,offsets[a]+b]=waveforms[a][b]
     waveform_set0 = waveform_set0.tocoo()
     #waveform_set0 = np.matpul(waveform_set0,adcdownsample)
     #waveform_set0 = np.matpul(channeldownsample,waveform_set0)
@@ -57,13 +52,13 @@ def plots(rconnect,TPC):
     ax0 = fig.add_subplot(111, facecolor='white')
     
     ax0.plot(waveform_set0.col, waveform_set0.row, 's', color='red', ms=1)
-    ax0.set_ylim(this_offset, this_offset+5600)
-    ax0.set_xlim(0,4000000)
-    ax0.set_ylabel('Channel Number')
-    ax0.set_xlabel('Time (ns)')
-    ax0.set_title('TPC %d Event Display'%(TPC+1))
+    ax0.set_ylim(0,5600)
+    ax0.set_xlim(0,4100)
+    ax0.set_ylabel('Channel Number',fontsize=18)
+    ax0.set_xlabel('Tick',fontsize=18)
+    ax0.set_title('TPC %d Event Display'%(TPC+1),fontsize=24)
     #ax0.imshow(waveform_set0, cmap='BuPu')
-
+    
     sio = StringIO()
     canvas.print_png(sio)
     sio.seek(0)
