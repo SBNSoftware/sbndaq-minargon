@@ -13,19 +13,23 @@ class HWSelector:
         self.value = value
 
     def to_url(self):
-        return "%s:%s:%s" % (self.table, self.column, self.value)
+        return ("%s:%s:%s" % (self.table, self.column, self.value)).replace(";", "|")
 
+    def __repr__(self):
+        return self.__str__()
+    def __str__(self):
+        return self.to_url()
 
 class HWSelectorConverter(BaseConverter):
     def to_python(self, value):
-        return HWSelector(*value.split(":"))
+        return HWSelector(*[s.replace("|", ";") for s in value.split(":")])
 
     def to_url(self, selector):
         return selector.to_url()
 
 class HWSelectorListConverter(BaseConverter):
     def to_python(self, values):
-        return [HWSelector(*value.split(":")) for value in values.split(",")]
+        return [HWSelector(*[s.replace("|", ";") for s in value.split(":")]) for value in values.split(",")]
 
     def to_url(self, selectors):
         return ",".join([s.to_url() for s in selectors])
