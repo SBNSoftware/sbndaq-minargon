@@ -280,6 +280,7 @@ export class LineChart {
         this.time = new Array(n_data);
         this.n_data = n_data;
         this.target = target;
+        this.static_traces = [];
         if (xdata === undefined) {
             this.xdata = [];
             for (var i = 0; i < this.n_data; i++) {
@@ -307,14 +308,35 @@ export class LineChart {
         }
     }
 
+    addStaticTrace(xdata, ydata, timestamps, name) {
+      var text = [];
+      for (var i = 0; i < timestamps.length; i++) {
+        text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"));
+      }
+      this.static_traces.push({
+            x: xdata,
+            y: ydata,
+            type: "scatter",
+            text: text,
+            name: name
+      });
+      this.draw(this.layout);
+    }
+
+    clearStaticTraces() {
+      this.static_traces = [];
+    }
+
     // Internal function: draw the scatter plot for the first time
     draw(layout) {
         var trace = this.trace();
+        this.layout = layout;
         Plotly.newPlot(this.target, trace, layout);
     }
 
     // update plot with a new layout
     reLayout(layout) {
+        this.layout = layout;
         Plotly.relayout(this.target, layout);
     }
 
@@ -323,18 +345,8 @@ export class LineChart {
     // 	      plotly plot. If range is "undefined",
     //        then the plot will switch to the default Plotly range.
     updateRange(range) {
-        if (range === undefined) {
-            this.range = undefined;
-            this.min = undefined;
-            this.max = undefined;
-            Plotly.deleteTraces(this.target, [1,2]);
-            return;
-        }
-        var new_trace = (this.range === undefined);
-        this.range = range;
         this.range_trace();
-        if (new_trace) Plotly.addTraces(this.target, [this.max, this.min]);
-        else Plotly.redraw(this.target);
+        this.draw(this.layout);
     }
 
     // Internal function: reset the data for the "Warning Hi/Lo" plots 
@@ -374,10 +386,16 @@ export class LineChart {
             y: this.data,
             type: "scatter",
             text: this.text,
+            name: "Data",
         }];
 
-        if (!(this.max === undefined)) ret.append(this.max);
-        if (!(this.min === undefined)) ret.append(this.min);
+        if (!(this.max === undefined)) ret.push(this.max);
+        if (!(this.min === undefined)) ret.push(this.min);
+
+        for (var i = 0; i < this.static_traces.length; i++) {
+          ret.push(this.static_traces[i]);
+        }
+
         return ret;
     }
 

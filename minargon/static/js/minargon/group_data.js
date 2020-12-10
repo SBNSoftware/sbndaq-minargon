@@ -44,6 +44,17 @@ export class GroupDataScatterController {
   restrictNumInstances() {
     return false;
   }
+  updateReferenceData(data) {
+    var xdata = this.instances;
+    var times = [];
+    var ydata = [];
+    for (var i = 0; i < data.length; i++) {
+      times.push(data[i][0]);
+      ydata.push(data[i][1]);
+    }
+    this.scatter.clearStaticTraces();
+    this.scatter.addStaticTrace(xdata, ydata, times, "Reference");
+  }
 
   // "set" the configuration after constructing the class and calling
   // the various "xxxController" functions
@@ -217,7 +228,13 @@ export class GroupDataScatterController {
 
   updateTitleTime(data) {
     if (data.length > 0 && data[0].size > 0) {
-      this.last_data_time = moment.unix(Math.round(data[0].get_last()[0] / 1000)).tz("America/Chicago");
+      var times = [];
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].size > 0) {
+          times.push(data[i].get_last()[0]);
+        }
+      }
+      this.last_data_time = moment.unix(Math.round(Math.max(...times) / 1000)).tz("America/Chicago");
     }
     else {
       this.last_data_time = undefined;
@@ -373,6 +390,7 @@ export class GroupDataHistoController {
   restrictNumInstances() {
     return false;
   }
+  updateReferenceData() {} // noop
 
   // "set" the configuration after constructing the class and calling
   // the various "xxxController" functions
@@ -512,8 +530,14 @@ export class GroupDataHistoController {
   }
 
   updateTitleTime(data) {
-    if (data.length > 0 && data[0].size > 0) {
-      this.last_data_time = moment.unix(Math.round(data[0].get_last()[0] / 1000)).tz("America/Chicago");
+    if (data.length > 0) {
+      var times = [];
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].size > 0) {
+          times.push(data[i].get_last()[0]);
+        }
+      }
+      this.last_data_time = moment.unix(Math.round(Math.max(...times) / 1000)).tz("America/Chicago");
     }
     else {
       this.last_data_time = undefined;
