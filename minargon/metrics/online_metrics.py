@@ -267,6 +267,19 @@ def stream_group(connect, stream_type, metric_names, group_name, instance_start=
         values, min_end_time = stream_group_online(connect, stream_type, metric_names, group_name, instances, args)
         return jsonify(values=values, min_end_time=min_end_time)
 
+@app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/<int:instance_start>/<int:instance_end>')
+@app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/<list:instance_list>')
+@app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/hw_select/<hw_selector:hw_select>')
+def stream_group_ref(connect, stream_type, metric_names, group_name, instance_start=None, instance_end=None, instance_list=None, hw_select=None):
+    if instance_list is not None:
+        instances = instance_list
+    elif instance_start is not None and instance_end is not None: 
+        instances = [str(x) for x in range(instance_start, instance_end)]
+    elif hw_select is not None:
+        instances = [str(x) for x in select(hw_select)]
+
+    return jsonify(values=stream_group_archived_ref(connect, stream_type, metric_names, group_name, instances))
+
 @app.route('/<connect>/stream_group_last_time/<stream_type>/<metric>/<group>')
 def stream_group_last_time(connect, stream_type, metric, group):
 
@@ -280,7 +293,11 @@ def stream_group_last_time(connect, stream_type, metric, group):
 def stream_group_hw_step(connect, stream_type, metric_name, group_name, hw_select):
     args = stream_args(request.args)
     # get an instance
-    instance = select(hw_select)[0]
+    instances = select(hw_select)
+    if not len(instances):
+        return jsonify(step=0)
+
+    instance = instances[0]
 
     # get the step
     if stream_type == "archived":
@@ -289,7 +306,6 @@ def stream_group_hw_step(connect, stream_type, metric_name, group_name, hw_selec
         # build a key
         key = "%s:%s:%s:%s" % (group_name, instance, metric_name, stream_type)
         return infer_step_size_online(connect, key)
-
 
 def average_streams(streams):
     return streams[0]
@@ -321,7 +337,9 @@ def stream_group_hw_avg(connect, stream_type, metric_name, group_name, hw_select
 
     # build the instances
     channels = [[str(x) for i,x in enumerate(select(hw_select)) if i % downsample == 0] for hw_select in hw_selects]
- 
+
+    channels = [c for c in channels if len(c)]
+
     values, min_end_time = stream_group_online_avg(connect, stream_type, metric_name, group_name, channels, args)
 
     ret = {}
@@ -353,6 +371,51 @@ def stream_group_archived_last_time(connection, stream_type, metric, group):
     for line in data: # should only be one
         time = data[0]["sample_time_a"]
     return time
+
+@postgres_api.postgres_route
+def stream_group_archived_ref(connection, stream_type, metric_names, group_name, instances):
+    connection, config = connection
+
+    # first figure out if any of the provided metrics are being archived
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    query = "SELECT METRIC,CHANNEL_ID,extract(epoch FROM REF_SMPL_TIME)*1000 AS SAMPLE_TIME,REF_SMPL_VALUE from RUNCON_PRD.MONITOR_MAP where CHANNEL_ID IN ({INSTANCES}) AND GROUP_NAME = '{GROUP_NAME}' "\
+            "AND METRIC = '{METRIC_NAME}'"
+
+    qs = []
+    for metric in metric_names:
+        query_builder = {
+          "INSTANCES":  ",".join(instances),
+          "METRIC_NAME": metric,
+          "GROUP_NAME": group_name
+        }
+        qs.append(query.format(**query_builder))
+    query = ";".join(qs)
+
+    try:
+        cursor.execute(query)
+    except:
+        cursor.execute("ROLLBACK")
+        connection.commit()
+        raise
+
+    ret = {}
+    for metric in metric_names:
+        ret[metric] = {}
+        for inst in instances:
+            ret[metric][inst] = []
+
+
+    data = cursor.fetchall()
+    for line in data:
+        metric = str(line["metric"]) 
+        ID = str(line["channel_id"])
+        val = line["ref_smpl_value"]
+        time = line["sample_time"]
+        if val and time:
+            val = float(val)
+            ret[metric][ID].append((time, val))
+
+    return ret
 
 @postgres_api.postgres_route
 def stream_group_archived_last(connection, stream_type, metric_names, group_name, instances):

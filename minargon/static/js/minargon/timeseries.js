@@ -62,6 +62,7 @@ export class PlotlyController {
   restrictNumInstances() {
     return true;
   }
+  updateReferenceData() {} // noop
 
   setYTitles(ytitles) {
     this.ytitles = ytitles;
@@ -381,6 +382,7 @@ export class CubismController {
   restrictNumInstances() {
     return true;
   }
+  updateReferenceData() {} // noop
 
   // Internal function: grap the time step from the server and run a
   // callback
