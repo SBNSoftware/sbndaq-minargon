@@ -1,5 +1,19 @@
 import {WarningRange, DataTrace, ScatterYAxis} from "./chart_proto.js";
 
+// Taken from Plotly source
+var COLORS = [
+    '#1f77b4',  // muted blue
+    '#ff7f0e',  // safety orange
+    '#2ca02c',  // cooked asparagus green
+    '#d62728',  // brick red
+    '#9467bd',  // muted purple
+    '#8c564b',  // chestnut brown
+    '#e377c2',  // raspberry yogurt pink
+    '#7f7f7f',  // middle gray
+    '#bcbd22',  // curry yellow-green
+    '#17becf'   // blue-teal
+];
+
 // All code here relies on plotly.js being loaded
 // TODO: make use of module imports
 
@@ -318,7 +332,8 @@ export class LineChart {
             y: ydata,
             type: "scatter",
             text: text,
-            name: name
+            name: name,
+            marker: {color: COLORS[(this.static_traces.length+2) % COLORS.length]},
       });
       this.draw(this.layout);
     }
@@ -332,6 +347,7 @@ export class LineChart {
         var trace = this.trace();
         this.layout = layout;
         Plotly.newPlot(this.target, trace, layout);
+        Plotly.moveTraces(this.target, 0); // move the Data trace to the front
     }
 
     // update plot with a new layout
@@ -357,7 +373,7 @@ export class LineChart {
                 y: [this.range[0], this.range[0]],
 	        type: "scatter", 
                 name: "Warning Low",
-                marker: { color: "green"},
+                marker: { color: COLORS[1]},
             };
         }
         else {
@@ -370,7 +386,7 @@ export class LineChart {
                 y: [this.range[1], this.range[1]],
 	        type: "scatter", 
                 name: "Warning High",
-                marker: { color: "red"},
+                marker: { color: COLORS[1]},
             };
         }
         else {
@@ -387,6 +403,7 @@ export class LineChart {
             type: "scatter",
             text: this.text,
             name: "Data",
+            marker: { color: COLORS[0]},
         }];
 
         if (!(this.max === undefined)) ret.push(this.max);
