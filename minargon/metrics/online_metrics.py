@@ -338,15 +338,16 @@ def stream_group_hw_avg(connect, stream_type, metric_name, group_name, hw_select
     # build the instances
     channels = [[str(x) for i,x in enumerate(select(hw_select)) if i % downsample == 0] for hw_select in hw_selects]
 
-    channels = [c for c in channels if len(c)]
+    channels_query = [c for c in channels if len(c)]
 
-    values, min_end_time = stream_group_online_avg(connect, stream_type, metric_name, group_name, channels, args)
+    values, min_end_time = stream_group_online_avg(connect, stream_type, metric_name, group_name, channels_query, args)
 
     ret = {}
     ret[metric_name] = {}
     # average over each HW grouping
     for hw_channels, hw_select in zip(channels, hw_selects):
-         ret[metric_name][hw_select.to_url()] = values[metric_name][hw_channels[0]]
+         if len(hw_channels):
+             ret[metric_name][hw_select.to_url()] = values[metric_name][hw_channels[0]]
 
     return jsonify(values=ret, min_end_time=min_end_time)
 
@@ -374,6 +375,9 @@ def stream_group_archived_last_time(connection, stream_type, metric, group):
 
 @postgres_api.postgres_route
 def stream_group_archived_ref(connection, stream_type, metric_names, group_name, instances):
+    if not len(instances):
+        return {}
+
     connection, config = connection
 
     # first figure out if any of the provided metrics are being archived
