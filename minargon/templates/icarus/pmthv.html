@@ -48,17 +48,20 @@ $(document).ready(function() {
     var tr = document.createElement("tr");
     tr.innerHTML = "<td id='{{row[1]}}'>{{ row[1] }}</td><td><a href='{{ url_for('pv_single_stream', database=connection, ID=row[0]) }}'>{{ row[3] }}</a></td>"
     var units = document.createElement("td");
-    if (pvName.endsWith("temp")) {
-      units.innerHTML = "&deg;C";
-      tr.appendChild(units);
-    } else if (pvName.endsWith("curr")) {
-      units.innerHTML = "A";
-      tr.appendChild(units);
-    } else if (pvName.endsWith("volt")) {
+    if (pvName.endsWith("vmon")) {
       units.innerHTML = "V";
       tr.appendChild(units);
-    } else if (pvName.endsWith("fan")) {
-      units.innerHTML = "%";
+    } else if (pvName.endsWith("IMon_fbk")) {
+      units.innerHTML = "A";
+      tr.appendChild(units);
+    } else if (pvName.endsWith("VMon_fbk")) {
+      units.innerHTML = "V";
+      tr.appendChild(units);
+    } else if (pvName.endsWith("v0set")) {
+      units.innerHTML = "V";
+      tr.appendChild(units);
+    } else {
+      units.innerHTML = " ";
       tr.appendChild(units);
     }
     var ts = document.createElement("td");
