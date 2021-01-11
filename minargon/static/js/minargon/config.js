@@ -147,7 +147,7 @@ export class GroupConfigController {
   //        return a URL string that the user will navigate to. If
   //        nothing is passed, then nothing will happen when the user
   //        clicks on a strip chart
-  constructor(config, href, metrics, instances, stream_index, max_n_instances, hw_select, channel_map) {
+  constructor(config, href, metrics, instances, stream_index, max_n_instances, hw_select, channel_map, text_meta) {
     this.config = config;
     this.href = href;
 
@@ -192,6 +192,7 @@ export class GroupConfigController {
       this.channel_map = channel_map;
       this.channel_is_mapped = true;
     }
+    this.text_meta = text_meta;
 
     var self = this;
     // sort the instances by the channel map
@@ -206,6 +207,7 @@ export class GroupConfigController {
         self.channel_map[i] = v.value1;
         self.instances[i] = v.value2;
     });
+
   }
 
   HWSelectName() {
@@ -306,6 +308,8 @@ export class GroupConfigController {
         }
       }
     });
+
+    this.updateReferenceData();
   }
 
   // collect default parameters from metric
@@ -412,7 +416,35 @@ export class GroupConfigController {
       }
       this.controllers[i].updateMetricConfig(metric_config);
     }
+    this.updateReferenceData();
   } 
+
+  updateReferenceData() {
+    var archived_stream = this.config.streams.indexOf("archived");
+    if (archived_stream >= 0) { // if the archived stream exists
+      var link = this.data_link(archived_stream, this.metrics, this.instances, 1);
+      var accessors = link.accessors();
+      var self = this;
+      d3.json(link.link_builder.ref_link(), function(data) {
+        var out = [];
+        for (var i = 0; i < accessors.length; i++) {
+          var this_data = data.values;
+          for (var k = 0; k < accessors[i].length; k++) {
+            this_data = this_data[accessors[i][k]];
+            if (this_data == undefined) {
+              break;
+            }
+          }
+          if (this_data && this_data.length > 0) {
+            out.push(this_data[0]);
+          }
+        }
+        for (var i = 0; i < self.controllers.length; i++) {
+          self.controllers[i].updateReferenceData(out);
+        }
+      });
+    }
+  }
 
 
   // Internal function: change the stream name of the time-series
@@ -460,20 +492,24 @@ export class GroupConfigController {
   addGroupDataScatterController(target, title) {
     var data_link = this.data_link(this.stream_index, this.metrics, this.instances, 1);
 
+    var text = null;
     // build the list of global channel names
     if (this.channel_is_mapped) {
-      var global_channel_names = [];
+      var text = [];
       for (var i = 0; i < this.channel_map.length; i++) {
-        global_channel_names.push("Global Channel: " + String(this.instances[i]));
+        text.push("Global Channel: " + String(this.instances[i]));
       }
       var xLabel = "Local Channel"
     }
+    else if (this.text_meta) {
+      text = this.text_meta;
+    }
     else {
-      var global_channel_names = null;
+      var text = null;
       var xLabel = this.config.group;
     }
 
-    var controller = new GroupDataControllers.GroupDataScatterController(target, data_link, this.processMetricConfig(), title, xLabel, this.channel_map, global_channel_names);
+    var controller = new GroupDataControllers.GroupDataScatterController(target, data_link, this.processMetricConfig(), title, xLabel, this.channel_map, text);
     this.controllers.push(controller);
     return controller;
   }
