@@ -58,6 +58,11 @@ def icarus_tpcps(connection):
     dbrows = postgres_api.get_icarus_tpcps(connection, front_end_abort=True)
     return render_template('icarus/tpcps.html', rows=dbrows, connection=connection)
 
+@app.route('/<connection>/icarus_pmthv')
+def icarus_pmthv(connection):
+    dbrows = postgres_api.get_icarus_pmthv(connection, front_end_abort=True)
+    return render_template('icarus/pmthv.html', rows=dbrows, connection=connection)
+
 @app.route('/<connection>/epics_last_value/<group>')
 def epics_last_value(connection,group):
     dbrows = postgres_api.get_epics_last_value(connection,group)     
@@ -256,7 +261,8 @@ def pv_multiple_stream(database, var):
 
 @app.route("/data_list")
 def data_list():
-    print(data=build_data_browser_list())
+    data = build_data_browser_list()
+    print(data)
     return jsonify(data=build_data_browser_list())
 
 def build_data_browser_list():
