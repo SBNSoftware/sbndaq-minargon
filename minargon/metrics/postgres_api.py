@@ -282,8 +282,8 @@ def pv_meta_internal(connection, ID):
     warningRange = []
     DispRange = []
     for row in data:
-        warningRange.append(row['low_warn_lmt'])
-        warningRange.append(row['high_warn_lmt'])
+        warningRange.append(row['low_alarm_lmt'])
+        warningRange.append(row['high_alarm_lmt'])
         DispRange.append(row['low_disp_rng'])
         DispRange.append(row['high_disp_rng'])
 
@@ -304,7 +304,7 @@ def pv_meta_internal(connection, ID):
             ret["range"] = DispRange
 
         # Warning Range
-        if  (CheckVal(row['low_warn_lmt']) == False and CheckVal(row['high_warn_lmt']) == False) and row['low_warn_lmt'] != row['high_warn_lmt']:
+        if  (CheckVal(row['low_alarm_lmt']) == False and CheckVal(row['high_alarm_lmt']) == False) and row['low_alarm_lmt'] != row['high_alarm_lmt']:
              ret["warningRange"] = warningRange
 
         # only take the first row of data -- there should really only be one configuration per id
