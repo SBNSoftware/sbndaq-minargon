@@ -1,5 +1,19 @@
 import {WarningRange, DataTrace, ScatterYAxis} from "./chart_proto.js";
 
+// Taken from Plotly source
+var COLORS = [
+    '#1f77b4',  // muted blue
+    '#ff7f0e',  // safety orange
+    '#2ca02c',  // cooked asparagus green
+    '#d62728',  // brick red
+    '#9467bd',  // muted purple
+    '#8c564b',  // chestnut brown
+    '#e377c2',  // raspberry yogurt pink
+    '#7f7f7f',  // middle gray
+    '#bcbd22',  // curry yellow-green
+    '#17becf'   // blue-teal
+];
+
 // All code here relies on plotly.js being loaded
 // TODO: make use of module imports
 
@@ -280,6 +294,7 @@ export class LineChart {
         this.time = new Array(n_data);
         this.n_data = n_data;
         this.target = target;
+        this.static_traces = [];
         if (xdata === undefined) {
             this.xdata = [];
             for (var i = 0; i < this.n_data; i++) {
@@ -307,14 +322,37 @@ export class LineChart {
         }
     }
 
+    addStaticTrace(xdata, ydata, timestamps, name) {
+      var text = [];
+      for (var i = 0; i < timestamps.length; i++) {
+        text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"));
+      }
+      this.static_traces.push({
+            x: xdata,
+            y: ydata,
+            type: "scatter",
+            text: text,
+            name: name,
+            marker: {color: COLORS[(this.static_traces.length+2) % COLORS.length]},
+      });
+      this.draw(this.layout);
+    }
+
+    clearStaticTraces() {
+      this.static_traces = [];
+    }
+
     // Internal function: draw the scatter plot for the first time
     draw(layout) {
         var trace = this.trace();
+        this.layout = layout;
         Plotly.newPlot(this.target, trace, layout);
+        Plotly.moveTraces(this.target, 0); // move the Data trace to the front
     }
 
     // update plot with a new layout
     reLayout(layout) {
+        this.layout = layout;
         Plotly.relayout(this.target, layout);
     }
 
@@ -323,18 +361,8 @@ export class LineChart {
     // 	      plotly plot. If range is "undefined",
     //        then the plot will switch to the default Plotly range.
     updateRange(range) {
-        if (range === undefined) {
-            this.range = undefined;
-            this.min = undefined;
-            this.max = undefined;
-            Plotly.deleteTraces(this.target, [1,2]);
-            return;
-        }
-        var new_trace = (this.range === undefined);
-        this.range = range;
         this.range_trace();
-        if (new_trace) Plotly.addTraces(this.target, [this.max, this.min]);
-        else Plotly.redraw(this.target);
+        this.draw(this.layout);
     }
 
     // Internal function: reset the data for the "Warning Hi/Lo" plots 
@@ -345,7 +373,7 @@ export class LineChart {
                 y: [this.range[0], this.range[0]],
 	        type: "scatter", 
                 name: "Warning Low",
-                marker: { color: "green"},
+                marker: { color: COLORS[1]},
             };
         }
         else {
@@ -358,7 +386,7 @@ export class LineChart {
                 y: [this.range[1], this.range[1]],
 	        type: "scatter", 
                 name: "Warning High",
-                marker: { color: "red"},
+                marker: { color: COLORS[1]},
             };
         }
         else {
@@ -374,10 +402,17 @@ export class LineChart {
             y: this.data,
             type: "scatter",
             text: this.text,
+            name: "Data",
+            marker: { color: COLORS[0]},
         }];
 
-        if (!(this.max === undefined)) ret.append(this.max);
-        if (!(this.min === undefined)) ret.append(this.min);
+        if (!(this.max === undefined)) ret.push(this.max);
+        if (!(this.min === undefined)) ret.push(this.min);
+
+        for (var i = 0; i < this.static_traces.length; i++) {
+          ret.push(this.static_traces[i]);
+        }
+
         return ret;
     }
 

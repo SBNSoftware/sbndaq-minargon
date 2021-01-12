@@ -57,6 +57,34 @@ def flange_page(flanges):
 
     return render_template('icarus/flange_overview.html', **render_args)
 
+@app.route('/TPC_Plane_Overview/<TPC>')
+def TPC_Plane_Overview(TPC):
+    tpc_planes = hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", "tpc_id", TPC))
+    return plane_page(tpc_planes)
+
+def plane_page(tpc_planes):
+    tpc_planes = [hardwaredb.HWSelector("tpc_plane", "tpc_plane", p) for p in tpc_planes]
+
+    instance_name = "tpc_channel"
+    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+
+    channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes]
+    tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", "flange_pos_at_chimney", p.value) for p in tpc_planes]
+    flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
+    titles = ["TPC %s" % hw.value for hw in tpc_planes]
+
+    render_args = {
+      "config": config,
+      "channels": channels,
+      "metric": "rms",
+      "titles": titles,
+      "tpc_planes": tpc_planes,
+      "eventmeta_key": "eventmetaTPC",
+      "flange_names": flange_names,
+    }
+
+    return render_template('icarus/plane_overview.html', **render_args);
+
 @app.route('/TPC')
 @app.route('/TPC/<hw_selector:hw_select>')
 def TPC(hw_select=None):
