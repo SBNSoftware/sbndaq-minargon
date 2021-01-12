@@ -11,5 +11,5 @@ export function throw_alert(text, divID) {
 }
 
 export function remove_alert(divID) {
-   $(".alert-holder").find("#"+divID).remove();
+   $(".alert-holder").find('[id="' + divID + '"]').remove();
 }

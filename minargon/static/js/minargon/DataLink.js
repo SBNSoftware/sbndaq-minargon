@@ -138,6 +138,10 @@ export class HwMetricStreamLink {
     return this.data_link_internal('/stream_group/', start, stop, n_data);
   }
 
+  ref_link() {
+    return this.data_link_internal('/stream_group_ref/');
+  }
+
   event_source_link(start) {
     return this.data_link_internal('/stream_group_subscribe/', start, null);
   }
@@ -242,6 +246,10 @@ export class MetricStreamLink {
     return this.data_link_internal('/stream_group/', start, stop, n_data);
   }
 
+  ref_link() {
+    return this.data_link_internal('/stream_group_ref/');
+  }
+
   event_source_link(start) {
     return this.data_link_internal('/stream_group_subscribe/', start, null);
   }
@@ -269,8 +277,8 @@ export class MetricStreamLink {
 
   name() {
     if (this.metrics.length == 1) return this.metrics[0];
-    if (!this.sequence && this.instances.length == 1)  return this.instances[0].name;
-    return this.group.name;
+    if (!this.sequence && this.instances.length == 1)  return String(this.instances[0]);
+    return this.group;
   }
 
 }
