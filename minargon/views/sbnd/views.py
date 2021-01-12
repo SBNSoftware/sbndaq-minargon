@@ -103,4 +103,18 @@ def purity():
 
     return render_template('sbnd/purity.html', **render_args)
 
+@app.route('/Impedence_Ground_Monitor')
+def Impedence_Ground_Monitor():
+    database = "sbnd_epics"
+    IDs = [1, 3, 4, 5] 
+
+    configs = {}
+    for i in IDs:
+      configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database
+    }
+    return render_template('sbnd/impedence_ground_monitor.html', **render_args)
 
