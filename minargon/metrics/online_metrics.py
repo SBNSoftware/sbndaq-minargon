@@ -143,7 +143,7 @@ def hget(rconnect, name, keys):
     pipeline = rconnect.pipeline()
     for key in keys:
         pipeline.hget(name, key)
-    return jsonify(**dict([(key,val) for key,val in zip(keys, pipeline.execute())]))
+    return jsonify(**dict([(str(key),str(val)) for key,val in zip(keys, pipeline.execute())]))
 
 def get_min_end_time(data):
     min_end_time = 0
@@ -180,7 +180,7 @@ def stream(rconnect, name):
     data = redis_api.get_streams(rconnect, [name], **args)
     min_end_time = get_min_end_time(data)
 
-    return jsonify(values=data,min_end_time=min_end_time)
+    return jsonify(values=str(data),min_end_time=str(min_end_time))
 
 @app.route('/<rconnect>/alarms')
 @redis_route
@@ -685,6 +685,7 @@ def build_link_list(rconnect):
 
     # index by group, the metric, then instance
     for group, config, this_members, in zip(groups, configs, members):
+        print(config)
         config = json.loads(config)
         if "metric_config" not in config: continue
         metrics = list(config["metric_config"].keys())

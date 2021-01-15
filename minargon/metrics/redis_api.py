@@ -12,6 +12,12 @@ from six.moves import zip
 class MalformedRedisEntry(Exception):
     pass
 
+def convert(data):
+    if isinstance(data, bytes):  return data.decode('ascii')
+    if isinstance(data, dict):   return dict(map(convert, data.items()))
+    if isinstance(data, tuple):  return map(convert, data)
+    return data
+
 def type_to_struct_type(name):
     if name == "int8_t": return "b"
     if name == "int16_t": return "h"
@@ -54,18 +60,18 @@ def parse_binary(binary, typename):
 def extract_datum(dat):
     invert = "INVERT" in dat
     dat.pop("INVERT", None)
-
-    if "dat" in dat: 
+    d = convert(dat)
+    if "dat" in d:
         try:
-            val = float(dat["dat"])
+            val = float(d["dat"])
         except:
-            return dat["dat"]
+            return d["dat"]
     else:
-        typename = list(dat.keys())[0]
+        typename = list(d.keys())[0]
         structname = type_to_struct_type(typename)
         if structname is None:
             raise MalformedRedisEntry("Redis Steam entry missing binary type.")
-        val = struct.unpack(structname, dat[typename])[0]
+        val = struct.unpack(structname.encode(), d[typename].encode())[0]
     if invert:
         if abs(val) < 1e-4: return "inf" # JSON compatible infinity
         val = 1. / val
@@ -198,7 +204,8 @@ def get_streams(rdb, stream_list, n_data=None, start=None, stop=None):
     for stream, data in zip(stream_list, pipeline.execute()):
         ret[stream] = []
         for d in reversed(data):
-            time =  d[0].split("-")[0]
+            a = d[0].decode()
+            time =  a.split("-")[0].encode()
             val = extract_datum(d[1])
             ret[stream].append( (time, val) )
     return ret

@@ -23,6 +23,7 @@ from flask import jsonify, request, render_template, abort, g
 from datetime import datetime, timedelta # needed for testing only
 import time
 import calendar
+import re
 from pytz import timezone
 
 # status interpreter functions
@@ -589,6 +590,28 @@ def get_icarus_tpcps(connection):
     for row in dbrows:
         time = row[2].strftime("%Y-%m-%d %H:%M")
         formatted.append((row[0], row[1], time, row[3]))
+        result = sorted(formatted, key = sort_id);
+
+    return result;
+
+#______________________________________________________________________
+@postgres_route
+def get_icarus_pmthv(connection):
+    cursor = connection[0].cursor()
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '00000D00') from dcs_prd.channel where grp_id=11"""
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall();
+    cursor.close();
+
+    formatted = []
+    def sort_id(var):
+        return var[0];
+    for row in dbrows:
+        time = row[2].strftime("%Y-%m-%d %H:%M")
+        tmp = row[3] or "None"
+        temp = re.sub(r'0+(.+)', r'\1', tmp)
+        formatted.append((row[0], row[1], time, temp))
         result = sorted(formatted, key = sort_id);
 
     return result;
