@@ -262,7 +262,6 @@ def pv_multiple_stream(database, var):
 @app.route("/data_list")
 def data_list():
     data = build_data_browser_list()
-    print(data)
     return jsonify(data=build_data_browser_list())
 
 def build_data_browser_list():
