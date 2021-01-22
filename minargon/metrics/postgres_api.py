@@ -15,7 +15,7 @@ import subprocess
 import psycopg2
 #import asyncio
 #import asyncpg
-import json
+import simplejson as json
 from psycopg2.extras import RealDictCursor
 from minargon.tools import parseiso, parseiso_or_int, stream_args
 from minargon import app
