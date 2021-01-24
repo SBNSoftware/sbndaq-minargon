@@ -3,7 +3,7 @@ from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
 import time
 from os.path import join
-import json
+import simplejson as json
 import os
 import sys
 import random

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash
-import json
+import simplejson as json
 from minargon.metrics import postgres_api
 
 from minargon.tools import parseiso
