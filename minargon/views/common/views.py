@@ -60,8 +60,8 @@ def icarus_tpcps(connection):
 
 @app.route('/<connection>/icarus_pmthv')
 def icarus_pmthv(connection):
-    dbrows = postgres_api.get_icarus_pmthv(connection, front_end_abort=True)
-    return render_template('icarus/pmthv.html', rows=dbrows, connection=connection)
+    dbrows = postgres_api.get_icarus_pmthv(connection, "pv_single_stream", front_end_abort=True)
+    return render_template('icarus/pmthv.html', data=dbrows)
 
 @app.route('/<connection>/epics_last_value/<group>')
 def epics_last_value(connection,group):
