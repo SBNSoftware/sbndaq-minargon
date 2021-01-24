@@ -1,0 +1,81 @@
+{% extends "layout.html" | front_ended %}
+
+{% block title %}ICARUS Cathod Drift HV Supply Status{% endblock %}
+
+{% block body %}
+{{ super() }}
+<h2>ICARUS PMT HV Supply Status</h2>
+
+<P>
+<TABLE><TR><TD>Last Reading Time</TD><TD id="icarus_cathodehv_monitor/tss">&nbsp;</TD></TR></TABLE>
+<P>
+<TABLE id="main_table">
+<TR><TH>PV Name</TH><TH>Value</TH><TH>Units</TH><TH>TimeStamp</TH></TR>
+
+
+{%endblock%}
+
+{% block script %}
+<link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+    <style>
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
+    </style>
+
+<!-- Populate above table -->
+<script type="text/javascript">
+$(document).ready(function() {
+  {%for row in rows%} {
+    var pvName = "{{row[1]}}";
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td id='{{row[1]}}'>{{ row[1] }}</td><td><a href='{{ url_for('pv_single_stream', database=connection, ID=row[0]) }}'>{{ row[3] }}</a></td>"
+    var units = document.createElement("td");
+    if (pvName.endsWith("vmon")) {
+      units.innerHTML = "V";
+      tr.appendChild(units);
+    } else if (pvName.endsWith("IMon_fbk")) {
+      units.innerHTML = "A";
+      tr.appendChild(units);
+    } else if (pvName.endsWith("VMon_fbk")) {
+      units.innerHTML = "V";
+      tr.appendChild(units);
+    } else if (pvName.endsWith("v0set")) {
+      units.innerHTML = "V";
+      tr.appendChild(units);
+    } else {
+      units.innerHTML = " ";
+      tr.appendChild(units);
+    }
+    var ts = document.createElement("td");
+    ts.id="{{row[0]}}/timestamp";
+    ts.innerHTML = "{{row[2]}}";
+    tr.appendChild(ts);
+    document.getElementById("main_table").appendChild(tr);
+  }
+  {%endfor%}
+  document.getElementById("main_table").innerHTML += "</table>";
+});
+</script>
+
+
+<!-- <meta http-equiv="refresh" content="15">-->
+<!-- </html> -->
+{%endblock%}

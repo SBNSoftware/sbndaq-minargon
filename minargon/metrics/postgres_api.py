@@ -596,25 +596,138 @@ def get_icarus_tpcps(connection):
 
 #______________________________________________________________________
 @postgres_route
-def get_icarus_pmthv(connection):
-    cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '00000D00') from dcs_prd.channel where grp_id=11"""
+def get_icarus_pmthv(connection, link_name=None, ret_id=None):
+    #cursor = connection[0].cursor()
+    #query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11"""
 
+    #cursor.execute(query)
+    #dbrows = cursor.fetchall();
+    #cursor.close();
+
+    #formatted = []
+    #def sort_id(var):
+        #return var[0];
+    #for row in dbrows:
+        #time = row[2].strftime("%Y-%m-%d %H:%M")
+        #tmp = row[3] or "None"
+        #temp = re.sub(r'0+(.+)', r'\1', tmp)
+        #formatted.append((row[0], row[1], time, temp))
+        #result = sorted(formatted, key = sort_id);
+
+    #return result;
+
+    config = connection[1]
+    database = connection[1]["name"]
+    config = connection[1]
+    connection = connection[0]
+
+    # Cursor allows python to execute a postgres command in the database session. 
+    cursor = connection.cursor() # Fancy way of using cursor
+
+    # Database command to execute
+    query="""
+             select DCS_PRD.CHAN_GRP.NAME,SPLIT_PART(DCS_PRD.CHANNEL.NAME,'/',1),
+             SPLIT_PART(DCS_PRD.CHANNEL.NAME,'/',2),DCS_PRD.CHANNEL.CHANNEL_ID, DCS_PRD.CHANNEL.LAST_SMPL_TIME, to_char(DCS_PRD.CHANNEL.LAST_FLOAT_VAL, '99999D99')
+             from DCS_PRD.CHANNEL,DCS_PRD.CHAN_GRP where DCS_PRD.CHANNEL.GRP_ID=DCS_PRD.CHAN_GRP.GRP_ID and DCS_PRD.CHANNEL.GRP_ID=11
+             order by DCS_PRD.CHAN_GRP.NAME,DCS_PRD.CHANNEL.NAME;
+          """
     cursor.execute(query)
-    dbrows = cursor.fetchall();
-    cursor.close();
 
-    formatted = []
-    def sort_id(var):
-        return var[0];
-    for row in dbrows:
-        time = row[2].strftime("%Y-%m-%d %H:%M")
-        tmp = row[3] or "None"
-        temp = re.sub(r'0+(.+)', r'\1', tmp)
-        formatted.append((row[0], row[1], time, temp))
-        result = sorted(formatted, key = sort_id);
+    rows = cursor.fetchall()
 
-    return result;
+    # some variables for bookkeeping
+    old = [" ", " ", " "]
+    tags = [0, 0, 0]
+    index = [ 0, 0, 0 ]
+
+    pydict = { 
+        "text" : ["Click to expand"],
+        "expanded": "true",
+        "color" : "#000000",
+        "selectable" : "false",
+        "displayCheckbox": False,
+        "nodes" : []
+    }
+
+    # A list of id numbers for a variable
+    list_id=[]
+    id_flag=False 
+
+    # Create a python dictonary out of the database query
+    for row in rows:
+        # Header 1
+        #if row[0] != old[0]: # only use chan name part 1 once in loop to avoid overcounting e.g. grab APC then skip block until CRYO
+            #tags[0] = 0
+            #tags[1] = 0
+            #pydict["nodes"].append( { "color" : "#7D3C98","expanded": "false", "text" : str(row[0]), "href": "#parent1","nodes" : [], "displayCheckbox": False, "tags": [str(tags[0])]} ) # Top Level 
+            #old[0] = row[0]         
+            #index[0] = index[0] + 1 # Increment the index
+            #index[1] = 0
+
+        # Header 2
+        if row[1] != old[1]: # only use chan name part 2 once in loop to avoid overcounting 
+            tags[0] = 0
+            pydict["nodes"].append( {"href":"#child","expanded": "false","tags":[str(tags[1])], "displayCheckbox": False,
+                "text" : str(row[1]), "nodes": [], "href": app.config["WEB_ROOT"] + "/" + "pv_multiple_stream" + "/" + config["web_name"] + "/" + str(row[1])  } ) # Level 2
+            index[0] = index[0] + 1
+            tags[0] = tags[0] + 1
+            old[1] = row[1]			
+
+        # the "timestamp column does not correspond to a metric
+        if str(row[2]) == "timestamp": continue
+
+        # Append the ID numbers for selected variable name
+        if row[1] == ret_id:
+            list_id.append(str(row[3]))
+
+        V_matches = ["vmon", "v0set", "VMon"]
+        I_matches = ["IMon"]
+
+        if row[5] is None:
+            temp = "None" + " Last sample: " + row[4].strftime("%Y-%m-%d %H:%M")
+        else:
+            if any(x in row[2] for x in V_matches):
+                temp = str(row[5] + " V" + " Last sample: " + row[4].strftime("%Y-%m-%d %H:%M"))
+            elif any(x in row[2] for x in I_matches):
+                temp = str(row[5] + " A" + " Last sample: " + row[4].strftime("%Y-%m-%d %H:%M"))
+            else:
+                temp = str(row[5] + " Last sample: " + row[4].strftime("%Y-%m-%d %H:%M"))
+
+        # Push back every time
+        if not link_name is None:
+            pydict["nodes"][index[0] - 1 ]["nodes"].append({ 
+                "text" : str(row[2] + " = " + temp), 
+                "tags" : [str(tags[1])], 
+                "database": config["web_name"], 
+                "database_type": "postgres",
+                "ID": str(row[3]), 
+                "name": str(row[2]), 
+                "value": str(row[5]),
+                "time": str(row[4].strftime("%Y-%m-%d %H:%M")),
+                "color" : "#229954",
+                "href": app.config["WEB_ROOT"] + "/" + link_name + "/" + config["web_name"] + "/" + str(row[3])  
+            }) # Level 3
+        else: 
+            pydict["nodes"][index[0] - 1 ]["nodes"].append({ 
+                "text" : str(row[2] + "=" + temp), 
+                "tags" : [str(tags[1])], 
+                "database": config["web_name"], 
+                "database_type": "postgres",
+                "color" : "#229954",
+                "ID": str(row[3]), 
+                "name": str(row[2]),
+                "value": str(row[5]),
+                "time": str(row[4].strftime("%Y-%m-%d %H:%M"))  
+            }) # Level 3
+
+        index[1] = index[1] + 1
+        tags[1] = tags[1] + 1
+    # Decide what type of data to return
+    if ret_id is None:
+        print(pydict["nodes"][0]["nodes"])
+        return pydict # return the full tree
+    else:
+        return list_id # return the ids of a variable
 
 #________________________________________________________________________________________________
 @postgres_route
