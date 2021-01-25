@@ -91,6 +91,10 @@ export class PlotlyController {
           title = this.metric_config[i].yTitle;
         }
       }
+      // If only one metric, make that the title
+      else if (this.metric_config.length == 1) {
+        title = this.metric_config[0]["name"];
+      }
       else {
         title = this.titles[i];
       }
