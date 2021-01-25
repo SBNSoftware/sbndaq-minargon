@@ -115,6 +115,7 @@
                       {% endfor %}
                     </ul>
                   </li>
+		  {{ nav_link('Purity', 'Purity') }}
                   {{ nav_link('channel_snapshot', 'Waveforms') }}
 	          {{ nav_link('TPC_group_select', 'Group Select') }}
             	  {{ nav_link('NoiseCorr', 'Noise Correlation') }}
@@ -136,7 +137,6 @@
              {{ nav_link('icarus_tpcps', 'TPC Power Supplies', connection='epics') }}
              {{ nav_link('icarus_pmthv', 'PMT High Voltage', connection='epics') }}
     
-             <!--{{ nav_link('purity', 'Purity', group_name='TPC')}}-->
              {{ nav_link('view_streams', 'Data Browser')}}
            </ul>
           </div><!--/.navbar-collapse -->
