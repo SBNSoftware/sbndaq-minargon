@@ -31,9 +31,9 @@ def Flange_Overview():
     return flange_page(flanges)
 
 def flange_page(flanges):
-    instance_name = "tpc_channel"
+    group_name = "tpc_channel"
 
-    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     # turn the flange positions to hw_selects
     hw_selects = [hardwaredb.HWSelector("flanges", "flange_pos_at_chimney", f) for f in flanges]
@@ -65,8 +65,8 @@ def TPC_Plane_Overview(TPC):
 def plane_page(tpc_planes):
     tpc_planes = [hardwaredb.HWSelector("tpc_plane", "tpc_plane", p) for p in tpc_planes]
 
-    instance_name = "tpc_channel"
-    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+    group_name = "tpc_channel"
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes]
     tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", "flange_pos_at_chimney", p.value) for p in tpc_planes]
@@ -204,8 +204,8 @@ def channel_snapshot():
     # TODOL fix..... all of this
     view_ind_opts = {'channel': list(range(2304))}
 
-    instance_name = "tpc_channel"
-    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+    group_name = "tpc_channel"
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     template_args = {
         'channel': channel,
@@ -217,15 +217,14 @@ def channel_snapshot():
 
 
 @app.route('/Purity')
-def purity():
-    instance_name = "TPC"
-    metric_name = "purity"
+def Purity():
+    group_name = "tpc_purity"
 
     # get the config for this group from redis
-    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     render_args = {
-        'title': metric_name,
+        'title': "Purity Display",
         'config': config,
     }
 
