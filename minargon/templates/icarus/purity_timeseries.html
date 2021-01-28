@@ -4,37 +4,28 @@
 {% block title %}{{title}}{% endblock %}
 {% block body %}
 {{ super() }}
+<div class="container">
 <div class="row">
-<div class="col-md-4 vcenter">
-        <div class="card hcenter">
-            <div class="card-header">Display Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.metric_option(config["metric_config"], "purity", "form-metric") }}
-                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
-                    {{ stream_options.height_option([25, 40, 60, 80, 100], 25, "form-height") }}
-                    {{ stream_options.threshold_option("form-range-lo", "form-range-hi") }}
-                    {{ stream_options.warning_option("form-warning-range-lo", "form-warning-range-hi") }}
-                </form>
-            </div>  
-       	   </div>    
-          </div>
-         <div class="col-md-8" style="padding:0" id="timeseries"></div>
-         </div>
+<h1>TPC Purity</h1>
+</div>
 <div class="row">
-    <div class="col-md-8 vcenter" style="padding:0">
-    </div>
+    <div class="col-lg-12 col-md-12 col-sm-12" style="padding:0">
       <div id ="time-scatter"></div>
-       <div class="col-md-4 vcenter">
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4 hcenter vcenter">
         <div class="card hcenter">
-            <div class="card-header">TimeSeries Options</div>
+            <div class="card-header">Options</div>
             <div class="card-body">
                 <form class="form" role="form">
+                    {{ stream_options.metric_option(config["metric_config"], "lifetime_raw", "form-metric") }}
+                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
                     {{ stream_options.time_range("start", "end", "toggle") }}
                     {{ stream_options.download("download") }}
-	        </form>
-            </div>
-        </div>
+                </form>
+           </div>  
+       	</div>    
     </div>
 </div>
 
@@ -48,16 +39,9 @@ import * as Config from "{{ url_for('static', filename='js/minargon/config.js') 
 // var config = new timeseries.TimeSeries({{config|tojson|safe}});
 var config = {{config|tojson|safe}};
 
-var config_controller = new Config.GroupConfigController(config, undefined, ["purity"], undefined, 0, 25)
+var config_controller = new Config.GroupConfigController(config, undefined, ["lifetime_raw"], undefined, 0, 25)
     .metricController("#form-metric")
     .streamController("#form-stream"); 
-
-
-// build cubism controller
-var cubism = config_controller.addCubismController("#timeseries", 25)
-  .heightController("#form-height")
-  .rangeController("#form-range-lo", "#form-range-hi")
-  .set();
 
 // build plotly controller
 var plotly = config_controller.addPlotlyController("time-scatter")
