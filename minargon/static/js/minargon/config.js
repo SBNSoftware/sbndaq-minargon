@@ -425,7 +425,11 @@ export class GroupConfigController {
       var link = this.data_link(archived_stream, this.metrics, this.instances, 1);
       var accessors = link.accessors();
       var self = this;
-      d3.json(link.link_builder.ref_link(), function(data) {
+      d3.json(link.link_builder.ref_link(), function(error, data) {
+        if (!data) {
+          return;
+        }
+
         var out = [];
         for (var i = 0; i < accessors.length; i++) {
           var this_data = data.values;
