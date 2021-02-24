@@ -671,6 +671,10 @@ def build_link_list(rconnect):
     groups = rconnect.smembers("GROUPS")
     pipeline = rconnect.pipeline()
     for group in groups:
+       try:
+           group = group.decode("utf-8")
+       except:
+           continue
        pipeline.get("GROUP_CONFIG:%s" % group)
        pipeline.lrange("GROUP_MEMBERS:%s" % group, 0, -1)
     result = pipeline.execute()
@@ -685,8 +689,12 @@ def build_link_list(rconnect):
 
     # index by group, the metric, then instance
     for group, config, this_members, in zip(groups, configs, members):
+        if not config or not members: continue
+
         config = json.loads(config)
+
         if "metric_config" not in config: continue
+
         metrics = list(config["metric_config"].keys())
         streams = config["streams"]
         ret.append({
