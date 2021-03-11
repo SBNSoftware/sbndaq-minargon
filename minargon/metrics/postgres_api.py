@@ -840,3 +840,22 @@ def get_epics_last_value_pv(connection,pv):
         formatted.append((row[0],row[1],time,row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13],row[14],row[15],row[16],row[17]))
 
     return formatted
+
+@postgres_route
+def get_sbnd_drifthvps(connection):
+    cursor = connection[0].cursor()
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from sbnd_online_prd.channel where grp_id=6"""
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall();
+    cursor.close();
+
+    formatted = []
+    def sort_id(var):
+        return var[0];
+    for row in dbrows:
+        time = row[2].strftime("%Y-%m-%d %H:%M")
+        formatted.append((row[0], row[1], time, row[3]))
+        result = sorted(formatted, key = sort_id);
+
+    return result;
