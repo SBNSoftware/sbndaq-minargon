@@ -118,3 +118,14 @@ def Impedence_Ground_Monitor():
     }
     return render_template('sbnd/impedence_ground_monitor.html', **render_args)
 
+@app.route('/TPCPS')
+def tpcps():
+    channel = reqeust.args.get('tpcps', 0, type=int)
+    config = online_metrics.get_group_config("online", "tpcps", front_end_abort=True)
+
+    render_args = {
+        'channel': channel,
+        'config': config,
+    }
+
+    return render_template('icarus/tpcps.html', **render_args)
