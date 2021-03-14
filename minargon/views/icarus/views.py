@@ -230,17 +230,17 @@ def Purity():
 
     return render_template('icarus/purity_timeseries.html', **render_args)
 
-@app.route('/drifthvps')
-def drifthvps():
-    channel = reqeust.args.get('drifthvps', 0, type=int)
-    config = online_metrics.get_group_config("online", "drifthvps", front_end_abort=True)
+@app.route('/TPCPS')
+def tpcps():
+    channel = reqeust.args.get('tpcps', 0, type=int)
+    config = online_metrics.get_group_config("online", "tpcps", front_end_abort=True)
     
     render_args = {
         'channel': channel,
         'config': config,
     }
 
-    return render_template('icarus/drifthvps.html', **render_args)
+    return render_template('icarus/tpcps.html', **render_args)
 
 @app.route('/Impedence_Ground_Monitor')
 def Impedence_Ground_Monitor():
