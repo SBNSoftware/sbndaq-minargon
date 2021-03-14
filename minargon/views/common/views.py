@@ -81,6 +81,11 @@ def cathodehv(connection):
     except jinja2.exceptions.TemplateNotFound:
         abort(404)
 
+@app.route('/<connection>/drifthvps')
+def drifthvps(connection):
+    dbrows = postgres_api.get_sbnd_drifthvps(connection, front_end_abort=True)
+    return render_template('sbnd/drifthvps.html', rows=dbrows)
+
 @app.route('/<connection>/epics_last_value_pv/<pv>')
 def epics_last_value_pv(connection,pv):
     dbrows = postgres_api.get_epics_last_value_pv(connection,pv)

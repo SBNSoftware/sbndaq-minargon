@@ -844,7 +844,7 @@ def get_epics_last_value_pv(connection,pv):
 @postgres_route
 def get_sbnd_drifthvps(connection):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from sbnd_online_prd.channel where grp_id=6"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99'), last_str_val from dcs_prd.channel where grp_id=6"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall();
