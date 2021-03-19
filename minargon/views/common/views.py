@@ -53,15 +53,15 @@ def icarus_cryo(connection):
     dbrows = postgres_api.get_icarus_cryo(connection, front_end_abort=True)     
     return render_template('icarus/cryo.html', rows=dbrows, connection=connection)
 
-@app.route('/<connection>/icarus_tpcps')
-def icarus_tpcps(connection):
-    dbrows = postgres_api.get_icarus_tpcps(connection, front_end_abort=True)
-    return render_template('icarus/tpcps.html', rows=dbrows, connection=connection)
+@app.route('/<connection>/icarus_tpcps?flange=<flange>')
+def icarus_tpcps(connection, flange):
+    dbrows = postgres_api.get_icarus_tpcps(connection, flange, front_end_abort=True)
+    return render_template('icarus/tpcps.html', rows=dbrows, connection=connection, flange=flange)
 
-@app.route('/<connection>/icarus_pmthv')
-def icarus_pmthv(connection):
-    dbrows = postgres_api.get_icarus_pmthv(connection, "pv_single_stream", front_end_abort=True)
-    return render_template('icarus/pmthv.html', data=dbrows)
+@app.route('/<connection>/icarus_pmthv?side=<side>')
+def icarus_pmthv(connection, side):
+    dbrows = postgres_api.get_icarus_pmthv(connection, side, front_end_abort=True)
+    return render_template('icarus/pmthv.html', rows=dbrows, connection=connection, side=side)
 
 @app.route('/<connection>/epics_last_value/<group>')
 def epics_last_value(connection,group):

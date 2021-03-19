@@ -1,31 +1,133 @@
 {% extends "layout.html" | front_ended %}
-{% block title %}PMT High Voltage Power Supplies{% endblock %}
+
+{% block title %}ICARUS Cathod Drift HV Supply Status{% endblock %}
 
 {% block body %}
 {{ super() }}
 
+<h2>ICARUS PMT HV Supply Status {{side}} side</h2>
+
+<div id="content">
+<div id="headers"><h3 id="b00">Board 00</h3><h3 id="b02">Board 02</h3><h3 id="b04">Board 04</h3><h3 id="b06">Board 06</h3></div>
+<div id="tables">
+<TABLE id="board00">
+<TR><TH>CHANNEL</TH><TH>Power</TH><TH>PMT ID</TH><TH>V Set</TH><TH>V Mon</TH><TH>Status</TH></TR>
+
+<TABLE id="board02">
+<TR><TH>CHANNEL</TH><TH>Power</TH><TH>PMT ID</TH><TH>V Set</TH><TH>V Mon</TH><TH>Status</TH></TR>
+
+<TABLE id="board04">
+<TR><TH>CHANNEL</TH><TH>Power</TH><TH>PMT ID</TH><TH>V Set</TH><TH>V Mon</TH><TH>Status</TH></TR>
+
+<TABLE id="board06">
+<TR><TH>CHANNEL</TH><TH>Power</TH><TH>PMT ID</TH><TH>V Set</TH><TH>V Mon</TH><TH>Status</TH></TR>
+
+</div>
+</div>
+
 {%endblock%}
 
 {% block script %}
-<h2>PMT High Voltage Power Supplies</h2>
-<div id="pvTree"></div>
+<link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+    <style>
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
 
-<!-- Grab depreciated glyphicons for bootstrap v4 -->
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
+      #headers {
+        position: absolute;
+        left: 0%;
+        top: 15%;
+        width: 100%;
+        display: block;
+      }
+      #b00 {
+        position: absolute;
+        left: 9%;
+        top: 0%;
+      }
+      #b02 {
+        position: absolute;
+        left: 33%;
+        top: 0%;
+      }
+      #b04 {
+        position: absolute;
+        left: 57%;
+      }
+      #b06 {
+        position: absolute;
+        left: 82%;
+      }
+      #tables {
+        position: absolute;
+        display: block;
+        left: 1%;
+        top: 20%;
+        width: 98%;
+      }
+      #board00 {
+        position: absolute;
+        left: 0%;
+        top: 0%;
+      }
+      #board02 {
+        position: absolute;
+        left: 25%;
+        top: 0%;
+      }
+      #board04 {
+        position: absolute;
+        left: 50%;
+        top: 0%;
+      }
+      #board06 {
+        position: absolute;
+        left: 75%;
+        top: 0%;
+      }
+    </style>
 
-<script>
-
+<!-- Populate above table -->
+<script type="text/javascript">
 $(document).ready(function() {
-    var pvTree = [{{data|tojson}}];
+  console.log('{{side}}');
+  {% set power = rows[0][0] %}
+  {% set vset = rows[0][1] %}
+  {% set vmon = rows[0][2] %}
+  {% set status = rows[0][3] %}
+  {%for i in range(power|length)%} {
+    {%if power[i][0] == 'pmt' + side%} {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td id='channel{{power[i][2]}}'>{{ power[i][2] }}</td><td id='power{{power[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=power[i][4]) }}'>{{ power[i][6] }}</a></td><td id='pmt{{power[i][3]}}'>{{ power[i][3] }}</td><td id='vset{{power[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=vset[i][4]) }}'>{{ vset[i][6] }} V</a></td><td id='vmon{{power[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=vmon[i][4]) }}'>{{ vmon[i][6] }} V</a></td><td id='status{{power[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=status[i][4]) }}'>{{ status[i][6] }}</a></td>"
+      document.getElementById("board{{power[i][1]}}").appendChild(tr);
+    }
+    {%endif%}
+  }
+  document.getElementById("board{{power[i][1]}}").innerHTML += "</table>";
 
-    // Generate the treeview
-    $('#pvTree').treeview( {
-        levels: 4,
-        color: '#ca4281',
-        data: pvTree,
-        enableLinks: true
-    });
-
+  {%endfor%}
 });
 </script>
+
+
+<!-- <meta http-equiv="refresh" content="15">-->
+<!-- </html> -->
 {%endblock%}
