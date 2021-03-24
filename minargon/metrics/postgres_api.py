@@ -618,7 +618,6 @@ def get_icarus_tpcps(connection, flange):
            curr.append(r)
 
     end.append([volt, temp, curr])
-    print(end)
     return end;
 
 #______________________________________________________________________
@@ -650,8 +649,6 @@ def get_icarus_pmthv(connection, side):
             pmtm.append(tmp)
 
     pmtmap = sorted(pmtm)
-
-    print(pmtmap)
 
     rows = []
     east = []
