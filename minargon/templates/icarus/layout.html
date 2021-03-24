@@ -100,7 +100,7 @@
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   <li class="dropdown-submenu bg-maroon nav-item">
-                    <a href='#' class='nav-link dropdown-toggle bg-maroon' data-toggle='dropdown'>TPC Flanges<b class='caret'></b></a>
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Flanges<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
                       {% for TPC in TPCs %}
                         {{ nav_link('TPC_Flange_Overview', TPC, TPC=TPC) }}
@@ -134,18 +134,18 @@
              {{ nav_link('Impedence_Ground_Monitor', 'Ground Monitor') }}
              {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
              {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
-             <li class='dropdown nav-item bg-maroon'>
-              <a href='#' class='nav-link dropdown-toggle bg-maroon' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
-                <ul class='dropdown-menu bg-maroon'>
+             <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
+                <ul class='dropdown-menu'>
                   {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange WW', connection='epics', flange='ww') }}
                   {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange WE', connection='epics', flange='we') }}
                   {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange EW', connection='epics', flange='ew') }}
                   {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange EE', connection='epics', flange='ee') }}
                 </ul>
              </li>
-             <li class='dropdown nav-item bg-maroon'>
-              <a href='#' class='nav-link dropdown-toggle bg-maroon' data-toggle='dropdown'>PMT High Voltage<b class='caret'></b></a>
-                <ul class='dropdown-menu bg-maroon'>
+             <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT High Voltage<b class='caret'></b></a>
+                <ul class='dropdown-menu'>
                   {{ nav_link('icarus_pmthv', 'PMT High Voltage Side E', connection='epics', side='E') }}
                   {{ nav_link('icarus_pmthv', 'PMT High Voltage Side W', connection='epics', side='W') }}
                 </ul>
