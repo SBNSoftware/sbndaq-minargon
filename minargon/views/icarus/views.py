@@ -257,3 +257,33 @@ def Impedence_Ground_Monitor():
     }
     return render_template('icarus/impedence_ground_monitor.html', **render_args)
 
+@app.route('/Level_Monitor')
+def Level_Monitor():
+    database = "epics"
+    IDmap = {
+      "een": list(range(78, 83)),
+      "ewn": list(range(83, 88)),
+      "ees": [88, 89, 56, 90, 91], # lol
+      "ews": list(range(92, 97)),
+      "wen": [57, 59, 60, 61, 62],
+      "wwn": list(range(63, 68)),
+      "wes": list(range(68, 73)),
+      "wws": list(range(73, 78)),
+      "wes": list(range(68, 73)),
+    }
+
+    configs = {}
+    for _,IDs in IDmap.items():
+        for i in IDs:
+            configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database,
+      "IDmap": IDmap,
+    }
+
+    return render_template('icarus/level_monitor.html', **render_args)
+
+
+
