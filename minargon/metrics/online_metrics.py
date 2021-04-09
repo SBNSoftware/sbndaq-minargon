@@ -325,6 +325,9 @@ def stream_avg(rconnect, streams):
 @app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>')
 @app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>/<int:downsample>')
 def stream_group_hw_avg(connect, stream_type, metric_name, group_name, hw_selects, downsample=1):
+    # HOTFIX: This seems to be overtaxing redis -- ignore this for now
+    return jsonify(values={}, min_end_time=0)
+
     args = stream_args(request.args)
 
     # the hw-averaging can't handle archived data for now
