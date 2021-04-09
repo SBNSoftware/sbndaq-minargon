@@ -85,6 +85,11 @@ def plane_page(tpc_planes):
 
     return render_template('icarus/plane_overview.html', **render_args);
 
+@app.route('/CRT_board/')
+@app.route('/CRT_board/<hw_selector:hw_select>')
+def CRT_board(hw_select=None):
+    return timeseries_view(request.args, "CRT_board", "", "crtBoardLink", hw_select=hw_select)
+
 @app.route('/TPC')
 @app.route('/TPC/<hw_selector:hw_select>')
 def TPC(hw_select=None):
@@ -93,6 +98,49 @@ def TPC(hw_select=None):
     args["stream"] = "fast"
 
     return timeseries_view(args, "tpc_channel", "", "wireLink", eventmeta_key="eventmetaTPC", hw_select=hw_select)
+
+@app.route('/CRT_group_select')
+def CRT_group_select():
+    pydict = { 
+        "text" : ["Select CRT Grouping"],
+        "expanded": "true",
+        "color" : "#000000",
+        "selectable" : "false",
+        "displayCheckbox": False,
+        "nodes" : []
+    }
+
+    for table, cols in hardwaredb.icarus.crt.available_selectors().items():
+        col_nodes = []
+        for col, values in cols.items():
+            child_nodes = []
+            for opt in values:
+                node = {
+                    "text" : [opt.value],
+                    "selectable" : "true",
+                    "displayCheckbox": "false",
+                    "href":  url_for("CRT_board", hw_select=opt)
+                }
+                child_nodes.append(node)
+
+            col_node = {
+                "text" : [col],
+                "selectable" : "false",
+                "displayCheckbox": False,
+                "nodes" : child_nodes 
+            }
+            col_nodes.append(col_node)
+
+        table_node = {
+            "text": [table],
+            "selectable" : "false",
+            "displayCheckbox": False,
+            "nodes" : col_nodes 
+        }
+
+        pydict["nodes"].append(table_node)
+
+    return render_template('icarus/hw_grouping_select.html', data=pydict, title="CRT")
 
 @app.route('/TPC_group_select')
 def TPC_group_select():
@@ -135,7 +183,7 @@ def TPC_group_select():
 
         pydict["nodes"].append(table_node)
 
-    return render_template('icarus/tpc_grouping_select.html', data=pydict)
+    return render_template('icarus/hw_grouping_select.html', data=pydict, title="TPC")
 
 @app.route('/NoiseCorr')
 def NoiseCorr():
@@ -164,10 +212,6 @@ def PMT_snapshot():
       "view_ind_opts": {"PMT": pmt_range},
     }
     return render_template("icarus/pmt_snapshot.html", **template_args)
-
-@app.route('/CRT_board/')
-def CRT_board():
-    return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
 
 @app.route('/CRT_board_snapshot/')
 def CRT_board_snapshot():
@@ -256,4 +300,34 @@ def Impedance_Ground_Monitor():
       "database": database
     }
     return render_template('icarus/impedance_ground_monitor.html', **render_args)
+
+@app.route('/Level_Monitor')
+def Level_Monitor():
+    database = "epics"
+    IDmap = {
+      "een": list(range(78, 83)),
+      "ewn": list(range(83, 88)),
+      "ees": [88, 89, 56, 90, 91], # lol
+      "ews": list(range(92, 97)),
+      "wen": [57, 59, 60, 61, 62],
+      "wwn": list(range(63, 68)),
+      "wes": list(range(68, 73)),
+      "wws": list(range(73, 78)),
+      "wes": list(range(68, 73)),
+    }
+
+    configs = {}
+    for _,IDs in IDmap.items():
+        for i in IDs:
+            configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database,
+      "IDmap": IDmap,
+    }
+
+    return render_template('icarus/level_monitor.html', **render_args)
+
+
 
