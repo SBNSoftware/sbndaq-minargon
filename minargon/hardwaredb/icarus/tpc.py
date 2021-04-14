@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from minargon.hardwaredb import HWSelector, hardwaredb_route
+from werkzeug.exceptions import HTTPException
 import itertools
 
 db_name = "icarus_tpc_hw"
@@ -11,7 +12,10 @@ flange_table = "flanges"
 readout_table = "readout_boards"
 
 def TPCs():
-    return [hw.value for hw in available_values("flanges", "tpc_id")]
+    try:
+        return [hw.value for hw in available_values("flanges", "tpc_id")]
+    except HTTPException as e:
+        return []
 
 def to_column(s):
     return s.replace(" ", "_").lower()
