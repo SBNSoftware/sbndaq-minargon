@@ -1,4 +1,5 @@
 from minargon.hardwaredb import HWSelector, hardwaredb_route
+from werkzeug.exceptions import HTTPException
 import itertools
 
 db_name = "icarus_crt_hw"
@@ -11,7 +12,10 @@ module_table = "minos_modules"
 module_columns = ["module_id", "module_position"]
 
 def CRTLOCs():
-    return [(hw.value, hw) for hw in available_values(module_table, "module_position")]
+    try:
+        return [(hw.value, hw) for hw in available_values(module_table, "module_position")]
+    except HTTPException as e:
+        return []
 
 def to_column(c):
     return c
