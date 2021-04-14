@@ -84,6 +84,7 @@ div.alert-holder {
 
 .dropdown-submenu {
   position: relative;
+  background: rgb(127, 7, 10);
 }
 
 .dropdown-submenu a::after {
@@ -91,6 +92,7 @@ div.alert-holder {
   position: absolute;
   right: 6px;
   top: .8em;
+  background: rgb(127, 7, 10);
 }
 
 .dropdown-submenu .dropdown-menu {
@@ -98,5 +100,9 @@ div.alert-holder {
   left: 100%;
   margin-left: .1rem;
   margin-right: .1rem;
+  background: rgb(127, 7, 10);
 }
 
+.nav-item {
+  background: rgb(127, 7, 10);
+}

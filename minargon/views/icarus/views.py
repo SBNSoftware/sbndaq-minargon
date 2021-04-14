@@ -273,7 +273,7 @@ def Purity():
     }
 
     return render_template('icarus/purity_timeseries.html', **render_args)
-
+  
 @app.route('/TPCPS')
 def tpcps():
     channel = reqeust.args.get('tpcps', 0, type=int)
