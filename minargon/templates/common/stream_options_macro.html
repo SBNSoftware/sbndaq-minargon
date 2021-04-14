@@ -361,6 +361,28 @@ $('#{{id}}').treeview( {
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
+{% macro yaxes(id, collapsed) %}
+<!-- Buttons -->
+<div class="form-group row">
+  <label class="col-sm-6 control-form-label col-form-label">Y Axis</label> 
+  <label class="col-sm-3 control-form-label col-form-label">
+    {% if not collapsed %}
+      Separate
+    {% else %}
+      <a href="{{ url_for(request.path.split('/')[1], collapse=0) + '?' + request.full_path.split('?')[-1]}}">Separate</a>
+    {% endif %}
+  </label> 
+  <label class="col-sm-3 control-form-label col-form-label">
+    {% if  collapsed %}
+      Collapsed
+    {% else %}
+      <a href="{{ url_for(request.path.split('/')[1], collapse=1) + '?' + request.full_path.split('?')[-1]}}">Collapsed</a>
+    {% endif %}
+  </label> 
+</div>
+{% endmacro %}
+
+{# -------------------------------------------------------------------------- #}
 {% macro time_range(id_start, id_end, id_toggle, start_time=none, end_time=none) %}
 <!-- End -->
 <div class="form-group row">

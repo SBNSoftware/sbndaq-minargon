@@ -370,7 +370,8 @@ def view_functor(streamA, streamB, find):
     return render_template("common/view_functor.html", **render_args)
 
 @app.route('/view_streams')
-def view_streams():
+@app.route('/view_streams/<int:collapse>')
+def view_streams(collapse=0):
     postgres_stream_info = {}
     redis_stream_info = {}
     # parse GET parameters
@@ -442,7 +443,8 @@ def view_streams():
       "postgres_streams": postgres_streams,
       "make_redis_stream": make_redis_stream,
       "make_postgres_stream": make_postgres_stream,
-      "checked": checked
+      "checked": checked,
+      "collapse": collapse
     }
     return render_template("common/view_streams.html", **render_args)
 
