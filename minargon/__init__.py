@@ -91,3 +91,4 @@ for fname in os.listdir(redis_asset_dir):
 #define directory for PMT mapping file
 thisdir = os.path.dirname(os.path.abspath(__file__))
 pmt_map_dir = os.path.join(thisdir, "static/conf/")
+app.config["PMT_MAP"] = pmt_map_dir
