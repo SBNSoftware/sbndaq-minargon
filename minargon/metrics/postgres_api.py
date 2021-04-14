@@ -561,7 +561,7 @@ def pv_internal(connection, link_name=None, ret_id=None):
 @postgres_route
 def get_icarus_cryo(connection):
     cursor = connection[0].cursor();
-    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=9"""
+    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=10"""
 
     cursor.execute(query);
     dbrows = cursor.fetchall();
@@ -578,7 +578,7 @@ def get_icarus_cryo(connection):
 @postgres_route
 def get_icarus_tpcps(connection, flange):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14 and name like '%""" + flange + """%'"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=15 and name like '%""" + flange + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall();
@@ -628,7 +628,7 @@ def get_icarus_pmthv(connection, side):
         s = "1"
     else:
         s = "2"
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11 and name like '%pmt""" + s + """%'"""
+    query = """select channel_id, name, last_smpl_time, last_num_val, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=12 and name like '%pmt""" + s + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
@@ -680,10 +680,15 @@ def get_icarus_pmthv(connection, side):
                             pmtt = p[2]
                             
             time = row[2].strftime("%Y-%m-%d %H:%M")
-            if row[3] is None:
-                tmp = "None"
+            if 'onoff' in name:
+		if row[3] == 1:
+		    tmp = "On"
+		else:
+                    tmp = "Off"
+	    else if 'status' in name:
+		tmp = row[3]
             else:
-                tmp = row[3]
+                tmp = row[4]
             res.append([group, board, channel, pmtt, row[0], n, tmp])
             rr = sorted(res)
     end = []
