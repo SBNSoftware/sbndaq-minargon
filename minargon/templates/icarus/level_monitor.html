@@ -49,7 +49,7 @@
       links.push(new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, "{{ database }}", {{id}} )));
     {% endfor %}
 
-    var link = new module.Data.D3DataChain(links, "blah");
+    var link = new module.Data.D3DataChain(links, "{{loc}}");
     
     // Create controller and id names
     var controller  = "plotly-controller-{{loc}}";

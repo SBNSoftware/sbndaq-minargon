@@ -557,6 +557,24 @@ def pv_internal(connection, link_name=None, ret_id=None):
     else:
         return list_id # return the ids of a variable
  
+
+#__________________________________________________________________
+@postgres_route
+def get_pmt_readout_temp(connection):
+    cursor = connection[0].cursor();
+    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=16"""
+
+    cursor.execute(query);
+    dbrows = cursor.fetchall();
+    cursor.close();
+
+    formatted = []
+    for row in dbrows:
+        time = row[1].strftime("%Y-%m-%d %H:%M")
+        formatted.append((row[0], time, row[2]))
+
+    return formatted
+
 #__________________________________________________________________
 @postgres_route
 def get_icarus_cryo(connection):
@@ -601,7 +619,7 @@ def get_icarus_tpcps(connection, flange):
         else:
             value = row[3]
         res.append([id, flange, tpc, type, n, value])
-        rr = sorted(res)
+    rr = sorted(res)
 
     end = []
     
@@ -639,7 +657,7 @@ def get_icarus_pmthv(connection, side):
     pmtm = []
 
     try:
-	with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
+        with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
             for line in f:
                 tmp = []
                 if "icarus" in line:
@@ -649,7 +667,7 @@ def get_icarus_pmthv(connection, side):
                     tmp.append(l[6])
                 pmtm.append(tmp)
     except FileNotFoundError:
-        print("Wrong file or file path")
+        abort(404)
 
     pmtmap = sorted(pmtm)
 
@@ -690,7 +708,7 @@ def get_icarus_pmthv(connection, side):
             else:
                 tmp = row[4]
             res.append([group, board, channel, pmtt, row[0], n, tmp])
-            rr = sorted(res)
+    rr = sorted(res)
     end = []
 
     power = []
