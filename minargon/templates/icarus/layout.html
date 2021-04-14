@@ -143,29 +143,35 @@
                   {{ nav_link('CRT_group_select', 'Group Select') }} 
                 </ul>
               </li>
-             {{ nav_link('pvTree', 'ICARUS EPICS', connection='epics') }}
-             <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status</A></li>
-             {{ nav_link('Impedance_Ground_Monitor', 'Ground Monitor') }}
-             {{ nav_link('Level_Monitor', 'Level Monitor') }}
-             {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
-             {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
-             <li class='dropdown nav-item'>
-              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
-                <ul class='dropdown-menu'>
-                  {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange WW', connection='epics', flange='ww') }}
-                  {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange WE', connection='epics', flange='we') }}
-                  {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange EW', connection='epics', flange='ew') }}
-                  {{ nav_link('icarus_tpcps', 'TPC Power supplies Flange EE', connection='epics', flange='ee') }}
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>ICARUS EPICS<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                 {{ nav_link('pvTree', 'Tree Browser', connection='epics') }}
+                 <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status (EXTERNAL)</A></li>
+                 {{ nav_link('Impedance_Ground_Monitor', 'Ground Monitor') }}
+                 {{ nav_link('Level_Monitor', 'Level Monitor') }}
+                 {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
+                 {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('icarus_tpcps', 'Flange WW', connection='epics', flange='ww') }}
+                      {{ nav_link('icarus_tpcps', 'Flange WE', connection='epics', flange='we') }}
+                      {{ nav_link('icarus_tpcps', 'Flange EW', connection='epics', flange='ew') }}
+                      {{ nav_link('icarus_tpcps', 'Flange EE', connection='epics', flange='ee') }}
+                    </ul>
+                  </li>
+
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT High Voltage<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('icarus_pmthv', 'Side E', connection='epics', side='E') }}
+                      {{ nav_link('icarus_pmthv', 'Side W', connection='epics', side='W') }}
+                    </ul>
+                  </li>
+                 {{ nav_link('pmt_readout_temp', 'PMT Readout Temp', connection='epics') }}
                 </ul>
-             </li>
-             <li class='dropdown nav-item'>
-              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT High Voltage<b class='caret'></b></a>
-                <ul class='dropdown-menu'>
-                  {{ nav_link('icarus_pmthv', 'PMT High Voltage Side E', connection='epics', side='E') }}
-                  {{ nav_link('icarus_pmthv', 'PMT High Voltage Side W', connection='epics', side='W') }}
-                </ul>
-             </li>
-    
+              </li>
              {{ nav_link('view_streams', 'Data Browser')}}
            </ul>
           </div><!--/.navbar-collapse -->

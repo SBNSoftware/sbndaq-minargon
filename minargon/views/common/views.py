@@ -48,6 +48,11 @@ def latest_gps_info(connection):
 
     return render_template('common/gps_info.html',rows=dbrows)
 
+@app.route('/<connection>/pmt_readout_temp')
+def pmt_readout_temp(connection):
+    dbrows = postgres_api.get_pmt_readout_temp(connection, front_end_abort=True)     
+    return render_template('icarus/pmt_readout_temp.html', rows=dbrows, connection=connection)
+
 @app.route('/<connection>/icarus_cryo')
 def icarus_cryo(connection):
     dbrows = postgres_api.get_icarus_cryo(connection, front_end_abort=True)     
