@@ -576,45 +576,134 @@ def get_icarus_cryo(connection):
 
 #______________________________________________________________________
 @postgres_route
-def get_icarus_tpcps(connection):
+def get_icarus_tpcps(connection, flange):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14 and name like '%""" + flange + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall();
     cursor.close();
 
-    formatted = []
-    def sort_id(var):
-        return var[0];
+    res = []
     for row in dbrows:
-        time = row[2].strftime("%Y-%m-%d %H:%M")
-        formatted.append((row[0], row[1], time, row[3]))
-        result = sorted(formatted, key = sort_id);
+        id = row[0]
+        name = row[1]
+        tmp = name.split('/')[0].split('_')
+        n = name.split('/')[1]
+        flange = tmp[2][0:2]
+        tpc = tmp[2]
+        if 'fan' in name:
+            type = 'None'
+        else:
+            type = tmp[3]
+        if row[3] is None:
+            value = "None"
+        else:
+            value = row[3]
+        res.append([id, flange, tpc, type, n, value])
+        rr = sorted(res)
 
-    return result;
+    end = []
+    
+    volt = []
+    temp = []
+    curr = []
+
+    for r in rr:
+       if 'volt' in r[4]:
+           volt.append(r)
+       elif 'temp' in r[4]:
+           temp.append(r)
+       elif 'curr' in r[4]:
+           curr.append(r)
+
+    end.append([volt, temp, curr])
+    return end;
 
 #______________________________________________________________________
 @postgres_route
-def get_icarus_pmthv(connection):
+def get_icarus_pmthv(connection, side):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '00000D00') from dcs_prd.channel where grp_id=11"""
+    if side == 'E':
+        s = "1"
+    else:
+        s = "2"
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11 and name like '%pmt""" + s + """%'"""
 
     cursor.execute(query)
-    dbrows = cursor.fetchall();
-    cursor.close();
+    dbrows = cursor.fetchall()
+    cursor.close()
 
-    formatted = []
-    def sort_id(var):
-        return var[0];
+    pmtmapE = []
+    pmtmapW = []
+    pmtm = []
+
+    try:
+	with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
+            for line in f:
+                tmp = []
+                if "icarus" in line:
+                    l = line.split(', ');
+                    tmp.append(l[3])
+                    tmp.append(l[4])
+                    tmp.append(l[6])
+                pmtm.append(tmp)
+    except FileNotFoundError:
+        print("Wrong file or file path")
+
+    pmtmap = sorted(pmtm)
+
+    rows = []
+    east = []
+    west = []
+    boards = []
+    channels = []
+    pmts = []
+    v = []
+    res = []
     for row in dbrows:
-        time = row[2].strftime("%Y-%m-%d %H:%M")
-        tmp = row[3] or "None"
-        temp = re.sub(r'0+(.+)', r'\1', tmp)
-        formatted.append((row[0], row[1], time, temp))
-        result = sorted(formatted, key = sort_id);
+        id = row[0]
+        name = row[1]
+        if 'bertan' not in name:
+            tmp = name.split('/')[0].split('_')
+            n = name.split('/')[1]
+            t = tmp[3]
+            board = t[1:3]
+            channel = t[4:6]
+                            
+            temp = []
+            group = 'pmt' + side
+            for p in pmtmap:
+                if p != []:
+                    if board == p[0]:
+                        if channel == p[1]:
+                            pmtt = p[2]
+                            
+            time = row[2].strftime("%Y-%m-%d %H:%M")
+            if row[3] is None:
+                tmp = "None"
+            else:
+                tmp = row[3]
+            res.append([group, board, channel, pmtt, row[0], n, tmp])
+            rr = sorted(res)
+    end = []
 
-    return result;
+    power = []
+    status = []
+    vset = []
+    vmon = []
+    for r in rr:
+        if 'pwonoff' in r[5]:
+            power.append(r)
+        elif 'status' in r[5]:
+            status.append(r)
+        elif 'v0set' in r[5]:
+            vset.append(r)
+        else:
+            vmon.append(r)
+
+    end.append([power, vset, vmon, status])
+    return end;
 
 #________________________________________________________________________________________________
 @postgres_route
@@ -727,3 +816,22 @@ def get_epics_last_value_pv(connection,pv):
         formatted.append((row[0],row[1],time,row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13],row[14],row[15],row[16],row[17]))
 
     return formatted
+
+@postgres_route
+def get_sbnd_drifthvps(connection):
+    cursor = connection[0].cursor()
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99'), last_str_val from dcs_prd.channel where grp_id=6"""
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall();
+    cursor.close();
+
+    formatted = []
+    def sort_id(var):
+        return var[0];
+    for row in dbrows:
+        time = row[2].strftime("%Y-%m-%d %H:%M")
+        formatted.append((row[0], row[1], time, row[3]))
+        result = sorted(formatted, key = sort_id);
+
+    return result;
