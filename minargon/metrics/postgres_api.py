@@ -699,12 +699,12 @@ def get_icarus_pmthv(connection, side):
                             
             time = row[2].strftime("%Y-%m-%d %H:%M")
             if 'onoff' in name:
-		if row[3] == 1:
-		    tmp = "On"
-		else:
+                if row[3] == 1:
+                    tmp = "On"
+                else:
                     tmp = "Off"
-	    else if 'status' in name:
-		tmp = row[3]
+            elif 'status' in name:
+                tmp = row[3]
             else:
                 tmp = row[4]
             res.append([group, board, channel, pmtt, row[0], n, tmp])
