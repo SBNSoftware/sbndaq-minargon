@@ -87,3 +87,7 @@ for fname in os.listdir(redis_asset_dir):
     if fname.endswith(".lua"):
         with open(os.path.join(redis_asset_dir, fname)) as f:
             app.config["LUA_ASSETS"][fname[:-4]] = f.read()
+            
+#define directory for PMT mapping file
+thisdir = os.path.dirname(os.path.abspath(__file__))
+pmt_map_dir = os.path.join(thisdir, "static/conf/")
