@@ -128,10 +128,25 @@
                   {{ nav_link('PMT_snapshot', 'Waveforms') }}
                 </ul>
               </li>
-             {{ nav_link('CRT_board', 'Side CRT') }} 
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('CRT_board', 'Side CRT') }} 
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {% for loc,lochw in CRTLOCs %}
+                        {{ nav_link('CRT_board', loc, hw_select=lochw) }}
+                      {% endfor %}
+                    </ul>
+                  </li>
+                  {{ nav_link('CRT_group_select', 'Group Select') }} 
+                </ul>
+              </li>
              {{ nav_link('pvTree', 'ICARUS EPICS', connection='epics') }}
              <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status</A></li>
-             {{ nav_link('Impedence_Ground_Monitor', 'Ground Monitor') }}
+             {{ nav_link('Impedance_Ground_Monitor', 'Ground Monitor') }}
+             {{ nav_link('Level_Monitor', 'Level Monitor') }}
              {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
              {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
              <li class='dropdown nav-item'>

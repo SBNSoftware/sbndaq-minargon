@@ -1,7 +1,7 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}Impedence Ground Monitor{% endblock %}
+{% block title %}Impedance Ground Monitor{% endblock %}
 
 {# Define macro to setup plot #}
 {% macro plot_row(id) %}
@@ -103,11 +103,11 @@
     import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
     
     {{ run_stream(database, 46, configs[46], "Magnitude", 450, 550)}} 
-    {{ run_stream(database, 44, configs[44], "Impedence [ohm]", 400, 550) }}
+    {{ run_stream(database, 44, configs[44], "Impedance [ohm]", 400, 550) }}
     {{ run_atan(database, 48, 47, configs[48], configs[47], "Phase [deg]", "atan-48-47", -130, 140) }}
 
     {{ run_stream(database, 51, configs[51], "Magnitude", 500, 600) }}
-    {{ run_stream(database, 49, configs[49], "Impedence [ohm]", 450, 550) }}   
+    {{ run_stream(database, 49, configs[49], "Impedance [ohm]", 450, 550) }}   
     {{ run_atan(database, 53, 52, configs[53], configs[52], "Phase [deg]", "atan-53-52", -130, 140) }}
 
 </script>
