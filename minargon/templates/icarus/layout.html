@@ -143,15 +143,20 @@
                   {{ nav_link('CRT_group_select', 'Group Select') }} 
                 </ul>
               </li>
-             {{ nav_link('pvTree', 'ICARUS EPICS', connection='epics') }}
-             <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status</A></li>
-             {{ nav_link('Impedance_Ground_Monitor', 'Ground Monitor') }}
-             {{ nav_link('Level_Monitor', 'Level Monitor') }}
-             {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
-             {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
-             {{ nav_link('icarus_tpcps', 'TPC Power Supplies', connection='epics') }}
-             {{ nav_link('icarus_pmthv', 'PMT High Voltage', connection='epics') }}
-    
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>ICARUS EPICS<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                 {{ nav_link('pvTree', 'Tree Browser', connection='epics') }}
+                 <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status (EXTERNAL)</A></li>
+                 {{ nav_link('Impedance_Ground_Monitor', 'Ground Monitor') }}
+                 {{ nav_link('Level_Monitor', 'Level Monitor') }}
+                 {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
+                 {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
+                 {{ nav_link('icarus_tpcps', 'TPC Power Supplies', connection='epics') }}
+                 {{ nav_link('icarus_pmthv', 'PMT High Voltage', connection='epics') }}
+                 {{ nav_link('pmt_readout_temp', 'PMT Readout Temp', connection='epics') }}
+                </ul>
+              </li>
              {{ nav_link('view_streams', 'Data Browser')}}
            </ul>
           </div><!--/.navbar-collapse -->
