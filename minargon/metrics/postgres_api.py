@@ -638,15 +638,18 @@ def get_icarus_pmthv(connection, side):
     pmtmapW = []
     pmtm = []
 
-    with open('minargon/static/conf/Sy1527' + side + 'ch.sub.fnal') as f:
-        for line in f:
-            tmp = []
-            if "icarus" in line:
-                l = line.split(', ');
-                tmp.append(l[3])
-                tmp.append(l[4])
-                tmp.append(l[6])
-            pmtm.append(tmp)
+    try:
+	with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
+            for line in f:
+                tmp = []
+                if "icarus" in line:
+                    l = line.split(', ');
+                    tmp.append(l[3])
+                    tmp.append(l[4])
+                    tmp.append(l[6])
+                pmtm.append(tmp)
+    except FileNotFoundError:
+        print("Wrong file or file path")
 
     pmtmap = sorted(pmtm)
 
