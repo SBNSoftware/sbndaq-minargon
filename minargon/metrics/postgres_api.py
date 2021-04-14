@@ -579,7 +579,7 @@ def get_pmt_readout_temp(connection):
 @postgres_route
 def get_icarus_cryo(connection):
     cursor = connection[0].cursor();
-    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=9"""
+    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=10"""
 
     cursor.execute(query);
     dbrows = cursor.fetchall();
@@ -596,7 +596,7 @@ def get_icarus_cryo(connection):
 @postgres_route
 def get_icarus_tpcps(connection, flange):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14 and name like '%""" + flange + """%'"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=15 and name like '%""" + flange + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall();
@@ -619,7 +619,7 @@ def get_icarus_tpcps(connection, flange):
         else:
             value = row[3]
         res.append([id, flange, tpc, type, n, value])
-        rr = sorted(res)
+    rr = sorted(res)
 
     end = []
     
@@ -646,7 +646,7 @@ def get_icarus_pmthv(connection, side):
         s = "1"
     else:
         s = "2"
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11 and name like '%pmt""" + s + """%'"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=12 and name like '%pmt""" + s + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
@@ -657,7 +657,7 @@ def get_icarus_pmthv(connection, side):
     pmtm = []
 
     try:
-	with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
+        with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
             for line in f:
                 tmp = []
                 if "icarus" in line:
@@ -667,7 +667,7 @@ def get_icarus_pmthv(connection, side):
                     tmp.append(l[6])
                 pmtm.append(tmp)
     except FileNotFoundError:
-        print("Wrong file or file path")
+        abort(404)
 
     pmtmap = sorted(pmtm)
 
@@ -703,7 +703,7 @@ def get_icarus_pmthv(connection, side):
             else:
                 tmp = row[3]
             res.append([group, board, channel, pmtt, row[0], n, tmp])
-            rr = sorted(res)
+    rr = sorted(res)
     end = []
 
     power = []
