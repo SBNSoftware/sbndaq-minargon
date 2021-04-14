@@ -33,12 +33,14 @@ export class PlotlyController {
   //         be drawn
   // links: the DataLink object which will be used to get data to plot
   // metric_config: The metric configuration for the associated plot
-  constructor(target, link, titles, metric_config) {
+  constructor(target, link, titles, metric_config, oneyaxis) {
     this.link = link;
     this.target = target;
     this.max_data = 1000;
     this.titles = titles;
     this.ytitles = [];
+    this.oneyaxis = oneyaxis;
+    if (this.oneyaxis === undefined) this.oneyaxis = false;
 
     // title of plot is link name
     var plot_title = link.name();
@@ -108,6 +110,8 @@ export class PlotlyController {
       }
     
       ret.push(new ScatterYAxis(title, range, i));
+
+      if (this.oneyaxis) break;
     }
     return ret;
   }
@@ -282,7 +286,9 @@ export class PlotlyController {
     this.link = this.link.add(link);
     this.titles.push(name);
     this.updateMetricConfig(config, true);
-    this.scatter.add_trace(name, this.metric_config.length - 1); 
+    var yaxis_index = 0;
+    if (!this.oneyaxis) yaxis_index = this.metric_config.length - 1;
+    this.scatter.add_trace(name, yaxis_index); 
     if (this.is_running) {
       this.updateData(this.link);
     }
