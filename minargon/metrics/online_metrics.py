@@ -799,7 +799,7 @@ def get_group_config(rconnect, group_name):
     config["group"] = group_name
 
     # add the archiving database
-    if "archiving" in config["streams"]:
+    if "archiving" in config["streams"] and "metric_archiving" in app.config["REDIS_INSTANCES"]:
         config["streams"].append("archived")
         config["stream_links"].append("metric_archiving")
 
