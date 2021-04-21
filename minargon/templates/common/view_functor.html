@@ -58,7 +58,9 @@ import * as module from "{{ url_for('static', filename='js/minargon/functor.js')
 {% elif typeA == "postgres" %}
   var linkA = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{databaseA}}', "{{IDA}}"));
   var configA = {{configA|tojson}};
-  {% if "yTitle" in configA %}
+  {% if "yTitle" in configA and "yTitle" in configB and configA["yTitle"] == configB["yTitle"] and "title" in configA %}
+      var nameA = "{{configA['title']}} {{configA['yTitle']}}";
+  {% elif "yTitle" in configA %}
       var nameA = "{{configA['yTitle']}}";
   {% else %}
       var nameA = "{{IDA}}";
@@ -72,7 +74,9 @@ import * as module from "{{ url_for('static', filename='js/minargon/functor.js')
 {% elif typeB == "postgres" %}
   var linkB = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{databaseB}}', "{{IDB}}"));
   var configB = {{configB|tojson}};
-  {% if "yTitle" in configB %}
+  {% if "yTitle" in configA and "yTitle" in configB and configA["yTitle"] == configB["yTitle"] and "title" in configB %}
+      var nameB = "{{configB['title']}} {{configB['yTitle']}}";
+  {% elif "yTitle" in configB %}
       var nameB = "{{configB['yTitle']}}";
   {% else %}
       var nameB = "{{IDB}}";
