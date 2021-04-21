@@ -58,7 +58,8 @@ def channel_snapshot():
         'config': config,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
-        'extension': ''
+        'extension': '',
+        'dbname': "online",
     }
     return render_template('sbnd/channel_snapshot.html', **template_args)
 
@@ -70,7 +71,7 @@ def channel_snapshot_dab():
     view_ind_opts = {'channel': list(range(constants.N_CHANNELS))}
 
     instance_name = "tpc_channel_dab"
-    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+    config = online_metrics.get_group_config("onlineDAB", instance_name, front_end_abort=True)
 
     template_args = {
         'channel': channel,
@@ -78,6 +79,7 @@ def channel_snapshot_dab():
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
         'extension': '_dab',
+        'dbname': "onlineDAB",
     }
     return render_template('sbnd/channel_snapshot.html', **template_args)
 
@@ -91,7 +93,7 @@ def wireplane_view():
 @app.route('/wireplane_view_dab')
 def wireplane_view_dab():
     instance_name = "tpc_channel_dab" 
-    return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab")
+    return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 @app.route('/purity')
 def purity():

@@ -8,9 +8,9 @@ import {throw_database_error} from "./error.js";
 
 // NOTE: the timing values are hardcoded from the SBND VST -- this may have to change in the future
 
-function get_meta(keyname, param, callback) {
+function get_meta(keyname, param, callback, dbname) {
   // build the URL
-  var url = $SCRIPT_ROOT + "/online/hget/snapshot:" + keyname;
+  var url = $SCRIPT_ROOT + "/" + dbname + "/hget/snapshot:" + keyname;
   for (var key in param) {
     url += ":" + key + ":" + param[key];
   }
@@ -33,9 +33,9 @@ function get_meta(keyname, param, callback) {
 // target: div-id of the location of the plot
 // param: dictionary where the key-value pairs will be GET params for the URL specified
 //        to get data from the backend raw data API
-export function draw_waveform(target, param, keyname, name) {
+export function draw_waveform(target, param, keyname, name, dbname) {
   function do_draw(metadata) {
-  d3.json($SCRIPT_ROOT + "/online/waveform/" + keyname + "?" + $.param(param), function(err, data) {
+  d3.json($SCRIPT_ROOT + "/" + dbname + "/waveform/" + keyname + "?" + $.param(param), function(err, data) {
     if (!data) {
       throw_database_error(err, "draw_waveform");
       return;
@@ -79,16 +79,16 @@ export function draw_waveform(target, param, keyname, name) {
     Plotly.newPlot(target, [trace], layout)
   });
   }
-  get_meta(keyname, param, do_draw); 
+  get_meta(keyname, param, do_draw, dbname); 
 }
 
 // Draw an FFT in the specified target from the specified link
 // target: div-id of the location of the plot
 // param: dictionary where the key-value pairs will be GET params for the URL specified
 //        to get data from the backend raw data API
-export function draw_fft(target, param, keyname, name) {
+export function draw_fft(target, param, keyname, name, dbname) {
   function do_draw(metadata) {
-  d3.json($SCRIPT_ROOT + "/online/waveform/" + keyname + "?" + $.param(param), function(err, data) {
+  d3.json($SCRIPT_ROOT + "/" + dbname + "/waveform/" + keyname + "?" + $.param(param), function(err, data) {
     if (!data) {
       throw_database_error(err, "draw_fft");
       return;
@@ -134,7 +134,7 @@ export function draw_fft(target, param, keyname, name) {
     Plotly.newPlot(target, [trace], layout)
   });
   }
-  get_meta(keyname, param, do_draw); 
+  get_meta(keyname, param, do_draw, dbname); 
 }
 
 
