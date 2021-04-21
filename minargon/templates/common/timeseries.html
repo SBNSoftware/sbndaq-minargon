@@ -150,7 +150,7 @@ function crtBoardLink(group, instance) {
 
 // setup polling for event/run/subrun/time
 {% if eventmeta_key %}
-var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+var poll = new Poll.Poll($SCRIPT_ROOT + "/{{dbname}}/hget/{{eventmeta_key}}/run,subrun,event,time");
 poll.add_callback(function(data) {
     $("#run-number").html(data.run);
     $("#subrun-number").html(data.subrun);
