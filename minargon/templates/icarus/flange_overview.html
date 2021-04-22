@@ -18,10 +18,6 @@
 </div>
 {% endif %}
 
-<div class="row">
-         <div class="col-lg-12 col-md-12" style="padding:0" id="timeseries"></div>
-</div>
-
 {% for flange in flanges %}
 <div class="row">
 <h3>
@@ -103,11 +99,6 @@ var hw_list = [
 var hw_controller = new Config.HWGroupConfigController(config, hwFlangeLink, "{{metric}}", 0, hw_list)
     .metricController("#form-metric")
     .streamController("#form-stream");
-
-var cubism = hw_controller.addCubismController("#timeseries", 25)
-  .heightController("#form-height")
-  .rangeController("#form-range-lo", "#form-range-hi")
-  .set();
 
 hw_controller.runAll();
 
