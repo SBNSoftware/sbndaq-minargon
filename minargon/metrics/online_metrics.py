@@ -60,7 +60,7 @@ def redis_route(func):
             # try to make a connection
             try:
                 return func(r, *args, **kwargs)
-            except (redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError, redis.exceptions.ResponseError, redis_api.MalformedRedisEntry) as err:
+            except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError, redis.exceptions.ResponseError, redis_api.MalformedRedisEntry) as err:
                 error = RedisConnectionError(front_end_abort).register_redis_error(err, rconnect)
                 return abort(503, error)
         else:
