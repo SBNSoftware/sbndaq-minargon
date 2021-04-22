@@ -579,7 +579,7 @@ def get_pmt_readout_temp(connection):
 @postgres_route
 def get_icarus_cryo(connection):
     cursor = connection[0].cursor();
-    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=10"""
+    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=9"""
 
     cursor.execute(query);
     dbrows = cursor.fetchall();
@@ -596,7 +596,7 @@ def get_icarus_cryo(connection):
 @postgres_route
 def get_icarus_tpcps(connection, flange):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=15 and name like '%""" + flange + """%'"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14 and name like '%""" + flange + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall();
@@ -646,7 +646,7 @@ def get_icarus_pmthv(connection, side):
         s = "1"
     else:
         s = "2"
-    query = """select channel_id, name, last_smpl_time, last_num_val, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=12 and name like '%pmt""" + s + """%'"""
+    query = """select channel_id, name, last_smpl_time, last_num_val, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11 and name like '%pmt""" + s + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
