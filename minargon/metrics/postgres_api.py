@@ -643,9 +643,9 @@ def get_icarus_tpcps(connection, flange):
 def get_icarus_pmthv(connection, side):
     cursor = connection[0].cursor()
     if side == 'E':
-        s = "1"
-    else:
         s = "2"
+    else:
+        s = "1"
     query = """select channel_id, name, last_smpl_time, last_num_val, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11 and name like '%pmt""" + s + """%'"""
 
     cursor.execute(query)
