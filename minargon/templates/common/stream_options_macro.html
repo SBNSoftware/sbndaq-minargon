@@ -384,6 +384,18 @@ $('#{{id}}').treeview( {
 
 {# -------------------------------------------------------------------------- #}
 {% macro time_range(id_start, id_end, id_toggle, start_time=none, end_time=none) %}
+<!-- Start -->
+<div class="form-group row">
+   <label class="col-sm-5 control-form-label col-form-label">Start Time</label> 
+   <div class="col-sm-7">
+     {% if start_time is none: %}
+	 <input id="{{id_start}}">
+     {% else: %}
+	 <input id="{{id_start}}" value="{{start_time}}">
+     {% endif %}
+  </div>
+</div>
+
 <!-- End -->
 <div class="form-group row">
    <label class="col-sm-5 control-form-label col-form-label">End Time</label> 
@@ -481,14 +493,28 @@ function updateToggle(toggle_id) {
   $(toggle).trigger("date-change");
 }
 
+function toggleLiveStart(current_time, input) {
+  return toggleLive(current_time, input, true);
+}
+
+function toggleLiveEnd(current_time, input) {
+  return toggleLive(current_time, input, false);
+}
+
 // when the selected date-time range is valid, toggle the live button
-function toggleLive(current_time, input) {
+function toggleLive(current_time, input, isStart) {
   
   var this_start = moment($('#{{id_start}}').datetimepicker('getValue'));
   
   var this_end = moment($('#{{id_end}}').datetimepicker('getValue'));
-  
+
   if (this_start.isBefore(this_end)) {
+
+    if (this_end.diff(this_start, "days") > 7) {
+      var new_end = this_start.add(7, "days").format('MM/DD/YYYY HH:mm');
+      $('#{{id_end}}').val(new_end);
+      $('#{{id_end}}').datetimepicker("setOptions", {value: new_end });
+    }
 
     $("#{{id_toggle}}-label-live").removeClass("active");
     
