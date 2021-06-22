@@ -190,11 +190,15 @@ def NoiseCorr():
     return render_template("icarus/noise_snapshot.html")
 
 @app.route('/PMT')
-def PMT():
+@app.route('/PMT/<hw_selector:hw_select>')
+@app.route('/PMT/<PMTLOC>')
+def PMT(hw_select=None, PMTLOC=None):
+    if PMTLOC:
+        hw_select = hardwaredb.HWSelector("pmt_placements", "pmt_in_tpc_plane", PMTLOC)
     args = dict(**request.args)
     args["data"] = "rms"
     args["stream"] = "fast"
-    return timeseries_view(args, "PMT", "", "pmtLink")
+    return timeseries_view(args, "PMT", "", "pmtLink", hw_select=hw_select)
 
 @app.route('/PMT_snapshot')
 def PMT_snapshot():
