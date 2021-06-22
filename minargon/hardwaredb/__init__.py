@@ -101,7 +101,10 @@ if app.config["FRONT_END"] == "icarus":
     hw_mappings = icarus.tpc.MAPPINGS
 
     from .icarus import crt
-
     hw_selectors = dict(hw_selectors, **icarus.crt.SELECTORS)
     hw_mappings = dict(hw_mappings, **icarus.crt.MAPPINGS)
+
+    from .icarus import pmt
+    hw_selectors = dict(hw_selectors, **icarus.pmt.SELECTORS)
+    hw_mappings = dict(hw_mappings, **icarus.pmt.MAPPINGS)
 

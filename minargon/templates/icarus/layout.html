@@ -124,6 +124,14 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT Locations<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {% for PMT in PMTLOCs %}
+                        {{ nav_link('PMT', PMT, PMTLOC=PMT) }}
+                      {% endfor %}
+                    </ul>
+                  </li>
                   {{ nav_link('PMT', 'Metrics') }}
                   {{ nav_link('PMT_snapshot', 'Waveforms') }}
                 </ul>
