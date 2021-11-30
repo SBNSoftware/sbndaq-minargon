@@ -68,11 +68,13 @@ def extract_datum(dat):
             val = float(d[b"dat"])
         except:
             return d[b"dat"]
+    elif "str" in d:
+        return d["str"]
     else:
         typename = list(d.keys())[0]
         structname = type_to_struct_type(typename)
         if structname is None:
-            raise MalformedRedisEntry("Redis Stream entry missing binary type.")
+            raise MalformedRedisEntry("Redis Stream entry missing binary type (%s)." % typename)
         val = struct.unpack(structname, d[typename])[0]
     if invert:
         if abs(val) < 1e-4: return "inf" # JSON compatible infinity
