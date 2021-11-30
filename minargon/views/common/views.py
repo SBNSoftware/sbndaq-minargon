@@ -104,6 +104,11 @@ def epics_last_value_pv(connection,pv):
 def view_alarms(connection):
     return render_template('common/view_alarms.html', connection=connection)
 
+@app.route('/sentinel_alarms')
+def sentinel_alarms():
+    data = online_metrics.build_sentinel_list("online")
+    return render_template('common/alarm_tree.html', data=data)
+
 @app.route('/online_group/<group_name>')
 def online_group(group_name):
     return timeseries_view(request.args, group_name)
