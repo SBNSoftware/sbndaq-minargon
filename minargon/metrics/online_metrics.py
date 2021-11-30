@@ -710,6 +710,65 @@ def build_link_list(rconnect):
     return ret
 
 @redis_route
+def build_sentinel_list(rconnect):
+    def list_to_hierarchy(l):
+        ret = {
+          "text": "Sentinel Alarms",
+          "state": {
+            "expanded": True,
+          },
+          "displayCheckbox": False,
+          "nodes": [],
+        }
+
+        for items in l:
+            level = ret
+            for item in items:
+                if item not in [n["text"] for n in level["nodes"]]:
+                    level["nodes"].append({
+                      "state": {
+                        "expanded": True,
+                      },
+                      "text": item,
+                      "href": "#parent1",
+                      "displayCheckbox": False,
+                      "nodes" : []
+                    })
+                level = level["nodes"][-1]
+
+        return ret
+
+    def set_node(h, key, val):
+        nodes = h["nodes"]
+        for level in key:
+            index = [n["text"] for n in nodes].index(level)
+            nodes = nodes[index]["nodes"]
+        color = "green" if val.endswith("No Alarm") else "red"
+        nodes.append({
+            "text": val,
+            "selectable": False,
+            "color": color,
+        })
+
+    def clean_alarm(a):
+        if not a:
+            return "No Alarm"
+        return a
+
+    alarms = list(rconnect.smembers("OMSentinel:Alarms"))
+    values = redis_api.get_last_streams(rconnect, alarms)
+    values = [values[a][0] for a in alarms]
+    values = [datetime.fromtimestamp(float(t) / 1e3).strftime("%b-%d %H:%M") + " CST: " + clean_alarm(a) for t, a in values]
+
+    alarms = [a.split(":")[:-1] for a in alarms]
+    alarm_h = list_to_hierarchy(alarms)
+
+    for a, val in zip(alarms, values):
+        set_node(alarm_h, a, val)
+
+    return alarm_h
+
+@redis_route
 def build_link_tree(rconnect):
     groups = rconnect.smembers("GROUPS")
     pipeline = rconnect.pipeline()

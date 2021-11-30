@@ -1,0 +1,34 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}Sentinel Alarms{% endblock %}
+
+{% block body %}
+{{ super() }}
+
+{%endblock%}
+
+{% block script %}
+<h2>OM Sentinel Alarms</h2>
+<div id="alarm_tree"></div>
+
+<!-- Grab depreciated glyphicons for bootstrap v4 -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
+
+<script>
+
+$(document).ready(function() {
+    var alarm_tree = [{{data|tojson}}];
+
+    // Generate the treeview
+    var tree = $('#alarm_tree').treeview( {
+        levels: 4,
+        color: 'black',
+        data: alarm_tree,
+        enableLinks: false,
+    });
+
+    // Refresh every minute
+    setTimeout(location.reload.bind(location), 60*1000);
+
+});
+</script>
+{%endblock%}
