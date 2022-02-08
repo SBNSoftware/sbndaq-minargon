@@ -11,8 +11,8 @@ Quickstart
 To run a local copy of minargon, first create a virtual environment and activate
 it.
 
-    $ virtualenv venv
-    $ . venv/bin/activate
+    $ python -m venv env
+    $ . env/bin/activate
 
 Make sure you have a recent version of pip:
 
