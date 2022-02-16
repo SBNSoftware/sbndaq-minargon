@@ -22,7 +22,7 @@
 <h4 class="hcenter">
 Limits on baseline are between {{baseline_min}} and {{baseline_max}}. 
 Limits on RMS are between {{rms_min}} and {{rms_max}}.
-</h3>
+</h4>
 </div>
 <br>
 <br>
@@ -66,6 +66,7 @@ var config = {{config|tojson|safe}};
 // setup each plane poll
 {% for tpc_plane in tpc_planes %}
   {% set channels = channels[loop.index0]|tojson %}
+{
 
 // Setup the config
 var config_controller = new Config.GroupConfigController(config, undefined, ["rms", "baseline"], {{channels}}, 0, 25, "{{tpc_plane.to_url()}}", undefined, undefined);
@@ -128,6 +129,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
 ]);
 
 buffer.start();
+}
 {% endfor %}
 
 {% if eventmeta_key %}
