@@ -1,0 +1,144 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}TPC Alarms{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+
+<div class="row">
+<h4 class="hcenter">
+Limits on baseline are between {{baseline_min}} and {{baseline_max}}. 
+Limits on RMS are between {{rms_min}} and {{rms_max}}.
+</h3>
+</div>
+<br>
+<br>
+
+
+{% for tpc_plane in tpc_planes %}
+{% if loop.index0 % 3 == 0 %}
+  <div class="row">
+{% endif %}
+    <div class="col-lg-4 col-md-4" style="padding:0">
+      <h3>
+        <a href="{{url_for("TPC", hw_select=tpc_plane)}}">{{tpc_plane.value}}</a>
+      </h3>
+      <table class="table table-striped" id="{{tpc_plane.value | replace(' ', '-') | replace(';', '')}}">
+        <thead>
+        <tr>
+          <th> Bad Channels </th>
+          <th> RMS </th>
+          <th> Baseline </th>
+        </tr>
+        </thead>
+      </table>
+    </div>
+
+{% if loop.index0 % 3 == 2 %}
+  </div>
+  <br>
+{% endif %}
+
+{% endfor %}
+
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var config = {{config|tojson|safe}};
+
+// setup each plane poll
+{% for tpc_plane in tpc_planes %}
+  {% set channels = channels[loop.index0]|tojson %}
+
+// Setup the config
+var config_controller = new Config.GroupConfigController(config, undefined, ["rms", "baseline"], {{channels}}, 0, 25, "{{tpc_plane.to_url()}}", undefined, undefined);
+
+// Use the config to get the DataLink
+var data_link = config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+
+// Turn that DataLink into a DataBuffer
+var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var channels = {{channels}};
+
+    var badchannels = [];
+
+    var rms_data = data.slice(0, channels.length);
+    var baseline_data = data.slice(channels.length);
+    var baselines = [];
+    var rmss = [];
+    for (var i = 0; i < channels.length; i++) {
+      var baseline = baseline_data[i].get_last()[1];
+      var rms = rms_data[i].get_last()[1];
+
+      baselines.push(baseline);
+      rmss.push(rms);
+
+      var bad = ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) || (rms < {{rms_min}}) || (rms > {{rms_max}}));
+      if (bad) {
+        badchannels.push(i);
+      }
+    }
+
+    var header = `
+        <thead>
+        <tr>
+          <th> Bad Channels </th>
+          <th> RMS </th>
+          <th> Baseline </th>
+        </tr>
+        </thead>
+        <tbody>`;
+
+    var table_html = header;
+
+    for (var i = 0; i < badchannels.length; i++) {
+      var ind = badchannels[i];
+      var row = `
+          <tr>
+            <th><a href="/channel_snapshot?channel=` + channels[ind] + `">` + channels[ind] + `</a></th>
+            <th>` + rmss[ind].toFixed(2) +  `</th>
+            <th>` + baselines[ind].toFixed(2) +  `</th>
+          </tr>`; 
+      table_html = table_html.concat(row);
+    }
+    table_html = table_html + "</tbody>";
+
+    $("#{{tpc_plane.value | replace(' ', '-') | replace(';', '')}}").html(table_html);
+
+  }
+]);
+
+buffer.start();
+{% endfor %}
+
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}
