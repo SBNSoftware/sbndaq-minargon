@@ -99,6 +99,7 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+		  {{ nav_link('TPC_status', 'Status') }}
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Flanges<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
@@ -139,6 +140,7 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+		  {{ nav_link('CRT_status', 'Status') }}
                   {{ nav_link('CRT_board', 'Side CRT') }} 
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
