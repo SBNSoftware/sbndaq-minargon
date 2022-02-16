@@ -57,6 +57,50 @@ def flange_page(flanges):
 
     return render_template('icarus/flange_overview.html', **render_args)
 
+@app.route('/CRT_status')
+def CRT_status():
+    crts = [hw for _,hw in hardwaredb.icarus.crt.CRTLOCs()]
+    channels = [hardwaredb.select(crt) for crt in crts]
+    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+
+    print(channels)
+    render_args = {
+      "config": config,
+      "channels": channels,
+      "crts": crts,
+      "baseline_min": 150,
+      "baseline_max": 200,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('icarus/crt_status_overview.html', **render_args) 
+
+@app.route('/TPC_status')
+def TPC_status():
+    TPCs = ["EE", "EW", "WE", "WW"]
+    # Lookup the planes in each TPC
+    tpc_planes_all = [p for TPC in TPCs for p in hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", "tpc_id", TPC))]
+
+    # Build the "HWSelector" object to map the planes to channels
+    tpc_planes_all_hw = [hardwaredb.HWSelector("tpc_plane", "tpc_plane", p) for p in tpc_planes_all]
+    # Lookup the channels
+    channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes_all_hw]
+
+    config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
+
+    render_args = {
+      "config": config,
+      "channels": channels,
+      "tpc_planes": tpc_planes_all_hw,
+      "eventmeta_key": "eventmetaTPC",
+      "rms_min": 0.5,
+      "rms_max": 20,
+      "baseline_min": -2100,
+      "baseline_max": -1000,
+    }
+
+    return render_template('icarus/tpc_status_overview.html', **render_args)
+
 @app.route('/TPC_Plane_Overview/<TPC>')
 def TPC_Plane_Overview(TPC):
     tpc_planes = hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", "tpc_id", TPC))
