@@ -114,7 +114,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
       var ind = badchannels[i];
       var row = `
           <tr>
-            <th><a href="/channel_snapshot?channel=` + channels[ind] + `">` + channels[ind] + `</a></th>
+            <th><a href="{{url_for('channel_snapshot')}}?channel=` + channels[ind] + `">` + channels[ind] + `</a></th>
             <th>` + rmss[ind].toFixed(2) +  `</th>
             <th>` + baselines[ind].toFixed(2) +  `</th>
           </tr>`; 
