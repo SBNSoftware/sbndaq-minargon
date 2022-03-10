@@ -63,7 +63,7 @@ def CRT_status():
     channels = [hardwaredb.select(crt) for crt in crts]
     config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
 
-    print(channels)
+    #print(channels)
     render_args = {
       "config": config,
       "channels": channels,
@@ -74,6 +74,27 @@ def CRT_status():
     }
 
     return render_template('icarus/crt_status_overview.html', **render_args) 
+
+@app.route('/PMT_status')
+def PMT_status():
+    pmts = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
+    channels = [hardwaredb.select(pmt) for pmt in pmts]
+    config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+
+    #print(channels)
+    #print(config)
+    render_args = {
+      "config": config,
+      "channels": channels,
+      "pmts": pmts,
+      "rms_min": 0.5,
+      "rms_max": 7,
+      "baseline_min": 14500,
+      "baseline_max": 15500,
+      "eventmeta_key": False,
+    }
+
+    return render_template('icarus/pmt_status_overview.html', **render_args)
 
 @app.route('/TPC_status')
 def TPC_status():
@@ -133,6 +154,7 @@ def plane_page(tpc_planes):
 @app.route('/CRT_board/<hw_selector:hw_select>')
 def CRT_board(hw_select=None):
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink", hw_select=hw_select)
+
 
 @app.route('/TPC')
 @app.route('/TPC/<hw_selector:hw_select>')
@@ -239,6 +261,8 @@ def NoiseCorr():
 def PMT(hw_select=None, PMTLOC=None):
     if PMTLOC:
         hw_select = hardwaredb.HWSelector("pmt_placements", "pmt_in_tpc_plane", PMTLOC)
+   
+    print(hw_select)
     args = dict(**request.args)
     args["data"] = "rms"
     args["stream"] = "fast"
