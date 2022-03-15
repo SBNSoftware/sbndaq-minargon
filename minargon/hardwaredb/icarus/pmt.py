@@ -7,7 +7,7 @@ pmt_table = "pmt_placements"
 
 def PMTLOCs():
     try:
-        return [hw.value for hw in available_values("pmt_placements", "pmt_in_tpc_plane")] 
+        return [(hw.value,hw) for hw in available_values("pmt_placements", "pmt_in_tpc_plane")] 
     except HTTPException as e:
         return []
 
