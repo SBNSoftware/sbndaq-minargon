@@ -37,11 +37,6 @@ def view_plot():
     plotname = request.args.get("url", "")
     return render_template("common/view_plot.html", plotname=plotname)
 
-@app.route('/introduction')
-def introduction():
-    template = os.path.join(app.config["FRONT_END"], 'introduction.html')
-    return render_template(template)
-
 @app.route('/<connection>/latest_gps_info')
 def latest_gps_info(connection):
     dbrows = postgres_api.get_gps(connection, front_end_abort=True)     
