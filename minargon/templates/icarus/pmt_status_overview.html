@@ -20,28 +20,28 @@
 
 <div class="row">
 <h4 class="hcenter">
-Limits on baseline are between {{baseline_min}} and {{baseline_max}}. 
-Limits on RMS are between {{rms_min}} and {{rms_max}}.
+Limits on baseline are between {{baseline_min}} and {{baseline_max}}.
+Limits on rms are between {{rms_min}} and {{rms_max}}.
 </h4>
 </div>
 <br>
 <br>
 
 
-{% for tpc_plane in tpc_planes %}
+{% for pmt in pmts %}
 {% if loop.index0 % 3 == 0 %}
   <div class="row">
 {% endif %}
     <div class="col-lg-4 col-md-4" style="padding:0">
       <h3>
-        <a href="{{url_for("TPC", hw_select=tpc_plane)}}">{{tpc_plane.value}}</a>
+        <a href="{{url_for("PMT", PMTLOC=pmt.value)}}">{{pmt.value}}</a>
       </h3>
-      <table class="table table-striped" id="{{tpc_plane.value | replace(' ', '-') | replace(';', '')}}">
+      <table class="table table-striped" id="{{pmt.value | replace(' ', '-') | replace(';', '')}}">
         <thead>
         <tr>
           <th> Bad Channels </th>
-          <th> RMS </th>
           <th> Baseline </th>
+          <th> RMS </th>
         </tr>
         </thead>
       </table>
@@ -64,12 +64,12 @@ import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 var config = {{config|tojson|safe}};
 
 // setup each plane poll
-{% for tpc_plane in tpc_planes %}
+{% for pmt in pmts %}
   {% set channels = channels[loop.index0]|tojson %}
 {
 
 // Setup the config
-var config_controller = new Config.GroupConfigController(config, undefined, ["rms", "baseline"], {{channels}}, 0, 25, "{{tpc_plane.to_url()}}", undefined, undefined);
+var config_controller = new Config.GroupConfigController(config, undefined, ["rms", "baseline"], {{channels}}, 0, 25, "{{pmt.to_url()}}", undefined, undefined);
 
 // Use the config to get the DataLink
 var data_link = config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
@@ -80,22 +80,33 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
   function(data) {
     var channels = {{channels}};
 
-    var badchannels = [];
+    var isbad = [];
 
     var rms_data = data.slice(0, channels.length);
     var baseline_data = data.slice(channels.length);
+
+//    var rms_data = data; // .slice(0, channels.length);
+//    var baseline_data = data
     var baselines = [];
     var rmss = [];
     for (var i = 0; i < channels.length; i++) {
-      var baseline = baseline_data[i].get_last()[1];
-      var rms = rms_data[i].get_last()[1];
+      
+    //  var baseline = -1;
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+   //  var rms = -1;
+      if (rms_data[i].size > 0) {
+        var rms = rms_data[i].get_last()[1];
+      }
 
       baselines.push(baseline);
       rmss.push(rms);
-
       var bad = ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) || (rms < {{rms_min}}) || (rms > {{rms_max}}));
-      if (bad) {
-        badchannels.push(i);
+      
+      if (bad)  {
+        isbad.push(i);
       }
     }
 
@@ -111,11 +122,13 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
 
     var table_html = header;
 
-    for (var i = 0; i < badchannels.length; i++) {
-      var ind = badchannels[i];
+    for (var i = 0; i < isbad.length; i++) {
+    
+      var ind = isbad[i];
+
       var row = `
           <tr>
-            <th><a href="{{url_for('channel_snapshot')}}?channel=` + channels[ind] + `">` + channels[ind] + `</a></th>
+            <th><a href="{{url_for('PMT_snapshot')}}?PMT=` + channels[ind] + `">`  + channels[ind] + `</th>
             <th>` + rmss[ind].toFixed(2) +  `</th>
             <th>` + baselines[ind].toFixed(2) +  `</th>
           </tr>`; 
@@ -123,7 +136,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     }
     table_html = table_html + "</tbody>";
 
-    $("#{{tpc_plane.value | replace(' ', '-') | replace(';', '')}}").html(table_html);
+    $("#{{pmt.value | replace(' ', '-') | replace(';', '')}}").html(table_html);
 
   }
 ]);

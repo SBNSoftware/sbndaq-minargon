@@ -125,10 +125,11 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('PMT_status', 'Status') }}
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT Locations<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
-                      {% for PMT in PMTLOCs %}
+                      {% for PMT, _  in PMTLOCs %}
                         {{ nav_link('PMT', PMT, PMTLOC=PMT) }}
                       {% endfor %}
                     </ul>
