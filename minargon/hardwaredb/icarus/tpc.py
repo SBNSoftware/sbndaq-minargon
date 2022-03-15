@@ -17,6 +17,12 @@ def TPCs():
     except HTTPException as e:
         return []
 
+def TPCFlanges():
+    try:
+        return [hw for hw in available_values("flanges", "flange_pos_at_chimney")]
+    except HTTPException as e:
+        return []
+
 def to_column(s):
     return s.replace(" ", "_").lower()
 

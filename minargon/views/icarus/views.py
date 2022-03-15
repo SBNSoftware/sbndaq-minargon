@@ -15,6 +15,9 @@ from . import inject
 from six.moves import range
 from six.moves import zip
 
+TPC_RMS_ALARM_MIN = 0.5
+TPC_RMS_ALARM_MAX = 20.
+
 @app.route('/test/<int:chan>')
 def test(chan):
     channels =  hardwaredb.icarus_tpc.tpc_channel_list("readout_board_id", str(chan))
@@ -75,6 +78,20 @@ def CRT_status():
 
     return render_template('icarus/crt_status_overview.html', **render_args) 
 
+@app.route('/introduction')
+def introduction():
+    tpc_config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
+    tpc_channels = [hardwaredb.select(tpc_flange) for tpc_flange in hardwaredb.icarus.tpc.TPCFlanges()]
+
+    render_args = {
+      "tpc_config": tpc_config,
+      "tpc_channels": tpc_channels,
+      "tpc_rms_min": TPC_RMS_ALARM_MIN,
+      "tpc_rms_max": TPC_RMS_ALARM_MAX,
+    }
+
+    return render_template('icarus/introduction.html', **render_args)
+
 @app.route('/TPC_status')
 def TPC_status():
     TPCs = ["EE", "EW", "WE", "WW"]
@@ -93,8 +110,8 @@ def TPC_status():
       "channels": channels,
       "tpc_planes": tpc_planes_all_hw,
       "eventmeta_key": "eventmetaTPC",
-      "rms_min": 0.5,
-      "rms_max": 20,
+      "rms_min": TPC_RMS_ALARM_MIN,
+      "rms_max": TPC_RMS_ALARM_MAX,
       "baseline_min": -2100,
       "baseline_max": -1000,
     }
