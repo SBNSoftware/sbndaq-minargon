@@ -35,9 +35,9 @@ Limits on rms are between {{rms_min}} and {{rms_max}}.
 {% endif %}
     <div class="col-lg-4 col-md-4" style="padding:0">
       <h3>
-        <a href="{{url_for("PMT", PMTLOC=pmt.value)}}">{{pmt.value}}</a>
+        <a href="{{url_for("PMT", PMTLOC=pmt.values[0])}}">{{pmt.values[0]}}</a>
       </h3>
-      <table class="table table-striped" id="{{pmt.value | replace(' ', '-') | replace(';', '')}}">
+      <table class="table table-striped" id="{{pmt.values[0] | replace(' ', '-') | replace(';', '')}}">
         <thead>
         <tr>
           <th> Bad Channels </th>
@@ -138,7 +138,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     }
     table_html = table_html + "</tbody>";
 
-    $("#{{pmt.value | replace(' ', '-') | replace(';', '')}}").html(table_html);
+    $("#{{pmt.values[0] | replace(' ', '-') | replace(';', '')}}").html(table_html);
 
   }
 ]);

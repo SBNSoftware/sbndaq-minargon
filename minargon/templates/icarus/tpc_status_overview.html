@@ -22,7 +22,10 @@
 <div class="row">
 <h4 class="hcenter">
 Limits on baseline are between {{baseline_min}} and {{baseline_max}}. 
+<br>
 Limits on RMS are between {{rms_min}} and {{rms_max}}.
+<br>
+Non-"wired" channels are excluded.
 </h4>
 </div>
 <br>
@@ -35,9 +38,9 @@ Limits on RMS are between {{rms_min}} and {{rms_max}}.
 {% endif %}
     <div class="col-lg-4 col-md-4" style="padding:0">
       <h3>
-        <a href="{{url_for("TPC", hw_select=tpc_plane)}}">{{tpc_plane.value}}</a>
+        <a href="{{url_for("TPC", hw_select=tpc_plane)}}">{{tpc_plane.values | join('-')}}</a>
       </h3>
-      <table class="table table-striped" id="{{tpc_plane.value | replace(' ', '-') | replace(';', '')}}">
+      <table class="table table-striped" id="{{tpc_plane.values | join('-') | replace(' ', '_')}}">
         <thead>
         <tr>
           <th> Bad Channels </th>
@@ -124,7 +127,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     }
     table_html = table_html + "</tbody>";
 
-    $("#{{tpc_plane.value | replace(' ', '-') | replace(';', '')}}").html(table_html);
+    $("#{{tpc_plane.values | join('-') | replace(' ', '_')}}").html(table_html);
 
   }
 ]);
