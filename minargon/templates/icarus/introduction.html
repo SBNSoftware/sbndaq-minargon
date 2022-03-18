@@ -54,6 +54,10 @@ ICARUS Online Monitoring
     <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
     <th><span id="TPC-Status"> </span></th>
   </tr>
+  <tr>
+    <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
+    <th><span id="PMT-Status"> </span></th>
+  </tr>
   </table>
 </div>
 
@@ -242,6 +246,70 @@ buffer.start();
 }
 {% endfor %}
 
+
+// PMT
+
+var n_bad_channel = 0;
+var BAD_PMTS = new Set();
+var pmt_config = {{pmt_config|tojson|safe}};
+
+
+{% for pmt in pmts %}
+{% set pmt_channels = pmt_channels[loop.index0]|tojson %}
+{% set disconnected_pmt_channels = disconnected_pmt_channels[loop.index0]|tojson %}
+{
+
+var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefined, ["rms", "baseline"], {{pmt_channels}}, 0, 25, "{{pmt.to_url()}}", undefined, undefined);
+
+var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+var pmt_poll = new Data.D3DataPoll(pmt_data_link, 60*1000 /* 1 minute */);
+var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
+  function(data) {
+    
+    var pmt_channels = {{pmt_channels}};
+    var rms_data = data.slice(0, pmt_channels.length);
+    var baseline_data = data.slice(pmt_channels.length);
+
+    for (var i = 0; i < pmt_channels.length; i++) {
+
+      if (rms_data[i].size > 0) {
+        var rms = rms_data[i].get_last()[1];
+      }
+
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+
+      if ( (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
+      {
+        n_bad_channel += 1;
+        var channel_str = `<a href = "{{url_for('PMT_snapshot')}}?PMT=` + pmt_channels[i] + `">`+ pmt_channels[i] + `</a>`;
+        BAD_PMTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_PMTS.size > 3) {
+      let bad_pmts_str = "NOT OK. Bad channels: " + Array.from(BAD_PMTS).join(" ");
+      $("#PMT-Status").html(bad_pmts_str);
+     // $("#PMT-Status").html(n_bad_channel);
+      $("#PMT-Status").css({"color": "red"});
+    }
+    else {
+      $("#PMT-Status").text("OK");
+      $("#PMT-Status").css({"color": "green"});
+    }
+
+
+  }
+]);
+
+pmt_buffer.start();
+
+}
+{% endfor %}
+
 </script> 
 {%endblock%}
-

@@ -13,6 +13,7 @@
     <th>Run: <span id="run-number"></span></th>
     <th>Subrun: <span id="subrun-number"></span></th>
     <th>Event: <span id="event-number"></span></th>
+    <th>Timestamp: <span id="timestamp"></span></th>
   </tr>
 </table>
 </div>
@@ -138,6 +139,8 @@ poll.add_callback(function(data) {
     $("#run-number").html(data.run);
     $("#subrun-number").html(data.subrun);
     $("#event-number").html(data.event);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
 });
 poll.run();
 {% endif %}

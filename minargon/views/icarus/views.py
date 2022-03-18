@@ -18,6 +18,12 @@ from six.moves import zip
 TPC_RMS_ALARM_MIN = 0.5
 TPC_RMS_ALARM_MAX = 20.
 
+PMT_RMS_ALARM_MIN = 0.5
+PMT_RMS_ALARM_MAX = 7.
+
+PMT_BASELINE_ALARM_MIN = 14500
+PMT_BASELINE_ALARM_MAX = 15500
+
 @app.route('/test/<int:chan>')
 def test(chan):
     channels =  hardwaredb.icarus_tpc.tpc_channel_list("readout_board_id", str(chan))
@@ -82,12 +88,32 @@ def CRT_status():
 def introduction():
     tpc_config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
     tpc_channels = [hardwaredb.select(tpc_flange) for tpc_flange in hardwaredb.icarus.tpc.TPCFlanges()]
+    pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+    pmts = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
+    pmt_channels = [hardwaredb.select(pmt) for pmt in pmts]
 
+    # filter out disconnected channels
+    disconnected_pmt_channels = [15, 63, 111, 207, 255, 303, 351]
+    for i in range(len(pmt_channels)):
+      dc = [channel for channel in pmt_channels[i] if channel in disconnected_pmt_channels]
+      for j in dc:
+        pmt_channels[i].remove(j)
+   
+    print(pmt_channels)
+  
     render_args = {
       "tpc_config": tpc_config,
       "tpc_channels": tpc_channels,
       "tpc_rms_min": TPC_RMS_ALARM_MIN,
       "tpc_rms_max": TPC_RMS_ALARM_MAX,
+      "pmt_config": pmt_config,
+      "pmt_channels": pmt_channels,
+      "disconnected_pmt_channels": disconnected_pmt_channels,
+      "pmt_rms_min": PMT_RMS_ALARM_MIN,
+      "pmt_rms_max": PMT_RMS_ALARM_MAX,
+      "baseline_min": PMT_BASELINE_ALARM_MIN,
+      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "pmts": pmts
     }
 
     return render_template('icarus/introduction.html', **render_args)
@@ -104,11 +130,11 @@ def PMT_status():
       "config": config,
       "channels": channels,
       "pmts": pmts,
-      "rms_min": 0.5,
-      "rms_max": 7,
-      "baseline_min": 14500,
-      "baseline_max": 15500,
-      "eventmeta_key": False,
+      "rms_min": PMT_RMS_ALARM_MIN,
+      "rms_max": PMT_RMS_ALARM_MAX,
+      "baseline_min": PMT_BASELINE_ALARM_MIN,
+      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "eventmeta_key": "eventmetaPMT",
     }
 
     return render_template('icarus/pmt_status_overview.html', **render_args)
