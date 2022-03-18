@@ -1,7 +1,7 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}TPC Alarms{% endblock %}
+{% block title %}PMT Alarms{% endblock %}
 {% block body %}
 {{ super() }}
 <div class="container">
@@ -13,6 +13,7 @@
     <th>Run: <span id="run-number"></span></th>
     <th>Subrun: <span id="subrun-number"></span></th>
     <th>Event: <span id="event-number"></span></th>
+    <th>Timestamp: <span id="timestamp"></span></th>
   </tr>
 </table>
 </div>
@@ -79,16 +80,14 @@ var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
 var buffer = new Data.D3DataBuffer(poll, 1, [
   function(data) {
     var channels = {{channels}};
-
     var isbad = [];
 
     var rms_data = data.slice(0, channels.length);
     var baseline_data = data.slice(channels.length);
 
-//    var rms_data = data; // .slice(0, channels.length);
-//    var baseline_data = data
     var baselines = [];
     var rmss = [];
+ 
     for (var i = 0; i < channels.length; i++) {
       
     //  var baseline = -1;
@@ -100,9 +99,11 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
       if (rms_data[i].size > 0) {
         var rms = rms_data[i].get_last()[1];
       }
-
+          
+ 
       baselines.push(baseline);
       rmss.push(rms);
+
       var bad = ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) || (rms < {{rms_min}}) || (rms > {{rms_max}}));
       
       if (bad)  {
@@ -114,8 +115,9 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         <thead>
         <tr>
           <th> Bad Channels </th>
-          <th> RMS </th>
+          <th> RMS </th> 
           <th> Baseline </th>
+
         </tr>
         </thead>
         <tbody>`;
@@ -151,6 +153,8 @@ poll.add_callback(function(data) {
     $("#run-number").html(data.run);
     $("#subrun-number").html(data.subrun);
     $("#event-number").html(data.event);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
 });
 poll.run();
 {% endif %}
