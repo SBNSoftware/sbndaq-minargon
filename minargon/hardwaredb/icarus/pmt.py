@@ -1,5 +1,6 @@
 from minargon.hardwaredb import HWSelector, hardwaredb_route
 from werkzeug.exceptions import HTTPException
+from . import validate_columns, wherestr, to_column, to_display
 
 db_name = "icarus_pmt_hw"
 pmt_columns = ["pmt_in_tpc_plane", "pmt_id"]
@@ -7,17 +8,9 @@ pmt_table = "pmt_placements"
 
 def PMTLOCs():
     try:
-        return [(hw.value,hw) for hw in available_values("pmt_placements", "pmt_in_tpc_plane")] 
+        return [(hw.values[0], hw) for hw in available_values("pmt_placements", "pmt_in_tpc_plane")] 
     except HTTPException as e:
         return []
-
-def to_column(s):
-    return s.replace(" ", "_").lower()
-
-def to_display(s):
-    return s.replace("_", " ").title() \
-      .replace("Tpc", "TPC") \
-      .replace("Id", "ID")
 
 @hardwaredb_route(db_name)
 def available_values(conn, table, column):
@@ -31,17 +24,15 @@ def available_values(conn, table, column):
     except:
         sorted_data = data
     cur.close()
-    return [HWSelector(table, column, d) for d in sorted_data]
+    return [HWSelector(table, [column], [d]) for d in sorted_data]
 
 @hardwaredb_route(db_name)
-def pmt_channel_list(conn, column, condition):
+def pmt_channel_list(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in pmt_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, daq_table))
+    columns = validate_columns(columns, pmt_columns, pmt_table)
 
-    channels = cur.execute("SELECT pmt_id FROM %s WHERE %s=?" % (pmt_table, column), (condition,))
+    channels = cur.execute("SELECT pmt_id FROM %s %s" % (pmt_table, wherestr(columns)), tuple(conditions))
     channels = sorted([int(c[0]) for c in channels if c], key=int)
 
     cur.close()

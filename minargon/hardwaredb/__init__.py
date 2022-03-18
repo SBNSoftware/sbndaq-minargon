@@ -7,13 +7,28 @@ import sqlite3
 import os
 
 class HWSelector:
-    def __init__(self, table, column, value):
+    def __init__(self, table, columns=[], values=[]):
+        if not isinstance(columns, list):
+            raise ValueError("HWSelector columns must be a list")
+        if not isinstance(values, list):
+            raise ValueError("HWSelector values must be a list")
+        if len(columns) != len(values):
+            raise ValueError("Number of columns must match number of values")
+
         self.table = table
-        self.column = column
-        self.value = value
+        self.columns = [str(c) for c in columns]
+        self.values = [str(v) for v in values]
 
     def to_url(self):
-        return ("%s:%s:%s" % (self.table, self.column, self.value)).replace(";", "|")
+        return ("%s:%s:%s" % (self.table, ",".join(self.columns), ",".join(self.values))).replace(";", "|")
+
+    def display_values(self):
+        return "-".join([str(v) for v in self.values])
+
+    def where(self, column, value):
+        self.columns.append(column)
+        self.values.append(value)
+        return self
 
     def __repr__(self):
         return self.__str__()
@@ -21,18 +36,22 @@ class HWSelector:
         return self.to_url()
 
 class HWSelectorConverter(BaseConverter):
-    def to_python(self, value):
-        return HWSelector(*[s.replace("|", ";") for s in value.split(":")])
+    def to_python(self, values):
+        data = [s.replace("|", ";") for s in values.split(":")]
+        table = data[0]
+        columns = data[1].split(",")
+        values = data[2].split(",")
+        return HWSelector(table, columns, values)
 
     def to_url(self, selector):
         return selector.to_url()
 
 class HWSelectorListConverter(BaseConverter):
     def to_python(self, values):
-        return [HWSelector(*[s.replace("|", ";") for s in value.split(":")]) for value in values.split(",")]
+        return [HWSelector(*[s.replace("|", ";") for s in values.split(":")]) for values in values.split(".")]
 
     def to_url(self, selectors):
-        return ",".join([s.to_url() for s in selectors])
+        return ".".join([s.to_url() for s in selectors])
 
 class HardwareDBConnectionError:
     def __init__(self, err):
@@ -87,12 +106,12 @@ hw_mappings = {}
 hw_selectors = {}
 def select(hw_select):
     if hw_select.table in hw_selectors:
-        return hw_selectors[hw_select.table](hw_select.column, hw_select.value)
+        return hw_selectors[hw_select.table](hw_select.columns, hw_select.values)
     return abort(404)
 
 def channel_map(hw_select, channels):
-    if hw_select.table in hw_mappings and hw_select.column in hw_mappings[hw_select.table]:
-        return hw_mappings[hw_select.table][hw_select.column](hw_select.column, hw_select.value)
+    if hw_select.table in hw_mappings and hw_select.columns[0] in hw_mappings[hw_select.table]:
+        return hw_mappings[hw_select.table][hw_select.columns[0]](hw_select.columns[0], hw_select.values[0])
     return None
 
 if app.config["FRONT_END"] == "icarus":

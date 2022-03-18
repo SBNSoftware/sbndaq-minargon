@@ -1,6 +1,7 @@
 from minargon.hardwaredb import HWSelector, hardwaredb_route
 from werkzeug.exceptions import HTTPException
 import itertools
+from . import validate_columns, wherestr, to_column, to_display
 
 db_name = "icarus_crt_hw"
 
@@ -13,15 +14,9 @@ module_columns = ["module_id", "module_position"]
 
 def CRTLOCs():
     try:
-        return [(hw.value, hw) for hw in available_values(module_table, "module_position")]
+        return [(hw.values[0], hw) for hw in available_values(module_table, "module_position")]
     except HTTPException as e:
         return []
-
-def to_column(c):
-    return c
-
-def to_display(c):
-    return c
 
 @hardwaredb_route(db_name)
 def available_values(conn, table, column):
@@ -35,17 +30,15 @@ def available_values(conn, table, column):
     except:
         sorted_data = data
     cur.close()
-    return [HWSelector(table, column, d) for d in sorted_data]
+    return [HWSelector(table, [column], [d]) for d in sorted_data]
 
 @hardwaredb_route(db_name)
-def module_board_list(conn, column, condition):
+def module_board_list(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in module_columns:
-        raise ValueError("Column (%s) is not an available selector in table (%s)" % (column, module_table))
+    columns = validate_columns(columns, module_columns, module_table)
 
-    modules = cur.execute("SELECT module_id FROM %s WHERE %s=?" % (module_table, column), (condition,))
+    modules = cur.execute("SELECT module_id FROM %s %s" % (module_table, wherestr(column)), tuple(conditions))
     modules = [str(m[0]) for m in modules if m]
     module_spec = "(" + ",".join(["?" for _ in modules]) + ")"
 
@@ -62,14 +55,12 @@ def module_board_list(conn, column, condition):
     return macs
 
 @hardwaredb_route(db_name)
-def feb_board_list(conn, column, condition):
+def feb_board_list(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in feb_columns:
-        raise ValueError("Column (%s) is not an available selector in table (%s)" % (column, feb_table))
+    columns = validate_columns(columns, feb_columns, feb_table)
 
-    macs = cur.execute("SELECT mac_address FROM %s WHERE %s=?" % (feb_table, column), (condition,))
+    macs = cur.execute("SELECT mac_address FROM %s %s" % (feb_table, wherestr(column)), tuple(conditions))
     macs = sorted([int(m[0]) for m in macs if m], key=int)
 
     cur.close()

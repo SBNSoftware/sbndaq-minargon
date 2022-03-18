@@ -149,7 +149,7 @@ def timeseries_view(args, instance_name, view_ident="", link_function="undefined
     # setup the title
     title = instance_name
     if hw_select is not None:
-        title = ("%s %s -- " % (hw_select.column, hw_select.value)) + title
+        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
 
     # setup hw_select
     if hw_select is None:
