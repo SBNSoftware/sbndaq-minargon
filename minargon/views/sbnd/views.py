@@ -19,6 +19,10 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
+@app.route('/introduction')
+def introduction():
+    return render_template('sbnd/introduction.html')
+
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')
 def noise_snapshot():

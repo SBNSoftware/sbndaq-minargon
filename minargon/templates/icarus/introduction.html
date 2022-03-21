@@ -2,39 +2,72 @@
 {% block title %}Introduction to Minargon{% endblock %}
 {% block body %}
 {{ super() }}
-<div class="col-md-8 hcenter">
+<div class="container">
+<div class="row">
 <h1>
 ICARUS Online Monitoring
 </h1>
-<p>
-Online monitoring website for the ICARUS Detector. 
+</div>
 
-<br>
+<div class="row">
 
-TPC Online monitoring operation is: <span id="TPC-OM"> </span>
-<br>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter">
+  Monitoring Status
+  </h3>
 
-PMT Online monitoring operation is: <span id="PMT-OM"> </span>
+  <table class="table table-striped">
+  <tr>
+    <th>TPC OM: </th>
+    <th><span id="TPC-OM"> </span></th>
+  </tr>
+  <tr>
+    <th>PMT OM: </th>
+    <th><span id="PMT-OM"> </span></th>
+  </tr>
+  <tr>
+    <th>DAQConsumer: </th>
+    <th><span id="OM-status"> </span></th>
+  </tr>
+  <tr>
+    <th>Archiver: </th>
+    <th><span id="AR-status"> </span></th>
+  </tr>
+  <tr>
+    <th>Archived Data Time: </th>
+    <th><span id="Archived-Data"> </span></th>
+  </tr>
+  <tr>
+    <th>Redis Meomory Usage: </th>
+    <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
+  </tr>
+  </table>
+</div>
 
-<br>
 
-DAQConsumer operation is: <span id="OM-status"> </span>
+<div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter">
+  Detector Status
+  </h3>
+  <table class="table table-striped">
+  <tr>
+    <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
+    <th><span id="TPC-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
+    <th><span id="PMT-Status"> </span></th>
+  </tr>
+  </table>
+</div>
 
-<br>
+</div>
 
-Archiver operation is: <span id="AR-status"> </span>
-
-<br>
-
-Most recent archived data is: <span id="Archived-Data"> </span>
-<br>
-
-Redis Memory Usage is: <span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span>
-</p>
 {%endblock%}
 
 {% block script %}
 <script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
 import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
 import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
@@ -50,7 +83,6 @@ function time_delta(earlier) {
 
 function is_recent(time, time_is_ok) {
   return time_delta(time) < time_is_ok;
-  return ret;
 }
 
 
@@ -95,7 +127,6 @@ update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
 
 var poll_archived_data = new Poll.Poll($SCRIPT_ROOT + "/metric_archiving/stream_group_last_time/archived/rms/tpc_channel");
 poll_archived_data.add_callback(function(data) {
-    console.log(data);
     var spanid = "#Archived-Data";
     var delta = (time_delta(data.time) / 1000. / 60).toFixed(0);
     var delta_str = " (" + String(delta) + "m)";
@@ -167,6 +198,118 @@ poll_redis_mem_frac.add_callback(function(data) {
 });
 poll_redis_mem_frac.run();
 
+var N_FLANGE_BAD_CHANNEL = 16;
+var BAD_FLANGES = new Set();
+
+{% for flange in flanges %}
+{% set channels = tpc_channels[loop.index0]|tojson %}
+{
+
+var config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{channels}}, 0, 25, "{{flange.to_url()}}", undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["rms"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var n_bad_channel = 0;
+    for (var i = 0; i < data.length; i++) {
+      var rms = data[i].get_last()[1];
+      if (rms < {{tpc_rms_min}} || rms > {{tpc_rms_max}}) {
+        n_bad_channel += 1;
+      }
+    }  
+
+    var flange_str =
+      `<a href="{{url_for('TPC', hw_select=flange )}}">{{flange.values[0]}}</a>`;
+
+    if (n_bad_channel >= N_FLANGE_BAD_CHANNEL) {
+      BAD_FLANGES.add(flange_str);
+    }
+    else {
+      BAD_FLANGES.delete(flange_str);
+    }
+
+    if (BAD_FLANGES.size > 0) {
+      let bad_flange_str = "NOT OK. Bad Flanges: " + Array.from(BAD_FLANGES).join(" ");
+      $("#TPC-Status").html(bad_flange_str);
+      $("#TPC-Status").css({"color": "red"});
+    }
+    else {
+      $("#TPC-Status").text("OK");
+      $("#TPC-Status").css({"color": "green"});
+    }
+
+  }
+]);
+buffer.start();
+
+}
+{% endfor %}
+
+
+// PMT
+
+var n_bad_channel = 0;
+var BAD_PMTS = new Set();
+var pmt_config = {{pmt_config|tojson|safe}};
+
+
+{% for pmt in pmts %}
+{% set pmt_channels = pmt_channels[loop.index0]|tojson %}
+{% set disconnected_pmt_channels = disconnected_pmt_channels[loop.index0]|tojson %}
+{
+
+var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefined, ["rms", "baseline"], {{pmt_channels}}, 0, 25, "{{pmt.to_url()}}", undefined, undefined);
+
+var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+var pmt_poll = new Data.D3DataPoll(pmt_data_link, 60*1000 /* 1 minute */);
+var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
+  function(data) {
+    
+    var pmt_channels = {{pmt_channels}};
+    var rms_data = data.slice(0, pmt_channels.length);
+    var baseline_data = data.slice(pmt_channels.length);
+
+    for (var i = 0; i < pmt_channels.length; i++) {
+
+      if (rms_data[i].size > 0) {
+        var rms = rms_data[i].get_last()[1];
+      }
+
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+
+      if ( (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
+      {
+        n_bad_channel += 1;
+        var channel_str = `<a href = "{{url_for('PMT_snapshot')}}?PMT=` + pmt_channels[i] + `">`+ pmt_channels[i] + `</a>`;
+        BAD_PMTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_PMTS.size > 3) {
+      let bad_pmts_str = "NOT OK. Bad channels: " + Array.from(BAD_PMTS).join(" ");
+      $("#PMT-Status").html(bad_pmts_str);
+     // $("#PMT-Status").html(n_bad_channel);
+      $("#PMT-Status").css({"color": "red"});
+    }
+    else {
+      $("#PMT-Status").text("OK");
+      $("#PMT-Status").css({"color": "green"});
+    }
+
+
+  }
+]);
+
+pmt_buffer.start();
+
+}
+{% endfor %}
+
 </script> 
 {%endblock%}
-

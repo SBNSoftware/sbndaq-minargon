@@ -33,9 +33,9 @@ Limits on baseline are between {{baseline_min}} and {{baseline_max}}.
 {% endif %}
     <div class="col-lg-4 col-md-4" style="padding:0">
       <h3>
-        <a href="{{url_for("CRT_board", hw_select=crt)}}">{{crt.value}}</a>
+        <a href="{{url_for("CRT_board", hw_select=crt)}}">{{crt.values[0]}}</a>
       </h3>
-      <table class="table table-striped" id="{{crt.value | replace(' ', '-') | replace(';', '')}}">
+      <table class="table table-striped" id="{{crt.values[0] | replace(' ', '-') | replace(';', '')}}">
         <thead>
         <tr>
           <th> Board </th>
@@ -117,7 +117,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     }
     table_html = table_html + "</tbody>";
 
-    $("#{{crt.value | replace(' ', '-') | replace(';', '')}}").html(table_html);
+    $("#{{crt.values[0] | replace(' ', '-') | replace(';', '')}}").html(table_html);
 
   }
 ]);
