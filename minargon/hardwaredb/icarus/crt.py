@@ -38,7 +38,7 @@ def module_board_list(conn, columns, conditions):
 
     columns = validate_columns(columns, module_columns, module_table)
 
-    modules = cur.execute("SELECT module_id FROM %s %s" % (module_table, wherestr(column)), tuple(conditions))
+    modules = cur.execute("SELECT module_id FROM %s %s" % (module_table, wherestr(columns)), tuple(conditions))
     modules = [str(m[0]) for m in modules if m]
     module_spec = "(" + ",".join(["?" for _ in modules]) + ")"
 
@@ -60,7 +60,7 @@ def feb_board_list(conn, columns, conditions):
 
     columns = validate_columns(columns, feb_columns, feb_table)
 
-    macs = cur.execute("SELECT mac_address FROM %s %s" % (feb_table, wherestr(column)), tuple(conditions))
+    macs = cur.execute("SELECT mac_address FROM %s %s" % (feb_table, wherestr(columns)), tuple(conditions))
     macs = sorted([int(m[0]) for m in macs if m], key=int)
 
     cur.close()
