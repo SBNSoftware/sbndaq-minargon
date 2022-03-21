@@ -128,8 +128,13 @@ def PMT_status():
     channels = [hardwaredb.select(pmt) for pmt in pmts]
     config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
-    #print(channels)
-    #print(config)
+    # filter out disconnected channels
+    disconnected_pmt_channels = [15, 63, 111, 207, 255, 303, 351]
+    for i in range(len(channels)):
+      dc = [channel for channel in channels[i] if channel in disconnected_pmt_channels]
+      for j in dc:
+        channels[i].remove(j)
+
     render_args = {
       "config": config,
       "channels": channels,
