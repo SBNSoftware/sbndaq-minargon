@@ -15,6 +15,15 @@ from . import inject
 from six.moves import range
 from six.moves import zip
 
+TPC_RMS_ALARM_MIN = 1.5
+TPC_RMS_ALARM_MAX = 20.
+
+PMT_RMS_ALARM_MIN = 0.5
+PMT_RMS_ALARM_MAX = 7.
+
+PMT_BASELINE_ALARM_MIN = 14500
+PMT_BASELINE_ALARM_MAX = 15500
+
 @app.route('/test/<int:chan>')
 def test(chan):
     channels =  hardwaredb.icarus_tpc.tpc_channel_list("readout_board_id", str(chan))
@@ -22,7 +31,7 @@ def test(chan):
 
 @app.route('/TPC_Flange_Overview/<TPC>')
 def TPC_Flange_Overview(TPC):
-    flanges = hardwaredb.select(hardwaredb.HWSelector("flanges_flanges", "tpc_id", TPC))
+    flanges = hardwaredb.select(hardwaredb.HWSelector("flanges_flanges", ["tpc_id"], [TPC]))
     return flange_page(flanges)
 
 @app.route('/Flange_Overview')
@@ -36,7 +45,7 @@ def flange_page(flanges):
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     # turn the flange positions to hw_selects
-    hw_selects = [hardwaredb.HWSelector("flanges", "flange_pos_at_chimney", f) for f in flanges]
+    hw_selects = [hardwaredb.HWSelector("flanges", ["flange_pos_at_chimney"], [f]) for f in flanges]
 
     channels = [hardwaredb.select(hw_select) for hw_select in hw_selects]
     channel_map = [hardwaredb.channel_map(hw_select, c) for hw_select,c in zip(hw_selects, channels)]
@@ -75,23 +84,66 @@ def CRT_status():
 
     return render_template('icarus/crt_status_overview.html', **render_args) 
 
+@app.route('/introduction')
+def introduction():
+    pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+    pmts = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
+    pmt_channels = [hardwaredb.select(pmt) for pmt in pmts]
+
+    # filter out disconnected channels
+    disconnected_pmt_channels = [15, 63, 111, 207, 255, 303, 351]
+    for i in range(len(pmt_channels)):
+      dc = [channel for channel in pmt_channels[i] if channel in disconnected_pmt_channels]
+      for j in dc:
+        pmt_channels[i].remove(j)
+
+    tpc_config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
+    allflanges = hardwaredb.icarus.tpc.TPCFlanges()
+    # TODO: these should be in a database. But for now, hard-code the bad flanges
+    badflanges = ["WW01B", "EW20T"]
+    flanges = [f for f in allflanges if f.values[0] not in badflanges]
+    tpc_channels = [hardwaredb.select(tpc_flange.where("channel_type", "wired")) for tpc_flange in flanges]
+
+    render_args = {
+      "tpc_config": tpc_config,
+      "tpc_channels": tpc_channels,
+      "tpc_rms_min": TPC_RMS_ALARM_MIN,
+      "tpc_rms_max": TPC_RMS_ALARM_MAX,
+      "flanges": flanges,
+      "pmt_config": pmt_config,
+      "pmt_channels": pmt_channels,
+      "disconnected_pmt_channels": disconnected_pmt_channels,
+      "pmt_rms_min": PMT_RMS_ALARM_MIN,
+      "pmt_rms_max": PMT_RMS_ALARM_MAX,
+      "baseline_min": PMT_BASELINE_ALARM_MIN,
+      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "pmts": pmts
+    }
+
+    return render_template('icarus/introduction.html', **render_args)
+
 @app.route('/PMT_status')
 def PMT_status():
     pmts = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
     channels = [hardwaredb.select(pmt) for pmt in pmts]
     config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
-    #print(channels)
-    #print(config)
+    # filter out disconnected channels
+    disconnected_pmt_channels = [15, 63, 111, 207, 255, 303, 351]
+    for i in range(len(channels)):
+      dc = [channel for channel in channels[i] if channel in disconnected_pmt_channels]
+      for j in dc:
+        channels[i].remove(j)
+
     render_args = {
       "config": config,
       "channels": channels,
       "pmts": pmts,
-      "rms_min": 0.5,
-      "rms_max": 7,
-      "baseline_min": 14500,
-      "baseline_max": 15500,
-      "eventmeta_key": False,
+      "rms_min": PMT_RMS_ALARM_MIN,
+      "rms_max": PMT_RMS_ALARM_MAX,
+      "baseline_min": PMT_BASELINE_ALARM_MIN,
+      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "eventmeta_key": "eventmetaPMT",
     }
 
     return render_template('icarus/pmt_status_overview.html', **render_args)
@@ -100,10 +152,10 @@ def PMT_status():
 def TPC_status():
     TPCs = ["EE", "EW", "WE", "WW"]
     # Lookup the planes in each TPC
-    tpc_planes_all = [p for TPC in TPCs for p in hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", "tpc_id", TPC))]
+    tpc_planes_all = [p for TPC in TPCs for p in hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", ["tpc_id"], [TPC]))]
 
     # Build the "HWSelector" object to map the planes to channels
-    tpc_planes_all_hw = [hardwaredb.HWSelector("tpc_plane", "tpc_plane", p) for p in tpc_planes_all]
+    tpc_planes_all_hw = [hardwaredb.HWSelector("tpc_plane", ["tpc", "plane"], p).where("channel_type", "wired") for p in tpc_planes_all]
     # Lookup the channels
     channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes_all_hw]
 
@@ -114,9 +166,9 @@ def TPC_status():
       "channels": channels,
       "tpc_planes": tpc_planes_all_hw,
       "eventmeta_key": "eventmetaTPC",
-      "rms_min": 0.5,
-      "rms_max": 20,
-      "baseline_min": -2100,
+      "rms_min": TPC_RMS_ALARM_MIN,
+      "rms_max": TPC_RMS_ALARM_MAX,
+      "baseline_min": -2200,
       "baseline_max": -1000,
     }
 
@@ -124,19 +176,20 @@ def TPC_status():
 
 @app.route('/TPC_Plane_Overview/<TPC>')
 def TPC_Plane_Overview(TPC):
-    tpc_planes = hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", "tpc_id", TPC))
+    tpc_planes = hardwaredb.select(hardwaredb.HWSelector("tpc_plane_planes", ["tpc_id"], [TPC]))
     return plane_page(tpc_planes)
 
 def plane_page(tpc_planes):
-    tpc_planes = [hardwaredb.HWSelector("tpc_plane", "tpc_plane", p) for p in tpc_planes]
+    tpc_planes = [hardwaredb.HWSelector("tpc_plane", ["tpc", "plane"], p) for p in tpc_planes]
+    print(tpc_planes)
 
     group_name = "tpc_channel"
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes]
-    tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", "flange_pos_at_chimney", p.value) for p in tpc_planes]
+    tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", ["flange_pos_at_chimney"], p.values) for p in tpc_planes]
     flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
-    titles = ["TPC %s" % hw.value for hw in tpc_planes]
+    titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
 
     render_args = {
       "config": config,
@@ -182,7 +235,7 @@ def CRT_group_select():
             child_nodes = []
             for opt in values:
                 node = {
-                    "text" : [opt.value],
+                    "text" : [opt.display_values()],
                     "selectable" : "true",
                     "displayCheckbox": "false",
                     "href":  url_for("CRT_board", hw_select=opt)
@@ -225,7 +278,7 @@ def TPC_group_select():
             child_nodes = []
             for opt in values:
                 node = {
-                    "text" : [opt.value],
+                    "text" : [opt.display_values()],
                     "selectable" : "true",
                     "displayCheckbox": "false",
                     "href":  url_for("TPC", hw_select=opt)
@@ -260,7 +313,7 @@ def NoiseCorr():
 @app.route('/PMT/<PMTLOC>')
 def PMT(hw_select=None, PMTLOC=None):
     if PMTLOC:
-        hw_select = hardwaredb.HWSelector("pmt_placements", "pmt_in_tpc_plane", PMTLOC)
+        hw_select = hardwaredb.HWSelector("pmt_placements", ["pmt_in_tpc_plane"], [PMTLOC])
    
     print(hw_select)
     args = dict(**request.args)
