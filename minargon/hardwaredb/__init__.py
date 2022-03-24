@@ -110,8 +110,8 @@ def select(hw_select):
     return abort(404)
 
 def channel_map(hw_select, channels):
-    if hw_select.table in hw_mappings and hw_select.columns[0] in hw_mappings[hw_select.table]:
-        return hw_mappings[hw_select.table][hw_select.columns[0]](hw_select.columns[0], hw_select.values[0])
+    if hw_select.table in hw_mappings:
+        return hw_mappings[hw_select.table](hw_select.columns, hw_select.values)
     return None
 
 if app.config["FRONT_END"] == "icarus":

@@ -187,7 +187,7 @@ def plane_page(tpc_planes):
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes]
-    tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", ["flange_pos_at_chimney"], p.values) for p in tpc_planes]
+    tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", ["tpc", "plane"], p.values) for p in tpc_planes]
     flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
     titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
 
