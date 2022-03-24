@@ -75,15 +75,12 @@ def tpc_plane_plane_list(columns, conditions):
     return [[conditions[0], p.values[0]] for p in planes]
 
 @hardwaredb_route(db_name)
-def tpc_plane_flange_map(conn, column, condition):
-    TPC = condition[0]
-    plane = condition[1]
+def tpc_plane_flange_map(conn, columns, conditions):
+    TPC = conditions[0]
+    plane = conditions[1]
     plane_channels = set(daq_channel_list(["plane"], [plane]))
 
     cur = conn.cursor()
-    column = to_column(column)
-    if column not in flange_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, flange_table))
 
     flange_ids = cur.execute("SELECT flange_id FROM %s WHERE %s=?" % (flange_table, "tpc_id"), (TPC, ))
     # collect the flange ids into a selector
@@ -148,14 +145,13 @@ def flange_list(conn, columns, conditions):
 
 
 @hardwaredb_route(db_name)
-def slot_local_channel_map(conn, column, condition):
+def slot_local_channel_map(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in flange_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, flange_table))
+    columns = validate_columns(columns, flange_columns, flange_table)
 
-    flange_ids = cur.execute("SELECT flange_id FROM %s WHERE %s=?" % (flange_table, to_column(column)), (condition,))
+    flange_ids = cur.execute("SELECT flange_id FROM %s %s" % (flange_table, wherestr(columns)), tuple(conditions))
+
     # collect the flange ids into a selector
     flange_id_list = [str(f[0]) for f in flange_ids if f]
     flange_id_spec = "(" + ",".join(["?" for _ in flange_id_list]) + ")"
@@ -191,7 +187,5 @@ SELECTORS[tpc_plane_table] = tpc_plane_channel_list
 SELECTORS[tpc_plane_table + "_planes"] = tpc_plane_plane_list
 
 MAPPINGS = {}
-MAPPINGS[flange_table] = {}
-MAPPINGS[flange_table]["flange_pos_at_chimney"] = slot_local_channel_map
-MAPPINGS["tpc_plane_flanges"] = {}
-MAPPINGS["tpc_plane_flanges"]["flange_pos_at_chimney"] = tpc_plane_flange_map
+MAPPINGS[flange_table] = slot_local_channel_map
+MAPPINGS["tpc_plane_flanges"] = tpc_plane_flange_map
