@@ -148,9 +148,9 @@ def flange_list(conn, columns, conditions):
 def slot_local_channel_map(conn, columns, conditions):
     cur = conn.cursor()
 
-    columns = validate_columns(columns, flange_columns, flange_table)
+    this_flange_columns = validate_columns([columns[0]], flange_columns, flange_table)
 
-    flange_ids = cur.execute("SELECT flange_id FROM %s %s" % (flange_table, wherestr(columns)), tuple(conditions))
+    flange_ids = cur.execute("SELECT flange_id FROM %s %s" % (flange_table, wherestr(this_flange_columns)), (conditions[0],))
 
     # collect the flange ids into a selector
     flange_id_list = [str(f[0]) for f in flange_ids if f]
@@ -160,7 +160,11 @@ def slot_local_channel_map(conn, columns, conditions):
     readout_board_list = [str(f[0]) for f in readout_board_ids if f]
     readout_board_spec = "(" + ",".join(["?" for _ in readout_board_list]) + ")"
 
-    daq_channel_ids = cur.execute("SELECT channel_id,channel_number,readout_board_slot FROM %s WHERE readout_board_id IN %s" % (daq_table, readout_board_spec), readout_board_list)
+    this_daq_columns = validate_columns(columns[1:], daq_columns, daq_table)
+    daq_conditions = conditions[1:] 
+    andstr = "AND" if len(this_daq_columns) else ""
+
+    daq_channel_ids = cur.execute("SELECT channel_id,channel_number,readout_board_slot FROM %s %s %s readout_board_id IN %s" % (daq_table, wherestr(this_daq_columns), andstr, readout_board_spec), daq_conditions + readout_board_list)
 
     # sort the channels
     daq_channel_ids = sorted(list(daq_channel_ids), key=lambda x: x[0])
