@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from minargon import app
-from werkzeug.routing import BaseConverter
+from werkzeug.routing import BaseConverter, ValidationError
 from flask import abort, g
 from functools import wraps
 import sqlite3
@@ -9,11 +9,11 @@ import os
 class HWSelector:
     def __init__(self, table, columns=[], values=[]):
         if not isinstance(columns, list):
-            raise ValueError("HWSelector columns must be a list")
+            raise ValidationError("HWSelector columns must be a list")
         if not isinstance(values, list):
-            raise ValueError("HWSelector values must be a list")
+            raise ValidationError("HWSelector values must be a list")
         if len(columns) != len(values):
-            raise ValueError("Number of columns must match number of values")
+            raise ValidationError("Number of columns must match number of values")
 
         self.table = table
         self.columns = [str(c) for c in columns]
@@ -28,6 +28,11 @@ class HWSelector:
     def where(self, column, value):
         self.columns.append(column)
         self.values.append(value)
+        return self
+
+    def trim(self, level=1):
+        self.columns = self.columns[:level]
+        self.values = self.values[:level]
         return self
 
     def __repr__(self):

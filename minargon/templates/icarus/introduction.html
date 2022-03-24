@@ -220,7 +220,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     }  
 
     var flange_str =
-      `<a href="{{url_for('TPC', hw_select=flange )}}">{{flange.values[0]}}</a>`;
+      `<a href="{{url_for('TPC', hw_select=flange.trim() )}}">{{flange.values[0]}}</a>`;
 
     if (n_bad_channel >= N_FLANGE_BAD_CHANNEL) {
       BAD_FLANGES.add(flange_str);
