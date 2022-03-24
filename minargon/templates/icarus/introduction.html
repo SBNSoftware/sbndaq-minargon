@@ -291,7 +291,7 @@ var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
     }
 
 
-    if (BAD_PMTS.size > 3) {
+    if (BAD_PMTS.size > 6) {
       let bad_pmts_str = "NOT OK. Bad channels: " + Array.from(BAD_PMTS).join(" ");
       $("#PMT-Status").html(bad_pmts_str);
      // $("#PMT-Status").html(n_bad_channel);
