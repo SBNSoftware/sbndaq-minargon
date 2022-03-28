@@ -209,12 +209,16 @@ var config_controller = new Config.GroupConfigController({{tpc_config|tojson|saf
 
 var data_link = config_controller.data_link(0, ["rms"], undefined, 1);
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
-var buffer = new Data.D3DataBuffer(poll, 1, [
+var buffer = new Data.D3DataBuffer(poll, 5, [
   function(data) {
     var n_bad_channel = 0;
     for (var i = 0; i < data.length; i++) {
-      var rms = data[i].get_last()[1];
-      if (rms < {{tpc_rms_min}} || rms > {{tpc_rms_max}}) {
+      var this_data = data[i];
+      var rms = 0.;
+      for (var j = 0; j < this_data.size; j++) { 
+        rms = rms + this_data.get(j)[1] / this_data.size;
+      }
+      if (this_data.size > 0 && (rms < {{tpc_rms_min}} || rms > {{tpc_rms_max}})) {
         n_bad_channel += 1;
       }
     }  
