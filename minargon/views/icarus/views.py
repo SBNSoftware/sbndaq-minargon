@@ -115,8 +115,8 @@ def introduction():
       "disconnected_pmt_channels": disconnected_pmt_channels,
       "pmt_rms_min": PMT_RMS_ALARM_MIN,
       "pmt_rms_max": PMT_RMS_ALARM_MAX,
-      "baseline_min": PMT_BASELINE_ALARM_MIN,
-      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "pmt_baseline_min": PMT_BASELINE_ALARM_MIN,
+      "pmt_baseline_max": PMT_BASELINE_ALARM_MAX,
       "pmts": pmts
     }
 
