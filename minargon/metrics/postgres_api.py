@@ -403,6 +403,8 @@ def ps_series(connection, ID):
     args = stream_args(request.args)
     start_t = args['start']    # Start time
     if start_t is None:
+        return abort(404, "Must specify a start time to a PostgreSQL request") 
+
         start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
         start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
 

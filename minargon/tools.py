@@ -1,9 +1,9 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from datetime import datetime
+from datetime import datetime, tzinfo, timedelta
 import calendar
 
-from werkzeug.routing import BaseConverter
+from werkzeug.routing import BaseConverter, ValidationError
 import pytz
 
 LOCAL_TZ = pytz.timezone("US/Central")
@@ -73,10 +73,38 @@ def total_seconds(td):
     """Returns the total number of seconds contained in the duration."""
     return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
 
+
+# FROM: https://stackoverflow.com/questions/1101508/how-to-parse-dates-with-0400-timezone-string-in-python
+class FixedOffset(tzinfo):
+    """Fixed offset in minutes: `time = utc_time + utc_offset`."""
+    def __init__(self, offset):
+        self.__offset = timedelta(minutes=offset)
+        hours, minutes = divmod(offset, 60)
+        #NOTE: the last part is to remind about deprecated POSIX GMT+h timezones
+        #  that have the opposite sign in the name;
+        #  the corresponding numeric value is not used e.g., no minutes
+        self.__name = '<%+03d%02d>%+d' % (hours, minutes, -hours)
+    def utcoffset(self, dt=None):
+        return self.__offset
+    def tzname(self, dt=None):
+        return self.__name
+    def dst(self, dt=None):
+        return timedelta(0)
+    def __repr__(self):
+        return 'FixedOffset(%d)' % (self.utcoffset().total_seconds() / 60)
+
 def parseiso(timestr):
     """Convert an iso time string -> [ms] unix timestamp."""
     try: 
-        dt = datetime.strptime(timestr,'%Y-%m-%dT%H:%M:%S.%fZ')
+        naive_date_str, _, offset_str = timestr.rpartition(' ')
+        dt = datetime.strptime(naive_date_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+
+        offset = int(offset_str[-4:-2])*60 + int(offset_str[-2:])
+        if offset_str[0] == "-":
+            offset = -offset
+
+        dt = dt.replace(tzinfo=FixedOffset(offset))
+
     except:
         dt = datetime.strptime(timestr, '%m/%d/%Y %H:%M')
     return int(calendar.timegm(dt.timetuple())*1e3 + dt.microsecond/1e3)
@@ -86,11 +114,7 @@ def parseiso_or_int(inp_str):
     try:
         return int(inp_str)
     except ValueError:
-        try:
-            return parseiso(str(inp_str))
-        except:
-            return None
-    
+        return parseiso(str(inp_str))
 
 def stream_args(args):
     ret = {}

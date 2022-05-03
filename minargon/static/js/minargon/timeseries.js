@@ -248,7 +248,7 @@ export class PlotlyController {
         var d = new Date();
         d.setHours(d.getHours() -1);
         self.start = d;
-        self.end = Date.now();
+        self.end = new Date();
         self.is_live = false;
         // stop the buffer
         if (self.buffer.isRunning()) {
@@ -260,7 +260,7 @@ export class PlotlyController {
         var d = new Date();
         d.setDate(d.getDate() -1);
         self.start = d;
-        self.end = Date.now();
+        self.end = new Date();
         self.is_live = false;
         // stop the buffer
         if (self.buffer.isRunning()) {
@@ -335,7 +335,8 @@ export class PlotlyController {
     }
     else {
       // set it ourselves
-      this.scatter.x_range = [moment(this.start).format("YYYY-MM-DD HH:mm:ss"), moment(this.end).format("YYYY-MM-DD HH:mm:ss")];
+      this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
+                                moment(this.end).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
     }
   }
   // ---------------------------------------------------------------------------
