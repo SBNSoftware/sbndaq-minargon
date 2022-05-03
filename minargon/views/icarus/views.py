@@ -18,6 +18,9 @@ from six.moves import zip
 TPC_RMS_ALARM_MIN = 1.5
 TPC_RMS_ALARM_MAX = 20.
 
+TPC_BASELINE_ALARM_MIN = -2200
+TPC_BASELINE_ALARM_MAX = -1000
+
 PMT_RMS_ALARM_MIN = 0.5
 PMT_RMS_ALARM_MAX = 7.
 
@@ -109,6 +112,8 @@ def introduction():
       "tpc_channels": tpc_channels,
       "tpc_rms_min": TPC_RMS_ALARM_MIN,
       "tpc_rms_max": TPC_RMS_ALARM_MAX,
+      "tpc_baseline_min": TPC_BASELINE_ALARM_MIN,
+      "tpc_baseline_max": TPC_BASELINE_ALARM_MAX,
       "flanges": flanges,
       "pmt_config": pmt_config,
       "pmt_channels": pmt_channels,
@@ -168,8 +173,8 @@ def TPC_status():
       "eventmeta_key": "eventmetaTPC",
       "rms_min": TPC_RMS_ALARM_MIN,
       "rms_max": TPC_RMS_ALARM_MAX,
-      "baseline_min": -2200,
-      "baseline_max": -1000,
+      "baseline_min": TPC_BASELINE_ALARM_MIN,
+      "baseline_max": TPC_BASELINE_ALARM_MAX,
     }
 
     return render_template('icarus/tpc_status_overview.html', **render_args)
@@ -208,6 +213,9 @@ def plane_page(tpc_planes):
 def CRT_board(hw_select=None):
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink", hw_select=hw_select)
 
+@app.route('/CRT_board_top/')
+def CRT_board_top(hw_select=None):
+    return timeseries_view(request.args, "CRT_board_top", "")
 
 @app.route('/TPC')
 @app.route('/TPC/<hw_selector:hw_select>')

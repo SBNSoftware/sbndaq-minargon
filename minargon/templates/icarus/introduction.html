@@ -146,7 +146,7 @@ poll_tpc.add_callback(function(data) {
     var spanid = "#TPC-OM";
     var delta = (time_delta(data.time) / 1000.).toFixed(0);
     var delta_str = " (" + String(delta) + "s)";
-    if (is_recent(data.time, 120 * 1000 /* 120 s*/)) {
+    if (is_recent(data.time, 600 * 1000 /* 600 s*/)) {
       $(spanid).text("ON" + delta_str);
       $(spanid).css({"color": "green"});
     }
@@ -162,7 +162,7 @@ poll_pmt.add_callback(function(data) {
     var spanid = "#PMT-OM";
     var delta = (time_delta(data.time) / 1000.).toFixed(0);
     var delta_str = " (" + String(delta) + "s)";
-    if (is_recent(data.time, 120 * 1000 /* 120 s*/)) {
+    if (is_recent(data.time, 600 * 1000 /* 600 s*/)) {
       $(spanid).text("ON" + delta_str);
       $(spanid).css({"color": "green"});
     }
@@ -205,20 +205,36 @@ var BAD_FLANGES = new Set();
 {% set channels = tpc_channels[loop.index0]|tojson %}
 {
 
+
 var config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{channels}}, 0, 25, "{{flange.to_url()}}", undefined, undefined);
 
-var data_link = config_controller.data_link(0, ["rms"], undefined, 1);
+var data_link = config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
 var buffer = new Data.D3DataBuffer(poll, 5, [
   function(data) {
+    var channels = {{channels}};
+
+    var rms_data = data.slice(0, channels.length);
+    var baseline_data = data.slice(channels.length);
+
     var n_bad_channel = 0;
-    for (var i = 0; i < data.length; i++) {
-      var this_data = data[i];
+    for (var i = 0; i < channels.length; i++) {
+      var this_data = rms_data[i];
       var rms = 0.;
       for (var j = 0; j < this_data.size; j++) { 
         rms = rms + this_data.get(j)[1] / this_data.size;
       }
       if (this_data.size > 0 && (rms < {{tpc_rms_min}} || rms > {{tpc_rms_max}})) {
+        n_bad_channel += 1;
+        continue; // no need to check baseline
+      }
+
+      var this_data = baseline_data[i];
+      var baseline = 0.;
+      for (var j = 0; j < this_data.size; j++) { 
+        baseline = baseline + this_data.get(j)[1] / this_data.size;
+      }
+      if (this_data.size > 0 && (baseline < {{tpc_baseline_min}} || baseline > {{tpc_baseline_max}})) {
         n_bad_channel += 1;
       }
     }  
