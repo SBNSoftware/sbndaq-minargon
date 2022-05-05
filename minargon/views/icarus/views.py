@@ -77,8 +77,8 @@ def CRT_status():
       "config": config,
       "channels": channels,
       "crts": crts,
-      "baseline_min": 150,
-      "baseline_max": 200,
+      "baseline_min": 20,
+      "baseline_max": 400,
       "eventmeta_key": False, # TODO
     }
 
