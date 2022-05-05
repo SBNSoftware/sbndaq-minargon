@@ -66,6 +66,14 @@ export class PlotlyController {
   }
   updateReferenceData() {} // noop
 
+  setSaveName(name) {
+    this.scatter.savename = name;
+  }
+
+  setPlotTitle(title) {
+    this.scatter.title = title;
+  }
+
   setYTitles(ytitles) {
     this.ytitles = ytitles;
     this.scatter.y_axes = this.buildScatterAxes(); 
