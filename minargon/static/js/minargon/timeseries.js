@@ -66,6 +66,14 @@ export class PlotlyController {
   }
   updateReferenceData() {} // noop
 
+  setSaveName(name) {
+    this.scatter.savename = name;
+  }
+
+  setPlotTitle(title) {
+    this.scatter.title = title;
+  }
+
   setYTitles(ytitles) {
     this.ytitles = ytitles;
     this.scatter.y_axes = this.buildScatterAxes(); 
@@ -254,7 +262,17 @@ export class PlotlyController {
         if (self.buffer.isRunning()) {
           self.buffer.stop();
         }
-
+      }
+      else if (toggle_val == "8hour"){
+        var d = new Date();
+        d.setHours(d.getHours()-8);
+        self.start = d;
+        self.end = Date.now();
+        self.is_live = false;
+        // stop the buffer
+        if (self.buffer.isRunning()) {
+          self.buffer.stop();
+        }
       }
       else if (toggle_val == "day"){
         var d = new Date();
@@ -266,7 +284,17 @@ export class PlotlyController {
         if (self.buffer.isRunning()) {
           self.buffer.stop();
         }
-
+      }
+      else if (toggle_val == "week"){
+        var d = new Date();
+        d.setDate(d.getDate() -7);
+        self.start = d;
+        self.end = Date.now();
+        self.is_live = false;
+        // stop the buffer
+        if (self.buffer.isRunning()) {
+          self.buffer.stop();
+        }
       }
 
       self.runBuffer();

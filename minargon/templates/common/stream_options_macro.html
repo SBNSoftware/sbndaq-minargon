@@ -435,9 +435,19 @@ $('#{{id}}').treeview( {
         <input type="radio" name="options" value="live" id="{{id_toggle}}-hour" autocomplete="off" > Last Hour
       </label>
 
+      <!-- Toggle 8 Hour -->
+      <label class="btn btn-secondary" id="{{id_toggle}}-label-8hour" >
+        <input type="radio" name="options" value="live" id="{{id_toggle}}-8hour" autocomplete="off" > Last 8 Hrs
+      </label>
+
       <!-- Toggle Day -->
       <label class="btn btn-secondary" id="{{id_toggle}}-label-day">
         <input type="radio" name="options" value="live" id="{{id_toggle}}-day" autocomplete="off" > Last Day
+      </label>
+
+      <!-- Toggle Day -->
+      <label class="btn btn-secondary" id="{{id_toggle}}-label-week">
+        <input type="radio" name="options" value="live" id="{{id_toggle}}-week" autocomplete="off" > Last Week
       </label>
       
       <!-- Toggle Lookback -->
@@ -456,7 +466,9 @@ function updateToggle(toggle_id) {
   var toggle_live     = "#" + toggle_id + "-live";
   var toggle_lookback = "#" + toggle_id + "-lookback";
   var toggle_hour     = "#" + toggle_id + "-hour";
+  var toggle_8hour     = "#" + toggle_id + "-8hour";
   var toggle_day      = "#" + toggle_id + "-day";
+  var toggle_week      = "#" + toggle_id + "-week";
   var toggle          = "#" + toggle_id;
 
   if ($(toggle_live).prop("checked")) {
@@ -468,10 +480,16 @@ function updateToggle(toggle_id) {
   else if ($(toggle_hour).prop("checked")) {
     $(toggle).val("hour");
   }
+  else if ($(toggle_8hour).prop("checked")) {
+    $(toggle).val("8hour");
+  }
   else if ($(toggle_day).prop("checked")) {
     $(toggle).val("day");
   }
-  
+  else if ($(toggle_week).prop("checked")) {
+    $(toggle).val("week");
+  }
+
   $(toggle).trigger("date-change");
 }
 
@@ -534,7 +552,7 @@ jQuery('#{{id_end}}').datetimepicker({
 });
 
 
-var live_picker = ["#{{id_toggle}}-live", "#{{id_toggle}}-hour", "#{{id_toggle}}-day"];
+var live_picker = ["#{{id_toggle}}-live", "#{{id_toggle}}-hour", "#{{id_toggle}}-8hour", "#{{id_toggle}}-day", "#{{id_toggle}}-week"];
 
 // setup the toggle button to turn off the pickers
 for (var i = 0; i < live_picker.length; i++){
