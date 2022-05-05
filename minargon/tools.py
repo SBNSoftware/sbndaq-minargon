@@ -104,9 +104,12 @@ def parseiso(timestr):
             offset = -offset
 
         dt = dt.replace(tzinfo=FixedOffset(offset))
-
     except:
-        dt = datetime.strptime(timestr, '%m/%d/%Y %H:%M')
+        try:
+            dt = datetime.strptime(timestr, '%m/%d/%Y %H:%M')
+        except:
+            raise ValueError()
+
     return int(calendar.timegm(dt.timetuple())*1e3 + dt.microsecond/1e3)
 
 # try parsing as int, falling back to parseiso

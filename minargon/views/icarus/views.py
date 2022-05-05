@@ -27,6 +27,12 @@ PMT_RMS_ALARM_MAX = 7.
 PMT_BASELINE_ALARM_MIN = 14500
 PMT_BASELINE_ALARM_MAX = 15500
 
+CRT_BASELINE_ALARM_MIN = 20
+CRT_BASELINE_ALARM_MAX = 330
+
+TOPCRT_BASELINE_ALARM_MIN = 150
+TOPCRT_BASELINE_ALARM_MAX = 450
+
 @app.route('/test/<int:chan>')
 def test(chan):
     channels =  hardwaredb.icarus_tpc.tpc_channel_list("readout_board_id", str(chan))
@@ -75,20 +81,37 @@ def CRT_status():
     channels = [hardwaredb.select(crt) for crt in crts]
     config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
 
-    #print(channels)
     render_args = {
       "config": config,
       "channels": channels,
       "crts": crts,
-      "baseline_min": 150,
-      "baseline_max": 200,
+      "baseline_min": CRT_BASELINE_ALARM_MIN,
+      "baseline_max": CRT_BASELINE_ALARM_MAX,
       "eventmeta_key": False, # TODO
     }
 
     return render_template('icarus/crt_status_overview.html', **render_args) 
 
+@app.route('/TopCRT_status')
+def TopCRT_status():
+    crts = hardwaredb.icarus.topcrt.CRTLOCs()
+    channels = [hardwaredb.select(crt) for _,crt in crts]
+    config = online_metrics.get_group_config("online", "CRT_board_top", front_end_abort=True)
+
+    render_args = {
+      "config": config,
+      "channels": channels,
+      "crts": crts,
+      "baseline_min": TOPCRT_BASELINE_ALARM_MIN,
+      "baseline_max": TOPCRT_BASELINE_ALARM_MAX,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('icarus/topcrt_status_overview.html', **render_args) 
+
 @app.route('/introduction')
 def introduction():
+    # PMT
     pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
     pmts = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
     pmt_channels = [hardwaredb.select(pmt) for pmt in pmts]
@@ -100,12 +123,23 @@ def introduction():
       for j in dc:
         pmt_channels[i].remove(j)
 
+    # TPC
     tpc_config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
     allflanges = hardwaredb.icarus.tpc.TPCFlanges()
     # TODO: these should be in a database. But for now, hard-code the bad flanges
     badflanges = ["WW01B", "EW20T"]
     flanges = [f for f in allflanges if f.values[0] not in badflanges]
     tpc_channels = [hardwaredb.select(tpc_flange.where("channel_type", "wired")) for tpc_flange in flanges]
+
+    # SIDE-CRT
+    crts = [hw for _,hw in hardwaredb.icarus.crt.CRTLOCs()]
+    crt_channels = [hardwaredb.select(crt) for crt in crts]
+    crt_config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+
+    # TOP CRT
+    topcrts = [hw for _,hw in hardwaredb.icarus.topcrt.CRTLOCs()]
+    topcrt_channels = [hardwaredb.select(topcrt) for topcrt in topcrts]
+    topcrt_config = online_metrics.get_group_config("online", "CRT_board_top", front_end_abort=True)
 
     render_args = {
       "tpc_config": tpc_config,
@@ -115,6 +149,7 @@ def introduction():
       "tpc_baseline_min": TPC_BASELINE_ALARM_MIN,
       "tpc_baseline_max": TPC_BASELINE_ALARM_MAX,
       "flanges": flanges,
+
       "pmt_config": pmt_config,
       "pmt_channels": pmt_channels,
       "disconnected_pmt_channels": disconnected_pmt_channels,
@@ -122,7 +157,19 @@ def introduction():
       "pmt_rms_max": PMT_RMS_ALARM_MAX,
       "baseline_min": PMT_BASELINE_ALARM_MIN,
       "baseline_max": PMT_BASELINE_ALARM_MAX,
-      "pmts": pmts
+      "pmts": pmts,
+
+      "crt_config": crt_config,
+      "crt_channels": crt_channels,
+      "crts": crts,
+      "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
+      "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+
+      "topcrt_config": topcrt_config,
+      "topcrt_channels": topcrt_channels,
+      "topcrts": topcrts,
+      "topcrt_baseline_min": TOPCRT_BASELINE_ALARM_MIN,
+      "topcrt_baseline_max": TOPCRT_BASELINE_ALARM_MAX,
     }
 
     return render_template('icarus/introduction.html', **render_args)
@@ -214,8 +261,9 @@ def CRT_board(hw_select=None):
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink", hw_select=hw_select)
 
 @app.route('/CRT_board_top/')
+@app.route('/CRT_board_top/<hw_selector:hw_select>')
 def CRT_board_top(hw_select=None):
-    return timeseries_view(request.args, "CRT_board_top", "")
+    return timeseries_view(request.args, "CRT_board_top", "", hw_select=hw_select)
 
 @app.route('/TPC')
 @app.route('/TPC/<hw_selector:hw_select>')
@@ -226,53 +274,21 @@ def TPC(hw_select=None):
 
     return timeseries_view(args, "tpc_channel", "", "wireLink", eventmeta_key="eventmetaTPC", hw_select=hw_select)
 
+@app.route('/TopCRT_group_select')
+def TopCRT_group_select():
+    return hw_group_select("Top CRT", "CRT_board_top", hardwaredb.icarus.topcrt.available_selectors().items())
+
 @app.route('/CRT_group_select')
 def CRT_group_select():
-    pydict = { 
-        "text" : ["Select CRT Grouping"],
-        "expanded": "true",
-        "color" : "#000000",
-        "selectable" : "false",
-        "displayCheckbox": False,
-        "nodes" : []
-    }
-
-    for table, cols in hardwaredb.icarus.crt.available_selectors().items():
-        col_nodes = []
-        for col, values in cols.items():
-            child_nodes = []
-            for opt in values:
-                node = {
-                    "text" : [opt.display_values()],
-                    "selectable" : "true",
-                    "displayCheckbox": "false",
-                    "href":  url_for("CRT_board", hw_select=opt)
-                }
-                child_nodes.append(node)
-
-            col_node = {
-                "text" : [col],
-                "selectable" : "false",
-                "displayCheckbox": False,
-                "nodes" : child_nodes 
-            }
-            col_nodes.append(col_node)
-
-        table_node = {
-            "text": [table],
-            "selectable" : "false",
-            "displayCheckbox": False,
-            "nodes" : col_nodes 
-        }
-
-        pydict["nodes"].append(table_node)
-
-    return render_template('icarus/hw_grouping_select.html', data=pydict, title="CRT")
+    return hw_group_select("CRT", "CRT_board", hardwaredb.icarus.crt.available_selectors().items())
 
 @app.route('/TPC_group_select')
 def TPC_group_select():
+    return hw_group_select("TPC", "TPC", hardwaredb.icarus.tpc.available_selectors().items())
+
+def hw_group_select(title, url, items):
     pydict = { 
-        "text" : ["Select TPC Grouping"],
+        "text" : [title],
         "expanded": "true",
         "color" : "#000000",
         "selectable" : "false",
@@ -280,7 +296,7 @@ def TPC_group_select():
         "nodes" : []
     }
 
-    for table, cols in hardwaredb.icarus.tpc.available_selectors().items():
+    for table, cols in items:
         col_nodes = []
         for col, values in cols.items():
             child_nodes = []
@@ -289,7 +305,7 @@ def TPC_group_select():
                     "text" : [opt.display_values()],
                     "selectable" : "true",
                     "displayCheckbox": "false",
-                    "href":  url_for("TPC", hw_select=opt)
+                    "href":  url_for(url, hw_select=opt)
                 }
                 child_nodes.append(node)
 
@@ -310,7 +326,7 @@ def TPC_group_select():
 
         pydict["nodes"].append(table_node)
 
-    return render_template('icarus/hw_grouping_select.html', data=pydict, title="TPC")
+    return render_template('icarus/hw_grouping_select.html', data=pydict, title=title)
 
 @app.route('/NoiseCorr')
 def NoiseCorr():
