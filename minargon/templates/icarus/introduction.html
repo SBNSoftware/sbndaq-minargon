@@ -58,6 +58,14 @@ ICARUS Online Monitoring
     <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
     <th><span id="PMT-Status"> </span></th>
   </tr>
+  <tr>
+    <th><a href="{{url_for('CRT_status')}}">Side CRT Status:</a></th>
+    <th><span id="Side-CRT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('TopCRT_status')}}">Top CRT Status:</a></th>
+    <th><span id="Top-CRT-Status"> </span></th>
+  </tr>
   </table>
 </div>
 
@@ -130,7 +138,7 @@ poll_archived_data.add_callback(function(data) {
     var spanid = "#Archived-Data";
     var delta = (time_delta(data.time) / 1000. / 60).toFixed(0);
     var delta_str = " (" + String(delta) + "m)";
-    if (is_recent(data.time, 120 * 1000 * 60 /* 120 m*/)) {
+    if (is_recent(data.time, 10 * 1000 * 60 * 60 /* 10hr*/)) {
       $(spanid).text("RECENT" + delta_str);
       $(spanid).css({"color": "green"});
     }
@@ -269,7 +277,6 @@ buffer.start();
 
 // PMT
 
-var n_bad_channel = 0;
 var BAD_PMTS = new Set();
 var pmt_config = {{pmt_config|tojson|safe}};
 
@@ -303,7 +310,6 @@ var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
 
       if ( (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
       {
-        n_bad_channel += 1;
         var channel_str = `<a href = "{{url_for('PMT_snapshot')}}?PMT=` + pmt_channels[i] + `">`+ pmt_channels[i] + `</a>`;
         BAD_PMTS.add(channel_str);
       }
@@ -314,19 +320,113 @@ var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
     if (BAD_PMTS.size > 3) {
       let bad_pmts_str = "NOT OK. Bad channels: " + Array.from(BAD_PMTS).join(" ");
       $("#PMT-Status").html(bad_pmts_str);
-     // $("#PMT-Status").html(n_bad_channel);
       $("#PMT-Status").css({"color": "red"});
     }
     else {
       $("#PMT-Status").text("OK");
       $("#PMT-Status").css({"color": "green"});
     }
-
-
   }
 ]);
-
 pmt_buffer.start();
+
+}
+{% endfor %}
+
+var BAD_CRTS = new Set();
+var crt_config = {{crt_config|tojson|safe}};
+
+{% for crt in crts %}
+{% set crt_channels = crt_channels[loop.index0]|tojson %}
+{
+
+var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "{{crt.to_url()}}", undefined, undefined);
+
+var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
+var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
+var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
+  function(data) {
+    
+    var crt_channels = {{crt_channels}};
+    var baseline_data = data;
+
+    for (var i = 0; i < crt_channels.length; i++) {
+
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+
+      if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
+      {
+        var channel_str = String(crt_channels[i]);
+        BAD_CRTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_CRTS.size > 0) {
+      let bad_crts_str = "NOT OK. Bad channels: " + Array.from(BAD_CRTS).join(" ");
+      $("#Side-CRT-Status").html(bad_crts_str);
+      $("#Side-CRT-Status").css({"color": "red"});
+    }
+    else {
+      $("#Side-CRT-Status").text("OK");
+      $("#Side-CRT-Status").css({"color": "green"});
+    }
+  }
+]);
+crt_buffer.start();
+
+}
+{% endfor %}
+
+var BAD_TOPCRTS = new Set();
+var topcrt_config = {{topcrt_config|tojson|safe}};
+
+{% for topcrt in topcrts %}
+{% set topcrt_channels = topcrt_channels[loop.index0]|tojson %}
+{
+
+var topcrt_config_controller = new Config.GroupConfigController(topcrt_config, undefined, ["baseline"], {{topcrt_channels}}, 0, 25, "{{topcrt.to_url()}}", undefined, undefined);
+
+var topcrt_data_link = topcrt_config_controller.data_link(0, ["baseline"], undefined, 1);
+var topcrt_poll = new Data.D3DataPoll(topcrt_data_link, 60*1000 /* 1 minute */);
+var topcrt_buffer = new Data.D3DataBuffer(topcrt_poll, 1, [
+  function(data) {
+    
+    var topcrt_channels = {{topcrt_channels}};
+    var baseline_data = data;
+
+    for (var i = 0; i < topcrt_channels.length; i++) {
+
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+
+      if ( (baseline < {{topcrt_baseline_min}}) || (baseline > {{topcrt_baseline_max}}) )
+      {
+        var channel_str = String(topcrt_channels[i]);
+        BAD_TOPCRTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_TOPCRTS.size > 0) {
+      let bad_topcrts_str = "NOT OK. Bad channels: " + Array.from(BAD_TOPCRTS).join(" ");
+      $("#Top-CRT-Status").html(bad_topcrts_str);
+      $("#Top-CRT-Status").css({"color": "red"});
+    }
+    else {
+      $("#Top-CRT-Status").text("OK");
+      $("#Top-CRT-Status").css({"color": "green"});
+    }
+  }
+]);
+topcrt_buffer.start();
 
 }
 {% endfor %}

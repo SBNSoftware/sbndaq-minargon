@@ -21,7 +21,7 @@ def CRTLOCs():
 @hardwaredb_route(db_name)
 def available_values(conn, table, column):
     cur = conn.cursor()
-    data = cur.execute("SELECT %s FROM %s" % (to_column(column), table))
+    data = cur.execute("SELECT DISTINCT %s FROM %s" % (to_column(column), table))
     # make unique and ignore duplicates
     data = list(set([x[0] for x in data if x]))
     # if numeric, sort

@@ -46,6 +46,10 @@ class HWSelectorConverter(BaseConverter):
         table = data[0]
         columns = data[1].split(",")
         values = data[2].split(",")
+        if len(columns) == 1 and not columns[0]:
+            columns = []
+        if len(values) == 1 and not values[0]:
+            values = []
         return HWSelector(table, columns, values)
 
     def to_url(self, selector):
@@ -130,6 +134,10 @@ if app.config["FRONT_END"] == "icarus":
     from .icarus import crt
     hw_selectors = dict(hw_selectors, **icarus.crt.SELECTORS)
     hw_mappings = dict(hw_mappings, **icarus.crt.MAPPINGS)
+
+    from .icarus import topcrt
+    hw_selectors = dict(hw_selectors, **icarus.topcrt.SELECTORS)
+    hw_mappings = dict(hw_mappings, **icarus.topcrt.MAPPINGS)
 
     from .icarus import pmt
     hw_selectors = dict(hw_selectors, **icarus.pmt.SELECTORS)
