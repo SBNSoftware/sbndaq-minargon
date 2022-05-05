@@ -67,6 +67,10 @@ ICARUS Online Monitoring
     <th><span id="Top-CRT-Status"> </span></th>
   </tr>
   </table>
+  <p>
+    NOTE: The data-quality alarms are being piloted and may (for now) cause false-positives. For the interim, you 
+    can ignore them if the data quality is set to NOT OK.
+  </p>
 </div>
 
 </div>
@@ -317,7 +321,7 @@ var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
     }
 
 
-    if (BAD_PMTS.size > 3) {
+    if (BAD_PMTS.size > 6) {
       let bad_pmts_str = "NOT OK. Bad channels: " + Array.from(BAD_PMTS).join(" ");
       $("#PMT-Status").html(bad_pmts_str);
       $("#PMT-Status").css({"color": "red"});

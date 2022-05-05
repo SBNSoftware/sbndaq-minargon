@@ -53,16 +53,31 @@ export class FunctorScatter {
       this._title = title;
       if (this.is_drawn) {
         var layout = {};
-        layout["yaxis.title"] = this._title;
+        layout["title"] = this._title;
         Plotly.relayout(this.target, layout);
       }
     }
 
+    set ytitle(ytitle) {
+      this._ytitle = ytitle;
+      if (this.is_drawn) {
+        var layout = {};
+        layout["yaxis.title"] = this._ytitle;
+        Plotly.relayout(this.target, layout);
+      }
+    }
+
+    set savename(name) {
+      this._savename = name;
+      this.draw();
+    }
+
     draw() {
       var layout = this.build_layout();
+      var config = this.build_config();
       this.is_drawn = true;
 
-      Plotly.newPlot(this.target, this.trace, layout);
+      Plotly.newPlot(this.target, this.trace, layout, config);
     }
 
     // update the data and redraw the plot
@@ -200,6 +215,17 @@ export class FunctorScatter {
       Plotly.redraw(this.target);
     }
 
+    build_config() {
+      var config = {
+        toImageButtonOptions: {
+          filename: this._savename,
+          format: 'png'
+        }
+      };
+      return config;
+    }
+
+
     build_layout() {
       // build the layout for this plot
       var layout = {
@@ -209,12 +235,12 @@ export class FunctorScatter {
         hovermode: "closest"
       };
 
-      layout["name"] = this._title;
+      layout["title"] = this._title;
       layout["xaxis"] = {
         title: "Time (CST/GMT-6)"
       };
       layout["yaxis"] = {
-        title: this._title
+        title: this._ytitle
       };
       if (this._yrange) {
         layout["yaxis.range"] = this._yrange;

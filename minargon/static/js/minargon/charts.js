@@ -44,9 +44,14 @@ export class TimeSeriesScatter {
       this._title = title;
       if (this.is_drawn) {
         var layout = {};
-        layout["name"] = this._title;
+        layout["title"] = this._title;
         Plotly.relayout(this.target, layout);
       }
+    }
+
+    set savename(name) {
+      this._savename = name;
+      this.draw();
     }
 
     set y_axes(y_axes) {
@@ -113,10 +118,18 @@ export class TimeSeriesScatter {
       for (var i = 0; i < this.n_data; i++) {
         traces.push(this.data_traces[i].trace());
       }
+      var time_range = this.time_range();
+      for (var i = 0; i < this.warning_lines.length; i++) {
+        var warning_line_traces = this.warning_lines[i].trace(time_range);
+        for (var j = 0; j < warning_line_traces.length; j++) {
+          traces.push(warning_line_traces[j]);
+        }
+      }
 
       var layout = this.build_layout();
+      var config = this.build_config();
 
-      Plotly.newPlot(this.target, traces, layout);
+      Plotly.newPlot(this.target, traces, layout, config);
 
       this.is_drawn = true;
     }
@@ -182,10 +195,20 @@ export class TimeSeriesScatter {
       }
     }
 
+    build_config() {
+      var config = {
+        toImageButtonOptions: {
+          filename: this._savename,
+          format: 'png'
+        }
+      };
+      return config;
+    }
+
     build_layout() {
       // build the layout for this plot
       var layout = {};
-      layout["name"] = this.plot_title;
+      layout["title"] = this._title;
       layout["xaxis"] = {
         range: this._x_range,
         title: "Time (CST/GMT-6)"
