@@ -52,8 +52,16 @@ export class FunctorController {
     this.is_running = false;
   }
 
-  setTitle(title) {
+  setSaveName(name) {
+    this.scatter.savename = name;
+  }
+
+  setPlotTitle(title) {
     this.scatter.title = title;
+  }
+
+  setYTitle(ytitle) {
+    this.scatter.ytitle = ytitle;
   }
 
   setYRange(lo, hi) {

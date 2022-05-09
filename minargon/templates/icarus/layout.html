@@ -139,9 +139,9 @@
                 </ul>
               </li>
               <li class='dropdown nav-item'>
-              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Side CRT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
-		  {{ nav_link('CRT_status', 'Status') }}
+		  {{ nav_link('CRT_status', 'Side Status') }}
                   {{ nav_link('CRT_board', 'Side CRT') }} 
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
@@ -152,6 +152,22 @@
                     </ul>
                   </li>
                   {{ nav_link('CRT_group_select', 'Group Select') }} 
+                </ul>
+              </li>
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Top CRT<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+		  {{ nav_link('TopCRT_status', 'Top Status') }}
+                  {{ nav_link('CRT_board_top', 'Top CRT') }} 
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {% for loc,lochw in TOPCRTLOCs %}
+                        {{ nav_link('CRT_board_top', loc, hw_select=lochw) }}
+                      {% endfor %}
+                    </ul>
+                  </li>
+                  {{ nav_link('TopCRT_group_select', 'Group Select') }} 
                 </ul>
               </li>
               <li class='dropdown nav-item'>

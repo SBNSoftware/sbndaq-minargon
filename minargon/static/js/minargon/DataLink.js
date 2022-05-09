@@ -289,8 +289,9 @@ function flatten(arr) {
 
 // start/stop can be a date or an integer
 function timeArgs(start, stop, n_data) {
+  var now = new Date();
   var ret = {
-    now: new Date().toISOString(),
+    now: now.toISOString() + " " + now.getTimezoneOffset(),
   };
 
   if (n_data !== undefined) {
@@ -299,7 +300,7 @@ function timeArgs(start, stop, n_data) {
 
   if (start instanceof Date) {
     // alert(start);
-    ret.start = start.toISOString();
+    ret.start = start.toISOString() + " " + start.getTimezoneOffset();
   }
   else if (start !== undefined) {
     ret.start = start;
@@ -307,7 +308,7 @@ function timeArgs(start, stop, n_data) {
   // stop doesn't have to be set
   if (!(stop === undefined)) {
     if (stop instanceof Date) {
-      ret.stop = stop.toISOString();
+      ret.stop = stop.toISOString() + " " + stop.getTimezoneOffset();
     }
     else {
        ret.stop = stop;

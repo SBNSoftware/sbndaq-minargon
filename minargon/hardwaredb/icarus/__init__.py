@@ -9,6 +9,8 @@ def to_display(s):
       .replace("Id", "ID")
 
 def wherestr(columns):
+    if len(columns) == 0:
+        return ""
     return "WHERE " + " AND ".join(["%s=?" % c for c in columns])
 
 def validate_columns(cols, mlist, table):
