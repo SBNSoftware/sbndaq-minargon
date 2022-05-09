@@ -66,6 +66,14 @@ export class PlotlyController {
   }
   updateReferenceData() {} // noop
 
+  setSaveName(name) {
+    this.scatter.savename = name;
+  }
+
+  setPlotTitle(title) {
+    this.scatter.title = title;
+  }
+
   setYTitles(ytitles) {
     this.ytitles = ytitles;
     this.scatter.y_axes = this.buildScatterAxes(); 
@@ -248,17 +256,16 @@ export class PlotlyController {
         var d = new Date();
         d.setHours(d.getHours() -1);
         self.start = d;
-        self.end = Date.now();
+        self.end = new Date();
         self.is_live = false;
         // stop the buffer
         if (self.buffer.isRunning()) {
           self.buffer.stop();
         }
-
       }
-      else if (toggle_val == "day"){
+      else if (toggle_val == "8hour"){
         var d = new Date();
-        d.setDate(d.getDate() -1);
+        d.setHours(d.getHours()-8);
         self.start = d;
         self.end = Date.now();
         self.is_live = false;
@@ -266,7 +273,28 @@ export class PlotlyController {
         if (self.buffer.isRunning()) {
           self.buffer.stop();
         }
-
+      }
+      else if (toggle_val == "day"){
+        var d = new Date();
+        d.setDate(d.getDate() -1);
+        self.start = d;
+        self.end = new Date();
+        self.is_live = false;
+        // stop the buffer
+        if (self.buffer.isRunning()) {
+          self.buffer.stop();
+        }
+      }
+      else if (toggle_val == "week"){
+        var d = new Date();
+        d.setDate(d.getDate() -7);
+        self.start = d;
+        self.end = Date.now();
+        self.is_live = false;
+        // stop the buffer
+        if (self.buffer.isRunning()) {
+          self.buffer.stop();
+        }
       }
 
       self.runBuffer();
@@ -335,7 +363,8 @@ export class PlotlyController {
     }
     else {
       // set it ourselves
-      this.scatter.x_range = [moment(this.start).format("YYYY-MM-DD HH:mm:ss"), moment(this.end).format("YYYY-MM-DD HH:mm:ss")];
+      this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
+                                moment(this.end).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
     }
   }
   // ---------------------------------------------------------------------------
