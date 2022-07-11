@@ -294,7 +294,7 @@ var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefin
 
 var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
 var pmt_poll = new Data.D3DataPoll(pmt_data_link, 60*1000 /* 1 minute */);
-var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
+var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 5, [
   function(data) {
     
     var pmt_channels = {{pmt_channels}};
@@ -302,17 +302,21 @@ var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
     var baseline_data = data.slice(pmt_channels.length);
 
     for (var i = 0; i < pmt_channels.length; i++) {
-
-      if (rms_data[i].size > 0) {
-        var rms = rms_data[i].get_last()[1];
+      
+      var this_rms_data = rms_data[i];
+      var rms = 0.;   
+      for (var j = 0; j < this_rms_data.size; j++) {
+        var rms = rms + this_rms_data.get(j)[1]/this_rms_data.size;
       }
 
-      if (baseline_data[i].size > 0) {
-        var baseline = baseline_data[i].get_last()[1];
+      var this_baseline_data = baseline_data[i];
+      var baseline = 0.;   
+      for (var j = 0; j < this_baseline_data.size; j++) {
+        var baseline = baseline + this_baseline_data.get(j)[1]/this_baseline_data.size;
       }
 
 
-      if ( (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
+      if ( (baseline < {{pmt_baseline_min}}) || (baseline > {{pmt_baseline_max}}) || (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
       {
         var channel_str = `<a href = "{{url_for('PMT_snapshot')}}?PMT=` + pmt_channels[i] + `">`+ pmt_channels[i] + `</a>`;
         BAD_PMTS.add(channel_str);

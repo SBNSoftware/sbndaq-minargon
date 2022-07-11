@@ -90,7 +90,13 @@ def CRT_status():
       "eventmeta_key": False, # TODO
     }
 
+    print(crts)
+    print(channels)
     return render_template('icarus/crt_status_overview.html', **render_args) 
+
+@app.route('/CRT_fragments')
+def CRT_fragments():
+    return timeseries_view(request.args, "CRT_cont_frag")
 
 @app.route('/TopCRT_status')
 def TopCRT_status():
@@ -108,6 +114,44 @@ def TopCRT_status():
     }
 
     return render_template('icarus/topcrt_status_overview.html', **render_args) 
+
+@app.route('/fragments_status')
+def fragments_status():
+    pmts = [["8192", "8193", "8194", "8195", "8196", "8197"], ["8210", "8211", "8212", "8213", "8214", "8215"], ["8204", "8205", "8206", "8207", "8208", "8209"], ["8198", "8199", "8200", "8201", "8202", "8203"]]
+    pmt_locs = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
+    pmt_config = online_metrics.get_group_config("online", "PMT_cont_frag", front_end_abort=True)
+
+    crt_locs = [hw for _,hw in hardwaredb.icarus.crt.CRTLOCs()]
+    crts = [hardwaredb.select(crt_loc) for crt_loc in crt_locs]
+    for i in range(len(crts)):
+        for j in range(len(crts[i])):
+            crts[i][j] += 12544
+    crt_config = online_metrics.get_group_config("online", "CRT_cont_frag", front_end_abort=True)
+
+    topcrts = [hw for _,hw in hardwaredb.icarus.topcrt.CRTLOCs()]
+    topcrt_channels = [hardwaredb.select(topcrt) for topcrt in topcrts]
+
+    render_args = {
+      "zerorate_max": 0.5,
+
+      "crt_config": crt_config,
+      "crts": crts,
+      "crt_locs": crt_locs,
+
+     # "topcrt_config": topcrt_config,
+     # "topcrt_channels": topcrt_channels,
+     # "topcrts": topcrts,
+
+      "pmt_config": pmt_config,
+      "pmts": pmts,
+      "pmt_locs": pmt_locs,
+      "eventmeta_key": False, # TODO
+    }
+
+    print(crt_config)
+    print(pmt_config)
+    print(pmts)
+    return render_template('icarus/fragments_status_overview.html', **render_args)
 
 @app.route('/introduction')
 def introduction():
@@ -172,6 +216,8 @@ def introduction():
       "topcrt_baseline_max": TOPCRT_BASELINE_ALARM_MAX,
     }
 
+    print(crt_config)
+    print(pmt_config)
     return render_template('icarus/introduction.html', **render_args)
 
 @app.route('/PMT_status')
@@ -198,7 +244,14 @@ def PMT_status():
       "eventmeta_key": "eventmetaPMT",
     }
 
+    print(pmts)
+    print(channels)
+
     return render_template('icarus/pmt_status_overview.html', **render_args)
+
+@app.route('/PMT_fragments')
+def PMT_fragments():
+    return timeseries_view(request.args, "PMT_cont_frag")
 
 @app.route('/TPC_status')
 def TPC_status():
