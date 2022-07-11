@@ -77,7 +77,7 @@ var data_link = config_controller.data_link(0, ["rms", "baseline"], undefined, 1
 
 // Turn that DataLink into a DataBuffer
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
-var buffer = new Data.D3DataBuffer(poll, 1, [
+var buffer = new Data.D3DataBuffer(poll, 5, [
   function(data) {
     var channels = {{channels}};
     var isbad = [];
@@ -89,22 +89,25 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     var rmss = [];
  
     for (var i = 0; i < channels.length; i++) {
-      
-    //  var baseline = -1;
-      if (baseline_data[i].size > 0) {
-        var baseline = baseline_data[i].get_last()[1];
+    
+      var this_baseline_data = baseline_data[i];
+      var baseline = 0.;
+      for (var j = 0; j < this_baseline_data.size; j++) {
+        var baseline = baseline + this_baseline_data.get(j)[1]/this_baseline_data.size ;
       }
 
-   //  var rms = -1;
-      if (rms_data[i].size > 0) {
-        var rms = rms_data[i].get_last()[1];
+
+      var this_rms_data = rms_data[i];
+      var rms = 0.;
+      for (var j = 0; j < this_rms_data.size; j++) { 
+        rms = rms + this_rms_data.get(j)[1] / this_rms_data.size;
       }
           
  
       baselines.push(baseline);
       rmss.push(rms);
 
-      var bad = ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) || (rms < {{rms_min}}) || (rms > {{rms_max}}));
+      var bad = (this_rms_data.size > 0) && ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) || (rms < {{rms_min}}) || (rms > {{rms_max}}));
       
       if (bad)  {
         isbad.push(i);
