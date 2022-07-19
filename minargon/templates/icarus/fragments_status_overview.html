@@ -20,15 +20,15 @@ Limit on empty fragment rate is {{zerorate_max}}
 </div>
 <div class = "row">
 <h5 class = "hcenter">
-PMT board number = ID - 8190
+PMT board number = ID - 8192
 </h5>
 </div>
 <br>
 <br>
 
-
+<div>
 {% for pmt_loc in pmt_locs %}
-{% if loop.index0 % 4 == 0 %}
+{% if loop.index0 % 3 == 0 %}
   <div class="row">
 {% endif %}
     <div class="col-lg-4 col-md-4" style="padding:0">
@@ -48,12 +48,15 @@ PMT board number = ID - 8190
     </div>
 
 
-{% if loop.index0 % 4 == 3 %}
+{% if loop.index0 % 3 == 2 %}
   </div>
   <br>
 {% endif %}
 {% endfor %}
+</div>
 
+<br>
+<br>
 
 <div class="row">
 <h2 class = "hcenter">
@@ -68,8 +71,9 @@ Side CRT board number = ID - 12544
 <br>
 <br>
 
+<div>
 {% for crt_loc in crt_locs %}
-{% if loop.index0 % 4 == 0 %}
+{% if loop.index0 % 3 == 0 %}
   <div class="row">
 {% endif %}
     <div class="col-lg-4 col-md-4" style="padding:0">
@@ -89,12 +93,52 @@ Side CRT board number = ID - 12544
     </div>
 
 
-{% if loop.index0 % 4 == 3 %}
+{% if loop.index0 % 3 == 2 %}
   </div>
   <br>
 {% endif %}
 {% endfor %}
+</div>
 
+<div class="row">
+<h2 class = "hcenter">
+<a href="{{url_for('CRT_fragments')}}">Top CRT Fragments Status</a>
+</h2>
+</div>
+<div class="row">
+<h5 class="hcenter">
+Top CRT board number = ID - 12800
+</h5>
+</div>
+<br>
+<br>
+
+{% for topcrt_loc in topcrt_locs %}
+{% if loop.index0 % 3 == 0 %}
+  <div class="row">
+{% endif %}
+    <div class="col-lg-4 col-md-4" style="padding:0">
+      <h3>
+        <a href="{{url_for("CRT_board_top", hw_select=topcrt_loc)}}">{{topcrt_loc.values[0]}}</a>
+      </h3>
+      <table class="table table-striped" id="{{topcrt_loc.values[0] | replace(' ', '-') | replace(';', '')}}">
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+      </table>
+    </div>
+
+
+{% if loop.index0 % 3 == 2 %}
+  </div>
+  <br>
+{% endif %}
+{% endfor %}
 
 
 {%endblock%}
@@ -260,6 +304,84 @@ buffer.start();
 }
 {% endfor %}
 
+
+// Top CRTs
+var config = {{topcrt_config|tojson|safe}};
+
+{% for topcrt_loc in topcrt_locs %}
+  {% set topcrts = topcrts[loop.index0]|tojson %}
+{
+// setup config
+var config_controller = new Config.GroupConfigController(config, undefined, ["frag_count", "zero_rate"], {{topcrts}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var topcrts = {{topcrts}};
+    var isbad = [];
+
+    var count_data = data.slice(0, topcrts.length);
+    var zero_data = data.slice(topcrts.length);
+
+    var counts = [];
+    var zeros = []; 
+
+    for (var i = 0; i < topcrts.length; i++) {
+
+      if (count_data[i].size > 0) {
+        var count = count_data[i].get_last()[1];
+      }
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      counts.push(count);
+      zeros.push(zero);
+
+     var bad = (zero > {{zerorate_max}});
+     isbad.push(bad);
+
+    } 
+
+    var header = `
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+        <tbody>`;
+    
+    var table_html = header;
+   
+    for (var i = 0; i < topcrts.length; i++) {
+      var c = "";
+      if (isbad[i]) {
+        c = 'style="background-color: red"';
+      }
+
+      var row = `
+          <tr>
+            <th>` +  topcrts[i] + `</th>
+            <th>` +  (topcrts[i]-12800) + `</th>       
+            <th>` + counts[i].toFixed(2) + `</th>
+            <th ` + c + `>` + zeros[i].toFixed(2) + `</th>
+          </tr>`;
+      table_html = table_html.concat(row);
+    }
+    table_html = table_html + "</tbody>";
+
+    $("#{{topcrt_loc.values[0] | replace(' ', '-') | replace(';', '')}}").html(table_html);
+
+  }
+]);
+buffer.start();
+}
+{% endfor %}
 
 </script>
 {% endblock %}
