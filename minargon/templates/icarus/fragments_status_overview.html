@@ -1,0 +1,387 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}Fragments Status{% endblock %}
+{% block body %}
+{{ super() }}
+<div class = "container">
+
+<div class = "row">
+<h4 class = "hcenter">
+Limit on empty fragment rate is {{zerorate_max}}
+</h4>
+</div>
+<br>
+
+<div class = "row">
+<h2 class = "hcenter">
+<a href="{{url_for('PMT_fragments')}}">PMT Fragments Status</a>
+</h2>
+</div>
+<div class = "row">
+<h5 class = "hcenter">
+PMT board number = ID - 8192
+</h5>
+</div>
+<br>
+<br>
+
+<div>
+{% for pmt_loc in pmt_locs %}
+{% if loop.index0 % 3 == 0 %}
+  <div class="row">
+{% endif %}
+    <div class="col-lg-4 col-md-4" style="padding:0">
+      <h3>
+        <a href="{{url_for("PMT", PMTLOC=pmt_loc.values[0])}}">{{pmt_loc.values[0]}}</a>
+      </h3>
+      <table class="table table-striped" id="{{pmt_loc.values[0] | replace(' ', '-') | replace(';', '')}}">
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+      </table>
+    </div>
+
+
+{% if loop.index0 % 3 == 2 %}
+  </div>
+  <br>
+{% endif %}
+{% endfor %}
+</div>
+
+<br>
+<br>
+
+<div class="row">
+<h2 class = "hcenter">
+<a href="{{url_for('CRT_fragments')}}">Side CRT Fragments Status</a>
+</h2>
+</div>
+<div class="row">
+<h5 class="hcenter">
+Side CRT board number = ID - 12544
+</h5>
+</div>
+<br>
+<br>
+
+<div>
+{% for crt_loc in crt_locs %}
+{% if loop.index0 % 3 == 0 %}
+  <div class="row">
+{% endif %}
+    <div class="col-lg-4 col-md-4" style="padding:0">
+      <h3>
+        <a href="{{url_for("CRT_board", hw_select=crt_loc)}}">{{crt_loc.values[0]}}</a>
+      </h3>
+      <table class="table table-striped" id="{{crt_loc.values[0] | replace(' ', '-') | replace(';', '')}}">
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+      </table>
+    </div>
+
+
+{% if loop.index0 % 3 == 2 %}
+  </div>
+  <br>
+{% endif %}
+{% endfor %}
+</div>
+
+<div class="row">
+<h2 class = "hcenter">
+<a href="{{url_for('CRT_fragments')}}">Top CRT Fragments Status</a>
+</h2>
+</div>
+<div class="row">
+<h5 class="hcenter">
+Top CRT board number = ID - 12800
+</h5>
+</div>
+<br>
+<br>
+
+{% for topcrt_loc in topcrt_locs %}
+{% if loop.index0 % 3 == 0 %}
+  <div class="row">
+{% endif %}
+    <div class="col-lg-4 col-md-4" style="padding:0">
+      <h3>
+        <a href="{{url_for("CRT_board_top", hw_select=topcrt_loc)}}">{{topcrt_loc.values[0]}}</a>
+      </h3>
+      <table class="table table-striped" id="{{topcrt_loc.values[0] | replace(' ', '-') | replace(';', '')}}">
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+      </table>
+    </div>
+
+
+{% if loop.index0 % 3 == 2 %}
+  </div>
+  <br>
+{% endif %}
+{% endfor %}
+
+
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var config = {{pmt_config|tojson|safe}};
+
+// setup each plane poll
+{% for pmt_loc in pmt_locs %}
+  {% set pmts = pmts[loop.index0]|tojson %}
+{
+// setup config
+var config_controller = new Config.GroupConfigController(config, undefined, ["frag_count", "zero_rate"], {{pmts}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var pmts = {{pmts}};
+    var isbad = [];
+
+    var count_data = data.slice(0, pmts.length);
+    var zero_data = data.slice(pmts.length);
+
+    var counts = [];
+    var zeros = []; 
+
+    for (var i = 0; i < pmts.length; i++) {
+
+      if (count_data[i].size > 0) {
+        var count = count_data[i].get_last()[1];
+      }
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      counts.push(count);
+      zeros.push(zero);
+
+     var bad = (zero > {{zerorate_max}});
+     isbad.push(bad);
+
+    } 
+
+    var header = `
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+        <tbody>`;
+    
+    var table_html = header;
+   
+    for (var i = 0; i < pmts.length; i++) {
+      var c = "";
+      if (isbad[i]) {
+        c = 'style="background-color: red"';
+      }
+
+      var row = `
+          <tr>
+            <th>` +  pmts[i] + `</th>
+            <th>` +  (pmts[i]-8192) + `</th>
+            <th>` + counts[i].toFixed(2) + `</th>
+            <th ` + c + `>` + zeros[i].toFixed(2) + `</th>
+	  </tr>`;
+      table_html = table_html.concat(row);
+    }
+    table_html = table_html + "</tbody>";
+
+    $("#{{pmt_loc.values[0] | replace(' ', '-') | replace(';', '')}}").html(table_html);
+
+  }
+]);
+buffer.start();
+}
+{% endfor %}
+
+// Side CRTs
+var config = {{crt_config|tojson|safe}};
+
+{% for crt_loc in crt_locs %}
+  {% set crts = crts[loop.index0]|tojson %}
+{
+// setup config
+var config_controller = new Config.GroupConfigController(config, undefined, ["frag_count", "zero_rate"], {{crts}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var crts = {{crts}};
+    var isbad = [];
+
+    var count_data = data.slice(0, crts.length);
+    var zero_data = data.slice(crts.length);
+
+    var counts = [];
+    var zeros = []; 
+
+    for (var i = 0; i < crts.length; i++) {
+
+      if (count_data[i].size > 0) {
+        var count = count_data[i].get_last()[1];
+      }
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      counts.push(count);
+      zeros.push(zero);
+
+     var bad = (zero > {{zerorate_max}});
+     isbad.push(bad);
+
+    } 
+
+    var header = `
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+        <tbody>`;
+    
+    var table_html = header;
+   
+    for (var i = 0; i < crts.length; i++) {
+      var c = "";
+      if (isbad[i]) {
+        c = 'style="background-color: red"';
+      }
+
+      var row = `
+          <tr>
+            <th>` +  crts[i] + `</th>
+            <th>` +  (crts[i]-12544) + `</th>       
+            <th>` + counts[i].toFixed(2) + `</th>
+            <th ` + c + `>` + zeros[i].toFixed(2) + `</th>
+          </tr>`;
+      table_html = table_html.concat(row);
+    }
+    table_html = table_html + "</tbody>";
+
+    $("#{{crt_loc.values[0] | replace(' ', '-') | replace(';', '')}}").html(table_html);
+
+  }
+]);
+buffer.start();
+}
+{% endfor %}
+
+
+// Top CRTs
+var config = {{topcrt_config|tojson|safe}};
+
+{% for topcrt_loc in topcrt_locs %}
+  {% set topcrts = topcrts[loop.index0]|tojson %}
+{
+// setup config
+var config_controller = new Config.GroupConfigController(config, undefined, ["frag_count", "zero_rate"], {{topcrts}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var topcrts = {{topcrts}};
+    var isbad = [];
+
+    var count_data = data.slice(0, topcrts.length);
+    var zero_data = data.slice(topcrts.length);
+
+    var counts = [];
+    var zeros = []; 
+
+    for (var i = 0; i < topcrts.length; i++) {
+
+      if (count_data[i].size > 0) {
+        var count = count_data[i].get_last()[1];
+      }
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      counts.push(count);
+      zeros.push(zero);
+
+     var bad = (zero > {{zerorate_max}});
+     isbad.push(bad);
+
+    } 
+
+    var header = `
+        <thead>
+        <tr>
+          <th> ID </th>
+          <th> Board </th>
+          <th> Fragment Count </th>
+          <th> Empty Rate </th>
+        </tr>
+        </thead>
+        <tbody>`;
+    
+    var table_html = header;
+   
+    for (var i = 0; i < topcrts.length; i++) {
+      var c = "";
+      if (isbad[i]) {
+        c = 'style="background-color: red"';
+      }
+
+      var row = `
+          <tr>
+            <th>` +  topcrts[i] + `</th>
+            <th>` +  (topcrts[i]-12800) + `</th>       
+            <th>` + counts[i].toFixed(2) + `</th>
+            <th ` + c + `>` + zeros[i].toFixed(2) + `</th>
+          </tr>`;
+      table_html = table_html.concat(row);
+    }
+    table_html = table_html + "</tbody>";
+
+    $("#{{topcrt_loc.values[0] | replace(' ', '-') | replace(';', '')}}").html(table_html);
+
+  }
+]);
+buffer.start();
+}
+{% endfor %}
+
+</script>
+{% endblock %}
