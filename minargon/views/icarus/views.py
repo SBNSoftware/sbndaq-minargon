@@ -33,6 +33,8 @@ CRT_BASELINE_ALARM_MAX = 330
 TOPCRT_BASELINE_ALARM_MIN = 150
 TOPCRT_BASELINE_ALARM_MAX = 450
 
+FRAG_ZERORATE_ALARM = 0.5
+
 @app.route('/test/<int:chan>')
 def test(chan):
     channels =  hardwaredb.icarus_tpc.tpc_channel_list("readout_board_id", str(chan))
@@ -90,8 +92,6 @@ def CRT_status():
       "eventmeta_key": False, # TODO
     }
 
-    print(crts)
-    print(channels)
     return render_template('icarus/crt_status_overview.html', **render_args) 
 
 @app.route('/CRT_fragments')
@@ -117,8 +117,8 @@ def TopCRT_status():
 
 @app.route('/fragments_status')
 def fragments_status():
-    pmts = [["8192", "8193", "8194", "8195", "8196", "8197"], ["8210", "8211", "8212", "8213", "8214", "8215"], ["8204", "8205", "8206", "8207", "8208", "8209"], ["8198", "8199", "8200", "8201", "8202", "8203"]]
     pmt_locs = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
+    pmts = [["8192", "8193", "8194", "8195", "8196", "8197"], ["8210", "8211", "8212", "8213", "8214", "8215"], ["8204", "8205", "8206", "8207", "8208", "8209"], ["8198", "8199", "8200", "8201", "8202", "8203"]]
     pmt_config = online_metrics.get_group_config("online", "PMT_cont_frag", front_end_abort=True)
 
     crt_locs = [hw for _,hw in hardwaredb.icarus.crt.CRTLOCs()]
@@ -128,29 +128,34 @@ def fragments_status():
             crts[i][j] += 12544
     crt_config = online_metrics.get_group_config("online", "CRT_cont_frag", front_end_abort=True)
 
-    topcrts = [hw for _,hw in hardwaredb.icarus.topcrt.CRTLOCs()]
-    topcrt_channels = [hardwaredb.select(topcrt) for topcrt in topcrts]
+    topcrt_locs = [hw for _,hw in hardwaredb.icarus.topcrt.CRTLOCs()]
+    topcrts = [hardwaredb.select(topcrt_loc) for topcrt_loc in topcrt_locs]
+    for i in range(len(topcrts)):
+        for j in range(len(topcrts[i])):
+            topcrts[i][j] += 12800
+    topcrt_config = online_metrics.get_group_config("online", "CRT_cont_frag", front_end_abort=True)
+
 
     render_args = {
-      "zerorate_max": 0.5,
-
-      "crt_config": crt_config,
-      "crts": crts,
-      "crt_locs": crt_locs,
-
-     # "topcrt_config": topcrt_config,
-     # "topcrt_channels": topcrt_channels,
-     # "topcrts": topcrts,
+      "zerorate_max": FRAG_ZERORATE_ALARM,
 
       "pmt_config": pmt_config,
       "pmts": pmts,
       "pmt_locs": pmt_locs,
       "eventmeta_key": False, # TODO
+
+      "crt_config": crt_config,
+      "crt_locs": crt_locs,
+      "crts": crts,
+
+      "topcrt_config": topcrt_config,
+      "topcrt_locs": topcrt_locs,
+      "topcrts": topcrts,
     }
 
-    print(crt_config)
-    print(pmt_config)
     print(pmts)
+    print(crts)
+    print(topcrts)
     return render_template('icarus/fragments_status_overview.html', **render_args)
 
 @app.route('/introduction')
@@ -159,13 +164,15 @@ def introduction():
     pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
     pmts = [hw for _,hw in hardwaredb.icarus.pmt.PMTLOCs()]
     pmt_channels = [hardwaredb.select(pmt) for pmt in pmts]
-
+    pmt_boards = [["8192", "8193", "8194", "8195", "8196", "8197"], ["8210", "8211", "8212", "8213", "8214", "8215"], ["8204", "8205", "8206", "8207", "8208", "8209"], ["8198", "8199", "8200", "8201", "8202", "8203"]]
     # filter out disconnected channels
     disconnected_pmt_channels = [15, 63, 111, 207, 255, 303, 351]
     for i in range(len(pmt_channels)):
       dc = [channel for channel in pmt_channels[i] if channel in disconnected_pmt_channels]
       for j in dc:
         pmt_channels[i].remove(j)
+    pmt_config_frag = online_metrics.get_group_config("online", "PMT_cont_frag", front_end_abort=True)
+
 
     # TPC
     tpc_config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
@@ -179,11 +186,21 @@ def introduction():
     crts = [hw for _,hw in hardwaredb.icarus.crt.CRTLOCs()]
     crt_channels = [hardwaredb.select(crt) for crt in crts]
     crt_config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+    crt_config_frag = online_metrics.get_group_config("online", "CRT_cont_frag", front_end_abort=True)
+    crt_boards = crt_channels
+    for i in range(len(crt_channels)):
+        for j in range(len(crt_channels[i])):
+            crt_boards[i][j] += 12544
+
 
     # TOP CRT
     topcrts = [hw for _,hw in hardwaredb.icarus.topcrt.CRTLOCs()]
     topcrt_channels = [hardwaredb.select(topcrt) for topcrt in topcrts]
     topcrt_config = online_metrics.get_group_config("online", "CRT_board_top", front_end_abort=True)
+    topcrt_boards = topcrt_channels
+    for i in range(len(topcrt_channels)):
+        for j in range(len(topcrt_channels[i])):
+            topcrt_boards[i][j] += 12800
 
     render_args = {
       "tpc_config": tpc_config,
@@ -196,28 +213,33 @@ def introduction():
 
       "pmt_config": pmt_config,
       "pmt_channels": pmt_channels,
+      "pmt_boards": pmt_boards,
       "disconnected_pmt_channels": disconnected_pmt_channels,
       "pmt_rms_min": PMT_RMS_ALARM_MIN,
       "pmt_rms_max": PMT_RMS_ALARM_MAX,
       "baseline_min": PMT_BASELINE_ALARM_MIN,
       "baseline_max": PMT_BASELINE_ALARM_MAX,
       "pmts": pmts,
+      "pmt_config_frag": pmt_config_frag,
 
       "crt_config": crt_config,
       "crt_channels": crt_channels,
       "crts": crts,
       "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
       "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+      "crt_config_frag": crt_config_frag,
+      "crt_boards": crt_boards,      
 
       "topcrt_config": topcrt_config,
       "topcrt_channels": topcrt_channels,
       "topcrts": topcrts,
       "topcrt_baseline_min": TOPCRT_BASELINE_ALARM_MIN,
       "topcrt_baseline_max": TOPCRT_BASELINE_ALARM_MAX,
+      "topcrt_boards": topcrt_boards,
+
+      "zerorate_max": FRAG_ZERORATE_ALARM,
     }
 
-    print(crt_config)
-    print(pmt_config)
     return render_template('icarus/introduction.html', **render_args)
 
 @app.route('/PMT_status')
@@ -243,9 +265,6 @@ def PMT_status():
       "baseline_max": PMT_BASELINE_ALARM_MAX,
       "eventmeta_key": "eventmetaPMT",
     }
-
-    print(pmts)
-    print(channels)
 
     return render_template('icarus/pmt_status_overview.html', **render_args)
 
@@ -286,7 +305,6 @@ def TPC_Plane_Overview(TPC):
 
 def plane_page(tpc_planes):
     tpc_planes = [hardwaredb.HWSelector("tpc_plane", ["tpc", "plane"], p) for p in tpc_planes]
-    print(tpc_planes)
 
     group_name = "tpc_channel"
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
