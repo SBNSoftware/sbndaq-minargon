@@ -66,6 +66,16 @@ ICARUS Online Monitoring
     <th><a href="{{url_for('TopCRT_status')}}">Top CRT Status:</a></th>
     <th><span id="Top-CRT-Status"> </span></th>
   </tr>
+  <tr>
+    <th><a href="{{url_for('fragments_status')}}">Fragments Status:</a></th>
+    <th>
+    <span id="Fragments-Status-PMT"></span>
+    <br>
+    <span id="Fragments-Status-CRT"></span>
+    <br>
+    <span id="Fragments-Status-TopCRT"></span>
+    </th>
+  </tr>
   </table>
   <p>
     NOTE: The data-quality alarms are being piloted and may (for now) cause false-positives. For the interim, you 
@@ -302,15 +312,20 @@ var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
     var baseline_data = data.slice(pmt_channels.length);
 
     for (var i = 0; i < pmt_channels.length; i++) {
+      
+      var this_rms_data = rms_data[i];
+      var rms = 0.;
 
-      if (rms_data[i].size > 0) {
-        var rms = rms_data[i].get_last()[1];
+      for (var j = 0; j < this_rms_data.size; j++) {
+        var rms = rms + this_rms_data.get(j)[1]/this_rms_data.size;
       }
 
-      if (baseline_data[i].size > 0) {
-        var baseline = baseline_data[i].get_last()[1];
-      }
+      var this_baseline_data = baseline_data[i];
+      var baseline = 0.;   
 
+      for (var j = 0; j < this_baseline_data.size; j++) {
+        var baseline = baseline + this_baseline_data.get(j)[1]/this_baseline_data.size;
+        }
 
       if ( (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
       {
@@ -336,6 +351,9 @@ pmt_buffer.start();
 
 }
 {% endfor %}
+
+
+// CRTs
 
 var BAD_CRTS = new Set();
 var crt_config = {{crt_config|tojson|safe}};
@@ -386,6 +404,9 @@ crt_buffer.start();
 }
 {% endfor %}
 
+
+//Top CRTs
+
 var BAD_TOPCRTS = new Set();
 var topcrt_config = {{topcrt_config|tojson|safe}};
 
@@ -432,6 +453,141 @@ var topcrt_buffer = new Data.D3DataBuffer(topcrt_poll, 1, [
 ]);
 topcrt_buffer.start();
 
+}
+{% endfor %}
+
+// Fragments status
+var BAD_PMT_BOARDS = new Set();
+var pmt_config_frag = {{pmt_config_frag|tojson|safe}};
+
+{% for pmt in pmts %}
+ {% set pmt_boards = pmt_boards[loop.index0]|tojson %}
+{
+var config_controller = new Config.GroupConfigController(pmt_config_frag, undefined, ["frag_count", "zero_rate"], {{pmt_boards}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var pmt_boards = {{pmt_boards}};
+    var zero_data = data.slice(pmt_boards.length);
+
+    for (var i = 0; i < pmt_boards.length; i++) {
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      if (zero > {{zerorate_max}})
+      {
+      var board_str = String(pmt_boards[i]-8192);
+      BAD_PMT_BOARDS.add(board_str) ;
+      }
+    }
+
+    if (BAD_PMT_BOARDS.size > 0){
+      let bad_pmts_str = "PMT NOT OK. Bad boards: " + Array.from(BAD_PMT_BOARDS).join(" ");
+      $("#Fragments-Status-PMT").html(bad_pmts_str);
+      $("#Fragments-Status-PMT").css({"color": "red"});    
+    }   
+    else {
+      $("#Fragments-Status-PMT").text("PMT OK");
+      $("#Fragments-Status-PMT").css({"color": "green"});
+    }
+  }
+
+]);
+buffer.start();
+}
+{% endfor %}
+
+var BAD_CRT_BOARDS = new Set();
+var crt_config_frag = {{crt_config_frag|tojson|safe}};
+
+{% for crt in crts %}
+ {% set crt_boards = crt_boards[loop.index0]|tojson %}
+{
+var config_controller = new Config.GroupConfigController(crt_config_frag, undefined, ["frag_count", "zero_rate"], {{crt_boards}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var crt_boards = {{crt_boards}};
+    var zero_data = data.slice(crt_boards.length);
+
+    for (var i = 0; i < crt_boards.length; i++) {
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      if (zero > {{zerorate_max}})
+      {
+      var board_str = String(crt_boards[i]-12544);
+      BAD_CRT_BOARDS.add(board_str) ;
+      }
+    }
+
+    if (BAD_CRT_BOARDS.size > 0){
+      let bad_crts_str = " Side CRT NOT OK. Bad boards: " + Array.from(BAD_CRT_BOARDS).join(" ");
+      $("#Fragments-Status-CRT").html(bad_crts_str);
+      $("#Fragments-Status-CRT").css({"color": "red"});    
+    }   
+    else {
+      $("#Fragments-Status-CRT").text(" Side CRT OK");
+      $("#Fragments-Status-CRT").css({"color": "green"});
+    }
+  }
+
+]);
+buffer.start();
+}
+{% endfor %}
+
+
+var BAD_TOPCRT_BOARDS = new Set();
+var crt_config_frag = {{crt_config_frag|tojson|safe}};
+
+{% for topcrt in topcrts %}
+ {% set topcrt_boards = topcrt_boards[loop.index0]|tojson %}
+{
+var config_controller = new Config.GroupConfigController(crt_config_frag, undefined, ["frag_count", "zero_rate"], {{topcrt_boards}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var topcrt_boards = {{topcrt_boards}};
+    var zero_data = data.slice(topcrt_boards.length);
+
+    for (var i = 0; i < topcrt_boards.length; i++) {
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      if (zero > {{zerorate_max}})
+      {
+      var board_str = String(topcrt_boards[i]-12800);
+      BAD_TOPCRT_BOARDS.add(board_str) ;
+      }
+    }
+
+    if (BAD_TOPCRT_BOARDS.size > 0){
+      let bad_topcrts_str = " Top CRT NOT OK. Bad boards: " + Array.from(BAD_TOPCRT_BOARDS).join(" ");
+      $("#Fragments-Status-TopCRT").html(bad_topcrts_str);
+      $("#Fragments-Status-TopCRT").css({"color": "red"});
+    }
+    else {
+      $("#Fragments-Status-TopCRT").text(" Top CRT OK");
+      $("#Fragments-Status-TopCRT").css({"color": "green"});
+    }
+
+  }
+
+]);
+buffer.start();
 }
 {% endfor %}
 
