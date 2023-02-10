@@ -229,7 +229,7 @@ def ps_step(connection, ID):
     if (step_size == None):
         step_size = 1e3
 
-    return jsonify(step=step_size)
+    return jsonify(step=float(step_size))
 #________________________________________________________________________________________________
 # Function to check None Values and empty unit
 def CheckVal(var):
@@ -439,7 +439,7 @@ def ps_series(connection, ID):
                 continue
 
             # Add the data to the list
-        data_list.append( [row['sample_time'], value] )
+        data_list.append( [float(row['sample_time']), value] )
 
     # Setup the return dictionary
     ret = {

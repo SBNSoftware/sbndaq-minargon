@@ -95,6 +95,12 @@ def wireplane_view_dab():
     instance_name = "tpc_channel_dab" 
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
+# CRT
+@app.route('/CRT_board')
+def CRT_board():
+				    return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
+
+
 @app.route('/purity')
 def purity():
     config = online_metrics.get_group_config("online", "TPC", front_end_abort=True)
@@ -119,4 +125,35 @@ def Impedence_Ground_Monitor():
       "database": database
     }
     return render_template('sbnd/impedence_ground_monitor.html', **render_args)
+
+@app.route('/Impedence_Ground_Monitor_CSU')
+def Impedence_Ground_Monitor_CSU():
+    database = "csu_epics"
+    IDs = [1, 3, 4, 5] 
+
+    configs = {}
+    for i in IDs:
+      configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database
+    }
+    return render_template('sbnd/impedence_ground_monitor.html', **render_args)
+
+@app.route('/DAB_Impedence_Ground_Monitor')
+def DAB_Impedence_Ground_Monitor():
+    database = "sbn_epics"
+    # IDs = [7, 5, 8, 9] 
+    IDs = [23218, 23216, 23219, 23220]
+
+    configs = {}
+    for i in IDs:
+      configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database
+    }
+    return render_template('sbnd/dab_impedence_ground_monitor.html', **render_args)
 

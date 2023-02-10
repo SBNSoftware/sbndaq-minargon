@@ -228,7 +228,7 @@ export class D3DataPoll {
                 // determine the start
                 var next_start = start;
                 if (next_start !== undefined && value.min_end_time != 0 && value.min_end_time != undefined) next_start = value.min_end_time;
-                setTimeout(function() { self.run(next_start, n_data); }, self.timeout);
+                setTimeout(function() { self.run(next_start, n_data); }, Math.min(self.timeout, 2147483647 /* max 32-bit integer in JS */));
             })
             .catch(function(error) {
               throw_database_error(error, "poll_run");
