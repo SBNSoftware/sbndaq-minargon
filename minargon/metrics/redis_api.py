@@ -12,7 +12,14 @@ from six.moves import zip
 class MalformedRedisEntry(Exception):
     pass
 
+def convert(data):
+    if isinstance(data, bytes):  return data.decode('utf-8')
+    if isinstance(data, dict):   return dict(map(convert, data.items()))
+    if isinstance(data, tuple):  return map(convert, data)
+    return data
+
 def type_to_struct_type(name):
+    name = name.decode("utf-8")
     if name == "int8_t": return "b"
     if name == "int16_t": return "h"
     if name == "int32_t": return "i"
@@ -28,6 +35,7 @@ def type_to_struct_type(name):
     return None
 
 def type_to_size(name):
+    name = name.decode("utf-8")
     if name == "int8_t": return 1
     if name == "int16_t": return 2
     if name == "int32_t": return 4
@@ -45,7 +53,7 @@ def parse_binary(binary, typename):
     size = type_to_size(typename)
     form = type_to_struct_type(typename)
     ret = []
-    for i in range(len(binary) / size):
+    for i in range(int(len(binary) / size)):
        dat = binary[i*size : (i+1)*size]
        ret.append(struct.unpack(form, dat)[0])
 
@@ -54,18 +62,20 @@ def parse_binary(binary, typename):
 def extract_datum(dat):
     invert = "INVERT" in dat
     dat.pop("INVERT", None)
-
-    if "dat" in dat: 
+    d = dat
+    if b"dat" in d:
         try:
-            val = float(dat["dat"])
+            val = float(d[b"dat"])
         except:
-            return dat["dat"]
+            return d[b"dat"]
+    elif "str" in d:
+        return d["str"]
     else:
-        typename = list(dat.keys())[0]
+        typename = list(d.keys())[0]
         structname = type_to_struct_type(typename)
         if structname is None:
-            raise MalformedRedisEntry("Redis Steam entry missing binary type.")
-        val = struct.unpack(structname, dat[typename])[0]
+            raise MalformedRedisEntry("Redis Stream entry missing binary type (%s)." % typename)
+        val = struct.unpack(structname, d[typename])[0]
     if invert:
         if abs(val) < 1e-4: return "inf" # JSON compatible infinity
         val = 1. / val
@@ -146,7 +156,7 @@ def get_last_streams(rdb, stream_list,count=1):
     for stream, data in zip(stream_list, pipeline.execute()):
         ret[stream] = []
         for datapoint in data:
-            time = datapoint[0].split("-")[0]
+            time = datapoint[0].decode("utf-8").split("-")[0]
             val = extract_datum(datapoint[1])
             ret[stream].append((time, val))
     return ret
@@ -198,8 +208,9 @@ def get_streams(rdb, stream_list, n_data=None, start=None, stop=None):
     for stream, data in zip(stream_list, pipeline.execute()):
         ret[stream] = []
         for d in reversed(data):
-            time =  d[0].split("-")[0]
+            a = d[0]
             val = extract_datum(d[1])
+            time = a.decode("utf-8").split("-")[0]
             ret[stream].append( (time, val) )
     return ret
 
@@ -215,7 +226,7 @@ def block_streams(rdb, streams):
                 ret[stream] = []
                 for d in stream_data[1]:
                     n_received += 1
-                    time = d[0].split("-")[0]
+                    time = d[0].decode("utf-8").split("-")[0]
                     val = extract_datum(d[1])
                     ret[stream].append( (time, val) )
                 streams[stream] = ret[stream][-1][0]

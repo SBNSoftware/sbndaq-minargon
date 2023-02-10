@@ -15,8 +15,8 @@ def custom503(error):
     }
 
     # render page for abort coming from front end
+    render_args["description"].replace("\n", "<br>")
     if error.description.front_end_abort:
-        render_args["description"].replace("\n", "<br>")
         return render_template('error/error.html', **render_args), 503
     # otherwise return JSON info
     else:

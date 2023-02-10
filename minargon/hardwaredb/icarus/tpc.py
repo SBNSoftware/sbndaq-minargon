@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 from minargon.hardwaredb import HWSelector, hardwaredb_route
+from werkzeug.exceptions import HTTPException
 import itertools
+from . import validate_columns, wherestr, to_column, to_display
 
 db_name = "icarus_tpc_hw"
 daq_columns = ["readout_board_id", "chimney_number", "readout_board_slot", "plane", "cable_label_number", "channel_type"]
@@ -11,15 +13,16 @@ flange_table = "flanges"
 readout_table = "readout_boards"
 
 def TPCs():
-    return [hw.value for hw in available_values("flanges", "tpc_id")]
+    try:
+        return [hw.values[0] for hw in available_values("flanges", "tpc_id")]
+    except HTTPException as e:
+        return []
 
-def to_column(s):
-    return s.replace(" ", "_").lower()
-
-def to_display(s):
-    return s.replace("_", " ").title() \
-      .replace("Tpc", "TPC") \
-      .replace("Id", "ID")
+def TPCFlanges():
+    try:
+        return [hw for hw in available_values("flanges", "flange_pos_at_chimney")]
+    except HTTPException as e:
+        return []
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
@@ -36,17 +39,14 @@ def available_values(conn, table, column):
     except:
         sorted_data = data
     cur.close()
-    return [HWSelector(table, column, d) for d in sorted_data]
+    return [HWSelector(table, [column], [d]) for d in sorted_data]
 
 @hardwaredb_route(db_name)
-def daq_channel_list(conn, column, condition):
+def daq_channel_list(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in daq_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, daq_table))
-
-    channels = cur.execute("SELECT channel_id FROM %s WHERE %s=?" % (daq_table, column), (condition,))
+    columns = validate_columns(columns, daq_columns, daq_table)
+    channels = cur.execute("SELECT channel_id FROM %s %s" % (daq_table, wherestr(columns)), tuple(conditions))
     channels = sorted([int(c[0]) for c in channels if c], key=int)
 
     cur.close()
@@ -54,13 +54,13 @@ def daq_channel_list(conn, column, condition):
 
 # fake table name for this lookup
 tpc_plane_table = "tpc_plane"
-tpc_plane_column = "tpc_plane"
-def tpc_plane_channel_list(column, condition):
-    TPC = condition.split(";")[0]
-    plane = condition.split(";")[-1][1:]
+tpc_plane_columns = ["tpc", "plane"]
+def tpc_plane_channel_list(columns, conditions):
+    TPC = conditions[0]
+    plane = conditions[1]
 
-    tpc_channels = set(flange_channel_list("tpc_id", TPC))
-    plane_channels = set(daq_channel_list("plane", plane))
+    tpc_channels = set(flange_channel_list(["tpc_id"], [TPC]))
+    plane_channels = set(daq_channel_list(["plane"] + columns[2:], [plane] + conditions[2:]))
 
     channels = sorted(list(tpc_channels.intersection(plane_channels)))
     return channels
@@ -68,22 +68,19 @@ def tpc_plane_channel_list(column, condition):
 def tpc_plane_channel_available_values():
     planes = available_values("daq_channels", "plane") 
     TPCs = available_values("flanges", "tpc_id") 
-    return [HWSelector(tpc_plane_table, tpc_plane_column, tpc.value + "; " + plane.value) for tpc,plane in itertools.product(TPCs, planes)]
+    return [HWSelector(tpc_plane_table, tpc_plane_columns, [tpc.values[0], plane.values[0]]) for tpc,plane in itertools.product(TPCs, planes)]
 
-def tpc_plane_plane_list(column, condition):
+def tpc_plane_plane_list(columns, conditions):
     planes = available_values("daq_channels", "plane") 
-    return [condition + "; " + p.value for p in planes]
+    return [[conditions[0], p.values[0]] for p in planes]
 
 @hardwaredb_route(db_name)
-def tpc_plane_flange_map(conn, column, condition):
-    TPC = condition.split(";")[0]
-    plane = condition.split(";")[-1][1:]
-    plane_channels = set(daq_channel_list("plane", plane))
+def tpc_plane_flange_map(conn, columns, conditions):
+    TPC = conditions[0]
+    plane = conditions[1]
+    plane_channels = set(daq_channel_list(["plane"], [plane]))
 
     cur = conn.cursor()
-    column = to_column(column)
-    if column not in flange_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, flange_table))
 
     flange_ids = cur.execute("SELECT flange_id FROM %s WHERE %s=?" % (flange_table, "tpc_id"), (TPC, ))
     # collect the flange ids into a selector
@@ -109,14 +106,12 @@ def tpc_plane_flange_map(conn, column, condition):
     return ret
 
 @hardwaredb_route(db_name)
-def flange_channel_list(conn, column, condition):
+def flange_channel_list(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in flange_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, flange_table))
+    this_flange_columns = validate_columns([columns[0]], flange_columns, flange_table)
 
-    flange_ids = cur.execute("SELECT flange_id FROM %s WHERE %s=?" % (flange_table, column), (condition, ))
+    flange_ids = cur.execute("SELECT flange_id FROM %s %s" % (flange_table, wherestr(this_flange_columns)), (conditions[0],))
     # collect the flange ids into a selector
     flange_id_list = [str(f[0]) for f in flange_ids if f]
     flange_id_spec = "(" + ",".join(["?" for _ in flange_id_list]) + ")"
@@ -125,7 +120,11 @@ def flange_channel_list(conn, column, condition):
     readout_board_list = [str(f[0]) for f in readout_board_ids if f]
     readout_board_spec = "(" + ",".join(["?" for _ in readout_board_list]) + ")"
 
-    daq_channel_ids = cur.execute("SELECT channel_id FROM %s WHERE readout_board_id IN %s" % (daq_table, readout_board_spec), readout_board_list)
+    this_daq_columns = validate_columns(columns[1:], daq_columns, daq_table)
+    daq_conditions = conditions[1:] 
+
+    andstr = "AND" if len(this_daq_columns) else ""
+    daq_channel_ids = cur.execute("SELECT channel_id FROM %s %s %s readout_board_id IN %s" % (daq_table, wherestr(this_daq_columns) or "WHERE", andstr, readout_board_spec), daq_conditions + readout_board_list)
     # sort the channels
     daq_channels = sorted([int(c[0]) for c in daq_channel_ids if c], key=int)
 
@@ -133,14 +132,12 @@ def flange_channel_list(conn, column, condition):
     return daq_channels
 
 @hardwaredb_route(db_name)
-def flange_list(conn, column, condition):
+def flange_list(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in flange_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, flange_table))
+    columns = validate_columns(columns, flange_columns, flange_table)
 
-    flange_ids = cur.execute("SELECT flange_pos_at_chimney FROM %s WHERE %s=?" % (flange_table,column), (condition,))
+    flange_ids = cur.execute("SELECT flange_pos_at_chimney FROM %s %s" % (flange_table, wherestr(columns)), tuple(conditions))
     flanges = [c[0] for c in flange_ids if c]
 
     cur.close()
@@ -148,14 +145,13 @@ def flange_list(conn, column, condition):
 
 
 @hardwaredb_route(db_name)
-def slot_local_channel_map(conn, column, condition):
+def slot_local_channel_map(conn, columns, conditions):
     cur = conn.cursor()
 
-    column = to_column(column)
-    if column not in flange_columns:
-       raise ValueError("Column (%s) is not an available selector in table %s" % (column, flange_table))
+    this_flange_columns = validate_columns([columns[0]], flange_columns, flange_table)
 
-    flange_ids = cur.execute("SELECT flange_id FROM %s WHERE %s=?" % (flange_table, to_column(column)), (condition,))
+    flange_ids = cur.execute("SELECT flange_id FROM %s %s" % (flange_table, wherestr(this_flange_columns)), (conditions[0],))
+
     # collect the flange ids into a selector
     flange_id_list = [str(f[0]) for f in flange_ids if f]
     flange_id_spec = "(" + ",".join(["?" for _ in flange_id_list]) + ")"
@@ -164,7 +160,11 @@ def slot_local_channel_map(conn, column, condition):
     readout_board_list = [str(f[0]) for f in readout_board_ids if f]
     readout_board_spec = "(" + ",".join(["?" for _ in readout_board_list]) + ")"
 
-    daq_channel_ids = cur.execute("SELECT channel_id,channel_number,readout_board_slot FROM %s WHERE readout_board_id IN %s" % (daq_table, readout_board_spec), readout_board_list)
+    this_daq_columns = validate_columns(columns[1:], daq_columns, daq_table)
+    daq_conditions = conditions[1:] 
+    andstr = "AND" if len(this_daq_columns) else ""
+
+    daq_channel_ids = cur.execute("SELECT channel_id,channel_number,readout_board_slot FROM %s %s %s readout_board_id IN %s" % (daq_table, wherestr(this_daq_columns) or "WHERE", andstr, readout_board_spec), daq_conditions + readout_board_list)
 
     # sort the channels
     daq_channel_ids = sorted(list(daq_channel_ids), key=lambda x: x[0])
@@ -179,7 +179,7 @@ def available_selectors():
     ret = {}
     ret[daq_table] = dict([(to_display(c), available_values(daq_table, c)) for c in daq_columns])
     ret[flange_table] = dict([(to_display(c), available_values(flange_table, c)) for c in flange_columns])
-    ret[tpc_plane_table] = dict([(to_display(tpc_plane_column), tpc_plane_channel_available_values())])
+    ret[tpc_plane_table] = dict([(to_display("-".join(tpc_plane_columns)), tpc_plane_channel_available_values())])
     return ret
 
 # what functions are available
@@ -191,7 +191,5 @@ SELECTORS[tpc_plane_table] = tpc_plane_channel_list
 SELECTORS[tpc_plane_table + "_planes"] = tpc_plane_plane_list
 
 MAPPINGS = {}
-MAPPINGS[flange_table] = {}
-MAPPINGS[flange_table]["flange_pos_at_chimney"] = slot_local_channel_map
-MAPPINGS["tpc_plane_flanges"] = {}
-MAPPINGS["tpc_plane_flanges"]["flange_pos_at_chimney"] = tpc_plane_flange_map
+MAPPINGS[flange_table] = slot_local_channel_map
+MAPPINGS["tpc_plane_flanges"] = tpc_plane_flange_map

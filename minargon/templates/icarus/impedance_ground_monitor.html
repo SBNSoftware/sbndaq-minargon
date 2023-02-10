@@ -1,7 +1,7 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}Impedence Ground Monitor{% endblock %}
+{% block title %}Impedance Ground Monitor{% endblock %}
 
 {# Define macro to setup plot #}
 {% macro plot_row(id) %}
@@ -47,7 +47,7 @@
 {% endblock %}
 
 {# Define a macro to startup the javascript #}
-{% macro run_stream(database, id, config, ytitle, lo, hi) %}
+{% macro run_stream(database, id, config, ytitle, lo, hi, plot_title, plot_save) %}
 {
     // Build the link
     var link = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, "{{ database }}", {{id}} ));
@@ -66,14 +66,18 @@
 	.timeRangeController(start_id, end_id, toggle_id)
 	.downloadDataController(download_id )
     plotly_controller.setYTitles(["{{ytitle}}"]);
+    plotly_controller.setPlotTitle("{{plot_title}}");
+    plotly_controller.setSaveName("{{plot_save}}");
     // plotly_controller.setYRanges([[{{lo}}, {{hi}}]]);
     
     // Start it
     plotly_controller.run();
+
 }
 {% endmacro %}
 
-{% macro run_atan(database, IDA, IDB, configA, configB, ytitle, plotid, lo, hi) %}
+{% macro run_atan(database, IDA, IDB, configA, configB, ytitle, plotid, lo, hi, plot_title, plot_save) %}
+{
 
   var linkA = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{database}}', "{{IDA}}"));
   var configA = {{configA|tojson}};
@@ -89,12 +93,16 @@
     .timeRangeController("#start-{{plotid}}", "#end-{{plotid}}", "#toggle-{{plotid}}")
     .downloadDataController("#download-{{plotid}}");
 
-  plot_controller.setTitle("{{ytitle}}");
+  plot_controller.setYTitle("{{ytitle}}");
+  plot_controller.setPlotTitle("{{plot_title}}");
+  plot_controller.setSaveName("{{plot_save}}");
   // plot_controller.setYRange({{lo}}, {{hi}});
    
   // start it
   plot_controller.run();
 
+
+}
 {% endmacro %}
 
 {% block script %}
@@ -102,13 +110,13 @@
     import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
     import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
     
-    {{ run_stream(database, 46, configs[46], "Magnitude", 450, 550)}} 
-    {{ run_stream(database, 44, configs[44], "Impedence [ohm]", 400, 550) }}
-    {{ run_atan(database, 48, 47, configs[48], configs[47], "Phase [deg]", "atan-48-47", -130, 140) }}
+    {{ run_stream(database, 46, configs[46], "Magnitude", 450, 550, "Gizmo 0 Magnitude", "Gizmo0Magnitude")}} 
+    {{ run_stream(database, 44, configs[44], "Impedance [ohm]", 400, 550, "Gizmo 0 Impedance", "Gizmo0Impedance") }}
+    {{ run_atan(database, 48, 47, configs[48], configs[47], "Phase [deg]", "atan-48-47", -130, 140, "Gizmo 0 Phase", "Gizmo0Phase") }}
 
-    {{ run_stream(database, 51, configs[51], "Magnitude", 500, 600) }}
-    {{ run_stream(database, 49, configs[49], "Impedence [ohm]", 450, 550) }}   
-    {{ run_atan(database, 53, 52, configs[53], configs[52], "Phase [deg]", "atan-53-52", -130, 140) }}
+    {{ run_stream(database, 51, configs[51], "Magnitude", 500, 600, "Gizmo 1 Magnitude", "Gizmo1Magnitude") }}
+    {{ run_stream(database, 49, configs[49], "Impedance [ohm]", 450, 550, "Gizmo 1 Impedance", "Gizmo1Impedance") }}   
+    {{ run_atan(database, 53, 52, configs[53], configs[52], "Phase [deg]", "atan-53-52", -130, 140, "Gizmo 1 Phase", "Gizmo1Phase") }}
 
 </script>
 {% endblock %}

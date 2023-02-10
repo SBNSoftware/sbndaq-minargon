@@ -3,7 +3,7 @@ from minargon import app
 from flask import jsonify, Response, request, abort
 from redis import Redis
 import redis.exceptions
-import json
+import simplejson as json
 from minargon.tools import parseiso, parseiso_or_int, stream_args, LOCAL_TZ
 from functools import wraps
 from datetime import datetime, timedelta # needed for testing only
@@ -60,7 +60,7 @@ def redis_route(func):
             # try to make a connection
             try:
                 return func(r, *args, **kwargs)
-            except (redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError, redis.exceptions.ResponseError, redis_api.MalformedRedisEntry) as err:
+            except (redis.exceptions.TimeoutError, redis.exceptions.ConnectionError, redis.exceptions.BusyLoadingError, redis.exceptions.ResponseError, redis_api.MalformedRedisEntry) as err:
                 error = RedisConnectionError(front_end_abort).register_redis_error(err, rconnect)
                 return abort(503, error)
         else:
@@ -143,7 +143,7 @@ def hget(rconnect, name, keys):
     pipeline = rconnect.pipeline()
     for key in keys:
         pipeline.hget(name, key)
-    return jsonify(**dict([(key,val) for key,val in zip(keys, pipeline.execute())]))
+    return jsonify(**dict([(key, val) for key,val in zip(keys, pipeline.execute())]))
 
 def get_min_end_time(data):
     min_end_time = 0
@@ -325,6 +325,9 @@ def stream_avg(rconnect, streams):
 @app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>')
 @app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>/<int:downsample>')
 def stream_group_hw_avg(connect, stream_type, metric_name, group_name, hw_selects, downsample=1):
+    # HOTFIX: This seems to be overtaxing redis -- ignore this for now
+    return jsonify(values={}, min_end_time=0)
+
     args = stream_args(request.args)
 
     # the hw-averaging can't handle archived data for now
@@ -671,6 +674,10 @@ def build_link_list(rconnect):
     groups = rconnect.smembers("GROUPS")
     pipeline = rconnect.pipeline()
     for group in groups:
+       try:
+           group = group.decode("utf-8")
+       except:
+           continue
        pipeline.get("GROUP_CONFIG:%s" % group)
        pipeline.lrange("GROUP_MEMBERS:%s" % group, 0, -1)
     result = pipeline.execute()
@@ -685,8 +692,12 @@ def build_link_list(rconnect):
 
     # index by group, the metric, then instance
     for group, config, this_members, in zip(groups, configs, members):
+        if not config or not members: continue
+
         config = json.loads(config)
+
         if "metric_config" not in config: continue
+
         metrics = list(config["metric_config"].keys())
         streams = config["streams"]
         ret.append({
@@ -697,6 +708,65 @@ def build_link_list(rconnect):
             "ID_join": ":"
         })
     return ret
+
+@redis_route
+def build_sentinel_list(rconnect):
+    def list_to_hierarchy(l):
+        ret = {
+          "text": "Sentinel Alarms",
+          "state": {
+            "expanded": True,
+          },
+          "displayCheckbox": False,
+          "nodes": [],
+        }
+
+        for items in l:
+            level = ret
+            for item in items:
+                if item not in [n["text"] for n in level["nodes"]]:
+                    level["nodes"].append({
+                      "state": {
+                        "expanded": True,
+                      },
+                      "text": item,
+                      "href": "#parent1",
+                      "displayCheckbox": False,
+                      "nodes" : []
+                    })
+                level = level["nodes"][-1]
+
+        return ret
+
+    def set_node(h, key, val):
+        nodes = h["nodes"]
+        for level in key:
+            index = [n["text"] for n in nodes].index(level)
+            nodes = nodes[index]["nodes"]
+        color = "green" if val.endswith("No Alarm") else "red"
+        nodes.append({
+            "text": val,
+            "selectable": False,
+            "color": color,
+        })
+
+    def clean_alarm(a):
+        if not a:
+            return "No Alarm"
+        return a
+
+    alarms = list(rconnect.smembers("OMSentinel:Alarms"))
+    values = redis_api.get_last_streams(rconnect, alarms)
+    values = [values[a][0] for a in alarms]
+    values = [datetime.fromtimestamp(float(t) / 1e3).strftime("%b-%d %H:%M") + " CST: " + clean_alarm(a) for t, a in values]
+
+    alarms = [a.split(":")[:-1] for a in alarms]
+    alarm_h = list_to_hierarchy(alarms)
+
+    for a, val in zip(alarms, values):
+        set_node(alarm_h, a, val)
+
+    return alarm_h
 
 @redis_route
 def build_link_tree(rconnect):

@@ -58,7 +58,9 @@ import * as module from "{{ url_for('static', filename='js/minargon/correlation.
 {% elif typeX == "postgres" %}
   var linkX = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{databaseX}}', "{{IDX}}"));
   var configX = {{configX|tojson}};
-  {% if "yTitle" in configX %}
+  {% if "yTitle" in configX and "yTitle" in configY and configX["yTitle"] == configY["yTitle"] and "title" in configX %}
+      var nameX = "{{configX['title']}} {{configX['yTitle']}}";
+  {% elif "yTitle" in configX %}
       var nameX = "{{configX['yTitle']}}";
   {% else %}
       var nameX = "{{IDX}}";
@@ -72,7 +74,9 @@ import * as module from "{{ url_for('static', filename='js/minargon/correlation.
 {% elif typeY == "postgres" %}
   var linkY = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{databaseY}}', "{{IDY}}"));
   var configY = {{configY|tojson}};
-  {% if "yTitle" in configY %}
+  {% if "yTitle" in configX and "yTitle" in configY and configX["yTitle"] == configY["yTitle"] and "title" in configY %}
+      var nameY = "{{configY['title']}} {{configY['yTitle']}}";
+  {% elif "yTitle" in configY %}
       var nameY = "{{configY['yTitle']}}";
   {% else %}
       var nameY = "{{IDY}}";

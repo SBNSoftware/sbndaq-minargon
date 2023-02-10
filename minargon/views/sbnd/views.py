@@ -3,7 +3,7 @@ from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
 import time
 from os.path import join
-import json
+import simplejson as json
 import os
 import sys
 import random
@@ -18,6 +18,10 @@ from minargon.tools import parseiso
 # from minargon.data_config import parse
 from minargon.metrics import online_metrics
 from six.moves import range
+
+@app.route('/introduction')
+def introduction():
+    return render_template('sbnd/introduction.html')
 
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')

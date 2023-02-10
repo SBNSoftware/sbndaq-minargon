@@ -2,39 +2,90 @@
 {% block title %}Introduction to Minargon{% endblock %}
 {% block body %}
 {{ super() }}
-<div class="col-md-8 hcenter">
+<div class="container">
+<div class="row">
 <h1>
 ICARUS Online Monitoring
 </h1>
-<p>
-Online monitoring website for the ICARUS Detector. 
+</div>
 
-<br>
+<div class="row">
 
-TPC Online monitoring operation is: <span id="TPC-OM"> </span>
-<br>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter">
+  Monitoring Status
+  </h3>
 
-PMT Online monitoring operation is: <span id="PMT-OM"> </span>
+  <table class="table table-striped">
+  <tr>
+    <th>TPC OM: </th>
+    <th><span id="TPC-OM"> </span></th>
+  </tr>
+  <tr>
+    <th>PMT OM: </th>
+    <th><span id="PMT-OM"> </span></th>
+  </tr>
+  <tr>
+    <th>DAQConsumer: </th>
+    <th><span id="OM-status"> </span></th>
+  </tr>
+  <tr>
+    <th>Archiver: </th>
+    <th><span id="AR-status"> </span></th>
+  </tr>
+  <tr>
+    <th>Archived Data Time: </th>
+    <th><span id="Archived-Data"> </span></th>
+  </tr>
+  <tr>
+    <th>Redis Meomory Usage: </th>
+    <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
+  </tr>
+  </table>
+</div>
 
-<br>
 
-DAQConsumer operation is: <span id="OM-status"> </span>
+<div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter">
+  Detector Status
+  </h3>
+  <table class="table table-striped">
+  <tr>
+    <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
+    <th><span id="TPC-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
+    <th><span id="PMT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('CRT_status')}}">Side CRT Status:</a></th>
+    <th><span id="Side-CRT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('TopCRT_status')}}">Top CRT Status:</a></th>
+    <th><span id="Top-CRT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('fragments_status')}}">Fragments Status:</a></th>
+    <th>
+    <span id="Fragments-Status-PMT"></span>
+    <br>
+    <span id="Fragments-Status-CRT"></span>
+    <br>
+    <span id="Fragments-Status-TopCRT"></span>
+    </th>
+  </tr>
+  </table>
+</div>
 
-<br>
+</div>
 
-Archiver operation is: <span id="AR-status"> </span>
-
-<br>
-
-Most recent archived data is: <span id="Archived-Data"> </span>
-<br>
-
-Redis Memory Usage is: <span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span>
-</p>
 {%endblock%}
 
 {% block script %}
 <script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
 import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
 import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
@@ -50,7 +101,6 @@ function time_delta(earlier) {
 
 function is_recent(time, time_is_ok) {
   return time_delta(time) < time_is_ok;
-  return ret;
 }
 
 
@@ -95,11 +145,10 @@ update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
 
 var poll_archived_data = new Poll.Poll($SCRIPT_ROOT + "/metric_archiving/stream_group_last_time/archived/rms/tpc_channel");
 poll_archived_data.add_callback(function(data) {
-    console.log(data);
     var spanid = "#Archived-Data";
     var delta = (time_delta(data.time) / 1000. / 60).toFixed(0);
     var delta_str = " (" + String(delta) + "m)";
-    if (is_recent(data.time, 120 * 1000 * 60 /* 120 m*/)) {
+    if (is_recent(data.time, 10 * 1000 * 60 * 60 /* 10hr*/)) {
       $(spanid).text("RECENT" + delta_str);
       $(spanid).css({"color": "green"});
     }
@@ -115,7 +164,7 @@ poll_tpc.add_callback(function(data) {
     var spanid = "#TPC-OM";
     var delta = (time_delta(data.time) / 1000.).toFixed(0);
     var delta_str = " (" + String(delta) + "s)";
-    if (is_recent(data.time, 120 * 1000 /* 120 s*/)) {
+    if (is_recent(data.time, 600 * 1000 /* 600 s*/)) {
       $(spanid).text("ON" + delta_str);
       $(spanid).css({"color": "green"});
     }
@@ -131,7 +180,7 @@ poll_pmt.add_callback(function(data) {
     var spanid = "#PMT-OM";
     var delta = (time_delta(data.time) / 1000.).toFixed(0);
     var delta_str = " (" + String(delta) + "s)";
-    if (is_recent(data.time, 120 * 1000 /* 120 s*/)) {
+    if (is_recent(data.time, 600 * 1000 /* 600 s*/)) {
       $(spanid).text("ON" + delta_str);
       $(spanid).css({"color": "green"});
     }
@@ -167,6 +216,376 @@ poll_redis_mem_frac.add_callback(function(data) {
 });
 poll_redis_mem_frac.run();
 
+var N_FLANGE_BAD_CHANNEL = 16;
+var BAD_FLANGES = new Set();
+
+{% for flange in flanges %}
+{% set channels = tpc_channels[loop.index0]|tojson %}
+{
+
+
+var config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{channels}}, 0, 25, "{{flange.to_url()}}", undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
+var buffer = new Data.D3DataBuffer(poll, 5, [
+  function(data) {
+    var channels = {{channels}};
+
+    var rms_data = data.slice(0, channels.length);
+    var baseline_data = data.slice(channels.length);
+
+    var n_bad_channel = 0;
+    for (var i = 0; i < channels.length; i++) {
+      var this_data = rms_data[i];
+      var rms = 0.;
+      for (var j = 0; j < this_data.size; j++) { 
+        rms = rms + this_data.get(j)[1] / this_data.size;
+      }
+      if (this_data.size > 0 && (rms < {{tpc_rms_min}} || rms > {{tpc_rms_max}})) {
+        n_bad_channel += 1;
+        continue; // no need to check baseline
+      }
+
+      var this_data = baseline_data[i];
+      var baseline = 0.;
+      for (var j = 0; j < this_data.size; j++) { 
+        baseline = baseline + this_data.get(j)[1] / this_data.size;
+      }
+      if (this_data.size > 0 && (baseline < {{tpc_baseline_min}} || baseline > {{tpc_baseline_max}})) {
+        n_bad_channel += 1;
+      }
+    }  
+
+    var flange_str =
+      `<a href="{{url_for('TPC', hw_select=flange.trim() )}}">{{flange.values[0]}}</a>`;
+
+    if (n_bad_channel >= N_FLANGE_BAD_CHANNEL) {
+      BAD_FLANGES.add(flange_str);
+    }
+    else {
+      BAD_FLANGES.delete(flange_str);
+    }
+
+    if (BAD_FLANGES.size > 0) {
+      let bad_flange_str = "NOT OK. Bad Flanges: " + Array.from(BAD_FLANGES).join(" ");
+      $("#TPC-Status").html(bad_flange_str);
+      $("#TPC-Status").css({"color": "red"});
+    }
+    else {
+      $("#TPC-Status").text("OK");
+      $("#TPC-Status").css({"color": "green"});
+    }
+
+  }
+]);
+buffer.start();
+
+}
+{% endfor %}
+
+
+// PMT
+
+var BAD_PMTS = new Set();
+var pmt_config = {{pmt_config|tojson|safe}};
+
+
+{% for pmt in pmts %}
+{% set pmt_channels = pmt_channels[loop.index0]|tojson %}
+{% set disconnected_pmt_channels = disconnected_pmt_channels[loop.index0]|tojson %}
+{
+
+var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefined, ["rms", "baseline"], {{pmt_channels}}, 0, 25, "{{pmt.to_url()}}", undefined, undefined);
+
+var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+var pmt_poll = new Data.D3DataPoll(pmt_data_link, 60*1000 /* 1 minute */);
+var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
+  function(data) {
+    
+    var pmt_channels = {{pmt_channels}};
+    var rms_data = data.slice(0, pmt_channels.length);
+    var baseline_data = data.slice(pmt_channels.length);
+
+    for (var i = 0; i < pmt_channels.length; i++) {
+      
+      var this_rms_data = rms_data[i];
+      var rms = 0.;
+
+      for (var j = 0; j < this_rms_data.size; j++) {
+        var rms = rms + this_rms_data.get(j)[1]/this_rms_data.size;
+      }
+
+      var this_baseline_data = baseline_data[i];
+      var baseline = 0.;   
+
+      for (var j = 0; j < this_baseline_data.size; j++) {
+        var baseline = baseline + this_baseline_data.get(j)[1]/this_baseline_data.size;
+        }
+
+      if ( (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}) )
+      {
+        var channel_str = `<a href = "{{url_for('PMT_snapshot')}}?PMT=` + pmt_channels[i] + `">`+ pmt_channels[i] + `</a>`;
+        BAD_PMTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_PMTS.size > 6) {
+      let bad_pmts_str = "NOT OK. Bad channels: " + Array.from(BAD_PMTS).join(" ");
+      $("#PMT-Status").html(bad_pmts_str);
+      $("#PMT-Status").css({"color": "red"});
+    }
+    else {
+      $("#PMT-Status").text("OK");
+      $("#PMT-Status").css({"color": "green"});
+    }
+  }
+]);
+pmt_buffer.start();
+
+}
+{% endfor %}
+
+
+// CRTs
+
+var BAD_CRTS = new Set();
+var crt_config = {{crt_config|tojson|safe}};
+
+{% for crt in crts %}
+{% set crt_channels = crt_channels[loop.index0]|tojson %}
+{
+
+var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "{{crt.to_url()}}", undefined, undefined);
+
+var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
+var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
+var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
+  function(data) {
+    
+    var crt_channels = {{crt_channels}};
+    var baseline_data = data;
+
+    for (var i = 0; i < crt_channels.length; i++) {
+
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+
+      if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
+      {
+        var channel_str = String(crt_channels[i]);
+        BAD_CRTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_CRTS.size > 0) {
+      let bad_crts_str = "NOT OK. Bad channels: " + Array.from(BAD_CRTS).join(" ");
+      $("#Side-CRT-Status").html(bad_crts_str);
+      $("#Side-CRT-Status").css({"color": "red"});
+    }
+    else {
+      $("#Side-CRT-Status").text("OK");
+      $("#Side-CRT-Status").css({"color": "green"});
+    }
+  }
+]);
+crt_buffer.start();
+
+}
+{% endfor %}
+
+
+//Top CRTs
+
+var BAD_TOPCRTS = new Set();
+var topcrt_config = {{topcrt_config|tojson|safe}};
+
+{% for topcrt in topcrts %}
+{% set topcrt_channels = topcrt_channels[loop.index0]|tojson %}
+{
+
+var topcrt_config_controller = new Config.GroupConfigController(topcrt_config, undefined, ["baseline"], {{topcrt_channels}}, 0, 25, "{{topcrt.to_url()}}", undefined, undefined);
+
+var topcrt_data_link = topcrt_config_controller.data_link(0, ["baseline"], undefined, 1);
+var topcrt_poll = new Data.D3DataPoll(topcrt_data_link, 60*1000 /* 1 minute */);
+var topcrt_buffer = new Data.D3DataBuffer(topcrt_poll, 1, [
+  function(data) {
+    
+    var topcrt_channels = {{topcrt_channels}};
+    var baseline_data = data;
+
+    for (var i = 0; i < topcrt_channels.length; i++) {
+
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+
+
+      if ( (baseline < {{topcrt_baseline_min}}) || (baseline > {{topcrt_baseline_max}}) )
+      {
+        var channel_str = String(topcrt_channels[i]);
+        BAD_TOPCRTS.add(channel_str);
+      }
+
+    }
+
+
+    if (BAD_TOPCRTS.size > 0) {
+      let bad_topcrts_str = "NOT OK. Bad channels: " + Array.from(BAD_TOPCRTS).join(" ");
+      $("#Top-CRT-Status").html(bad_topcrts_str);
+      $("#Top-CRT-Status").css({"color": "red"});
+    }
+    else {
+      $("#Top-CRT-Status").text("OK");
+      $("#Top-CRT-Status").css({"color": "green"});
+    }
+  }
+]);
+topcrt_buffer.start();
+
+}
+{% endfor %}
+
+// Fragments status
+var BAD_PMT_BOARDS = new Set();
+var pmt_config_frag = {{pmt_config_frag|tojson|safe}};
+
+{% for pmt in pmts %}
+ {% set pmt_boards = pmt_boards[loop.index0]|tojson %}
+{
+var config_controller = new Config.GroupConfigController(pmt_config_frag, undefined, ["frag_count", "zero_rate"], {{pmt_boards}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var pmt_boards = {{pmt_boards}};
+    var zero_data = data.slice(pmt_boards.length);
+
+    for (var i = 0; i < pmt_boards.length; i++) {
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      if (zero > {{zerorate_max}})
+      {
+      var board_str = String(pmt_boards[i]-8192);
+      BAD_PMT_BOARDS.add(board_str) ;
+      }
+    }
+
+    if (BAD_PMT_BOARDS.size > 0){
+      let bad_pmts_str = "PMT NOT OK. Bad boards: " + Array.from(BAD_PMT_BOARDS).join(" ");
+      $("#Fragments-Status-PMT").html(bad_pmts_str);
+      $("#Fragments-Status-PMT").css({"color": "red"});    
+    }   
+    else {
+      $("#Fragments-Status-PMT").text("PMT OK");
+      $("#Fragments-Status-PMT").css({"color": "green"});
+    }
+  }
+
+]);
+buffer.start();
+}
+{% endfor %}
+
+var BAD_CRT_BOARDS = new Set();
+var crt_config_frag = {{crt_config_frag|tojson|safe}};
+
+{% for crt in crts %}
+ {% set crt_boards = crt_boards[loop.index0]|tojson %}
+{
+var config_controller = new Config.GroupConfigController(crt_config_frag, undefined, ["frag_count", "zero_rate"], {{crt_boards}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var crt_boards = {{crt_boards}};
+    var zero_data = data.slice(crt_boards.length);
+
+    for (var i = 0; i < crt_boards.length; i++) {
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      if (zero > {{zerorate_max}})
+      {
+      var board_str = String(crt_boards[i]-12544);
+      BAD_CRT_BOARDS.add(board_str) ;
+      }
+    }
+
+    if (BAD_CRT_BOARDS.size > 0){
+      let bad_crts_str = " Side CRT NOT OK. Bad boards: " + Array.from(BAD_CRT_BOARDS).join(" ");
+      $("#Fragments-Status-CRT").html(bad_crts_str);
+      $("#Fragments-Status-CRT").css({"color": "red"});    
+    }   
+    else {
+      $("#Fragments-Status-CRT").text(" Side CRT OK");
+      $("#Fragments-Status-CRT").css({"color": "green"});
+    }
+  }
+
+]);
+buffer.start();
+}
+{% endfor %}
+
+
+var BAD_TOPCRT_BOARDS = new Set();
+var crt_config_frag = {{crt_config_frag|tojson|safe}};
+
+{% for topcrt in topcrts %}
+ {% set topcrt_boards = topcrt_boards[loop.index0]|tojson %}
+{
+var config_controller = new Config.GroupConfigController(crt_config_frag, undefined, ["frag_count", "zero_rate"], {{topcrt_boards}}, 0, 25, undefined, undefined, undefined);
+
+var data_link = config_controller.data_link(0, ["frag_count", "zero_rate"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var topcrt_boards = {{topcrt_boards}};
+    var zero_data = data.slice(topcrt_boards.length);
+
+    for (var i = 0; i < topcrt_boards.length; i++) {
+
+      if (zero_data[i].size > 0) {
+        var zero = zero_data[i].get_last()[1];
+      }
+
+      if (zero > {{zerorate_max}})
+      {
+      var board_str = String(topcrt_boards[i]-12800);
+      BAD_TOPCRT_BOARDS.add(board_str) ;
+      }
+    }
+
+    if (BAD_TOPCRT_BOARDS.size > 0){
+      let bad_topcrts_str = " Top CRT NOT OK. Bad boards: " + Array.from(BAD_TOPCRT_BOARDS).join(" ");
+      $("#Fragments-Status-TopCRT").html(bad_topcrts_str);
+      $("#Fragments-Status-TopCRT").css({"color": "red"});
+    }
+    else {
+      $("#Fragments-Status-TopCRT").text(" Top CRT OK");
+      $("#Fragments-Status-TopCRT").css({"color": "green"});
+    }
+
+  }
+
+]);
+buffer.start();
+}
+{% endfor %}
+
 </script> 
 {%endblock%}
-
