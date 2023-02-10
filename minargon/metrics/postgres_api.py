@@ -226,7 +226,7 @@ def ps_step(connection, ID):
     if (step_size == None):
         step_size = 1e3
 
-    return jsonify(step=step_size)
+    return jsonify(step=float(step_size))
 #________________________________________________________________________________________________
 # Function to check None Values and empty unit
 def CheckVal(var):
@@ -432,7 +432,7 @@ def ps_series(connection, ID):
                 continue
 
             # Add the data to the list
-        data_list.append( [row['sample_time'], value] )
+        data_list.append( [float(row['sample_time']), value] )
 
     # Setup the return dictionary
     ret = {
@@ -776,15 +776,15 @@ def get_epics_last_value(connection,group):
 
     database = connection[1]["name"]
     if (database == "sbnteststand"):
-        query = """select c.name, c.descr, c.last_smpl_time, 
+        query = """select c.name, c.descr, to_char( c.last_smpl_time,'YYYY.MM.DD HH24:MI:SS'),
     coalesce((c.last_num_val::numeric)::text,(trunc(c.last_float_val::numeric,3))::text, c.last_str_val),channel_id
     from dcs_archiver.channel c,dcs_archiver.chan_grp g
     where c.grp_id=g.grp_id and g.name='%s' order by c.name""" % group
     else:
-        query = """select c.name, c.descr, c.last_smpl_time, 
-    coalesce((c.last_num_val::numeric)::text,(trunc(c.last_float_val::numeric,3))::text, c.last_str_val),channel_id
-    from dcs_prd.channel c,dcs_prd.chan_grp g
-    where c.grp_id=g.grp_id and g.name='%s' order by c.name""" % group
+        query = """select c.name, c.descr, to_char( c.last_smpl_time,'YYYY.MM.DD HH24:MI:SS'),
+    coalesce((c.last_num_val::numeric)::text,(trunc(c.last_float_val::numeric,3))::text, c.last_str_val),c.channel_id,m.unit 
+    from dcs_prd.channel c,dcs_prd.chan_grp g,dcs_prd.num_metadata m 
+    where c.grp_id=g.grp_id and g.name='%s' and c.channel_id=m.channel_id order by c.name""" % group
 
     cursor.execute(query);
     dbrows = cursor.fetchall();
@@ -795,7 +795,7 @@ def get_epics_last_value(connection,group):
             time = row[2].strftime("%Y-%m-%d %H:%M")
         except:
             time = row[2]
-        formatted.append((row[0],row[1],time,row[3],row[4]))
+        formatted.append((row[0],row[1],time,row[3],row[4],row[5]))
 
     return formatted
 

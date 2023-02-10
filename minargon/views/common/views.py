@@ -121,12 +121,12 @@ def single_stream(stream_name):
 def pvTree(connection):
     return render_template('common/pvTree.html', data=postgres_api.pv_internal(connection, "pv_single_stream", front_end_abort=True))
 
-def timeseries_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None):
+def timeseries_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None, db="online"):
     # TODO: what to do with this?
     initial_datum = args.get('data', None)
     
     # get the config for this group from redis
-    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+    config = online_metrics.get_group_config(db, instance_name, front_end_abort=True)
 
     if initial_datum is None:
         if len(config["metric_list"]) > 0:
@@ -167,6 +167,7 @@ def timeseries_view(args, instance_name, view_ident="", link_function="undefined
         'channels': channels,
         'hw_select': hw_select,
         'channel_map': channel_map,
+        'dbname': db
     }
 
     return render_template('common/timeseries.html', **render_args)
