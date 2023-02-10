@@ -185,9 +185,11 @@ export class D3DataPoll {
       var self = this;
       var alertID = this.name().replace(/\s/g, '').replace(/:/g,'').replace(/_/g,'');
       var alertText = "Loading data for request (" + this.name() + ")";
-      var timeout = setTimeout(function() { throw_alert(alertText, alertID);}, 3000);
+      var timeout = setTimeout(function() { throw_alert(alertText, alertID, true);}, 3000);
       this.data.get_data_promise(start, stop)
         .then(function(value) {
+          throw_alert("INFO -- Executed query: " + String(value.query), "query-info", false);
+          console.log(value);
           for (var i = 0; i < self.listeners.length; i++) {
             var func = self.listeners[i];
             func(value, false);
@@ -215,7 +217,7 @@ export class D3DataPoll {
         var self = this;
         var alertID = this.name().replace(/\s/g, '').replace(/:/g,'').replace(/_/g,'');
         var alertText = "Loading data for request (" + this.name() + ")";
-        var timeout = setTimeout(function() { throw_alert(alertText, alertID);}, 3000);
+        var timeout = setTimeout(function() { throw_alert(alertText, alertID, true);}, 3000);
         this.data.get_data_promise(start, undefined, n_data)
             .then(function(value) {
                clearTimeout(timeout);

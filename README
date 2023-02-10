@@ -11,8 +11,8 @@ Quickstart
 To run a local copy of minargon, first create a virtual environment and activate
 it.
 
-    $ virtualenv venv
-    $ . venv/bin/activate
+    $ python3 -m venv env
+    $ . env/bin/activate
 
 Make sure you have a recent version of pip:
 
@@ -30,7 +30,7 @@ virtualenv that I have setup myself for use).
 Now, clone the minargon repository, and install the prerequisites:
 
     $ git clone https://github.com/SBNSoftware/sbndaq-minargon.git
-    $ cd minargon
+    $ cd sbndaq-minargon
     $ pip install -r requirements.txt
 
 Minargon needs a configuration file to run with the settings of where

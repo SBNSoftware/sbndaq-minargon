@@ -94,11 +94,12 @@
                   aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>-->
-          <div class="navbar-collapse collapse" id="navbar">
+          <div class="navbar-collapse collapse bg-maroon" id="navbar">
             <ul class="navbar-nav mr-auto">
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+		  {{ nav_link('TPC_status', 'Status') }}
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Flanges<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
@@ -115,6 +116,7 @@
                       {% endfor %}
                     </ul>
                   </li>
+		  {{ nav_link('Purity', 'Purity') }}
                   {{ nav_link('channel_snapshot', 'Waveforms') }}
 	          {{ nav_link('TPC_group_select', 'Group Select') }}
             	  {{ nav_link('NoiseCorr', 'Noise Correlation') }}
@@ -123,18 +125,89 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('PMT_status', 'Status') }}
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT Locations<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {% for PMT, _  in PMTLOCs %}
+                        {{ nav_link('PMT', PMT, PMTLOC=PMT) }}
+                      {% endfor %}
+                    </ul>
+                  </li>
                   {{ nav_link('PMT', 'Metrics') }}
                   {{ nav_link('PMT_snapshot', 'Waveforms') }}
+
                 </ul>
               </li>
-             {{ nav_link('CRT_board', 'Side CRT') }} 
-             {{ nav_link('pvTree', 'ICARUS EPICS', connection='epics') }}
-             <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status</A></li>
-             {{ nav_link('Impedence_Ground_Monitor', 'Ground Monitor') }}
-             {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
-             {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
-    
-             <!--{{ nav_link('purity', 'Purity', group_name='TPC')}}-->
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Side CRT<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+		  {{ nav_link('CRT_status', 'Side Status') }}
+                  {{ nav_link('CRT_board', 'Side CRT') }} 
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {% for loc,lochw in CRTLOCs %}
+                        {{ nav_link('CRT_board', loc, hw_select=lochw) }}
+                      {% endfor %}
+                    </ul>
+                  </li>
+                  {{ nav_link('CRT_group_select', 'Group Select') }} 
+                </ul>
+              </li>
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Top CRT<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+		  {{ nav_link('TopCRT_status', 'Top Status') }}
+                  {{ nav_link('CRT_board_top', 'Top CRT') }} 
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {% for loc,lochw in TOPCRTLOCs %}
+                        {{ nav_link('CRT_board_top', loc, hw_select=lochw) }}
+                      {% endfor %}
+                    </ul>
+                  </li>
+                  {{ nav_link('TopCRT_group_select', 'Group Select') }} 
+                </ul>
+              </li>
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Fragments<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('fragments_status', 'Fragments Status') }}
+		  {{ nav_link('PMT_fragments', 'PMT Fragments') }}
+                  {{ nav_link('CRT_fragments', 'CRT Fragments') }}
+                </ul>
+              </li>
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>ICARUS EPICS<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                 {{ nav_link('pvTree', 'Tree Browser', connection='epics') }}
+                 <li class="nav-item"><A class='nav-link' HREF=/icarus/dcs/>Archiver Status (EXTERNAL)</A></li>
+                 {{ nav_link('Impedance_Ground_Monitor', 'Ground Monitor') }}
+                 {{ nav_link('Level_Monitor', 'Level Monitor') }}
+                 {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
+                 {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('icarus_tpcps', 'Flange WW', connection='epics', flange='ww') }}
+                      {{ nav_link('icarus_tpcps', 'Flange WE', connection='epics', flange='we') }}
+                      {{ nav_link('icarus_tpcps', 'Flange EW', connection='epics', flange='ew') }}
+                      {{ nav_link('icarus_tpcps', 'Flange EE', connection='epics', flange='ee') }}
+                    </ul>
+                  </li>
+
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT High Voltage<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('icarus_pmthv', 'Side E', connection='epics', side='E') }}
+                      {{ nav_link('icarus_pmthv', 'Side W', connection='epics', side='W') }}
+                    </ul>
+                  </li>
+                 {{ nav_link('pmt_readout_temp', 'PMT Readout Temp', connection='epics') }}
+                </ul>
+              </li>
              {{ nav_link('view_streams', 'Data Browser')}}
            </ul>
           </div><!--/.navbar-collapse -->

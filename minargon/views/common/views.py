@@ -37,26 +37,31 @@ def view_plot():
     plotname = request.args.get("url", "")
     return render_template("common/view_plot.html", plotname=plotname)
 
-@app.route('/introduction')
-def introduction():
-    template = os.path.join(app.config["FRONT_END"], 'introduction.html')
-    return render_template(template)
-
 @app.route('/<connection>/latest_gps_info')
 def latest_gps_info(connection):
     dbrows = postgres_api.get_gps(connection, front_end_abort=True)     
 
     return render_template('common/gps_info.html',rows=dbrows)
 
+@app.route('/<connection>/pmt_readout_temp')
+def pmt_readout_temp(connection):
+    dbrows = postgres_api.get_pmt_readout_temp(connection, front_end_abort=True)     
+    return render_template('icarus/pmt_readout_temp.html', rows=dbrows, connection=connection)
+
 @app.route('/<connection>/icarus_cryo')
 def icarus_cryo(connection):
     dbrows = postgres_api.get_icarus_cryo(connection, front_end_abort=True)     
     return render_template('icarus/cryo.html', rows=dbrows, connection=connection)
 
-@app.route('/<connection>/icarus_tpcps')
-def icarus_tpcps(connection):
-    dbrows = postgres_api.get_icarus_tpcps(connection, front_end_abort=True)
-    return render_template('icarus/tpcps.html', rows=dbrows, connection=connection)
+@app.route('/<connection>/icarus_tpcps?flange=<flange>')
+def icarus_tpcps(connection, flange):
+    dbrows = postgres_api.get_icarus_tpcps(connection, flange, front_end_abort=True)
+    return render_template('icarus/tpcps.html', rows=dbrows, connection=connection, flange=flange)
+
+@app.route('/<connection>/icarus_pmthv?side=<side>')
+def icarus_pmthv(connection, side):
+    dbrows = postgres_api.get_icarus_pmthv(connection, side, front_end_abort=True)
+    return render_template('icarus/pmthv.html', rows=dbrows, connection=connection, side=side)
 
 @app.route('/<connection>/epics_last_value/<group>')
 def epics_last_value(connection,group):
@@ -76,6 +81,11 @@ def cathodehv(connection):
     except jinja2.exceptions.TemplateNotFound:
         abort(404)
 
+@app.route('/<connection>/drifthvps')
+def drifthvps(connection):
+    dbrows = postgres_api.get_sbnd_drifthvps(connection, front_end_abort=True)
+    return render_template('sbnd/drifthvps.html', rows=dbrows)
+
 @app.route('/<connection>/epics_last_value_pv/<pv>')
 def epics_last_value_pv(connection,pv):
     dbrows = postgres_api.get_epics_last_value_pv(connection,pv)
@@ -88,6 +98,11 @@ def epics_last_value_pv(connection,pv):
 @app.route('/<connection>/view_alarms')
 def view_alarms(connection):
     return render_template('common/view_alarms.html', connection=connection)
+
+@app.route('/sentinel_alarms')
+def sentinel_alarms():
+    data = online_metrics.build_sentinel_list("online")
+    return render_template('common/alarm_tree.html', data=data)
 
 @app.route('/online_group/<group_name>')
 def online_group(group_name):
@@ -134,7 +149,7 @@ def timeseries_view(args, instance_name, view_ident="", link_function="undefined
     # setup the title
     title = instance_name
     if hw_select is not None:
-        title = ("%s %s -- " % (hw_select.column, hw_select.value)) + title
+        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
 
     # setup hw_select
     if hw_select is None:
@@ -257,6 +272,7 @@ def pv_multiple_stream(database, var):
 
 @app.route("/data_list")
 def data_list():
+    data = build_data_browser_list()
     return jsonify(data=build_data_browser_list())
 
 def build_data_browser_list():
@@ -355,7 +371,8 @@ def view_functor(streamA, streamB, find):
     return render_template("common/view_functor.html", **render_args)
 
 @app.route('/view_streams')
-def view_streams():
+@app.route('/view_streams/<int:collapse>')
+def view_streams(collapse=0):
     postgres_stream_info = {}
     redis_stream_info = {}
     # parse GET parameters
@@ -427,7 +444,8 @@ def view_streams():
       "postgres_streams": postgres_streams,
       "make_redis_stream": make_redis_stream,
       "make_postgres_stream": make_postgres_stream,
-      "checked": checked
+      "checked": checked,
+      "collapse": collapse
     }
     return render_template("common/view_streams.html", **render_args)
 

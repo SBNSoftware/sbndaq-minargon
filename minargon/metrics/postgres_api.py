@@ -15,7 +15,7 @@ import subprocess
 import psycopg2
 #import asyncio
 #import asyncpg
-import json
+import simplejson as json
 from psycopg2.extras import RealDictCursor
 from minargon.tools import parseiso, parseiso_or_int, stream_args
 from minargon import app
@@ -23,6 +23,7 @@ from flask import jsonify, request, render_template, abort, g
 from datetime import datetime, timedelta # needed for testing only
 import time
 import calendar
+import re
 from pytz import timezone
 
 # status interpreter functions
@@ -49,7 +50,7 @@ class PostgresConnectionError:
     def register_postgres_error(self, err, name):
         self.err = err
         self.name = name
-        self.msg = str(err)
+        self.msg = str(err) + ("\nError occured while executing query:\n\n%s" % err.cursor.query)
         return self
 
     def register_fileopen_error(self, err, name):
@@ -134,6 +135,8 @@ def postgres_route(func):
                     return func((connection,config), *args, **kwargs)
                 except (psycopg2.Error, PostgresURLException) as err:
                     error = PostgresConnectionError().register_postgres_error(err, connection_name).with_front_end(front_end_abort)
+                    err.cursor.execute("ROLLBACK")
+                    err.cursor.connection.commit()
                     return abort(503, error)
             else:
                 error = connection.with_front_end(front_end_abort)
@@ -191,16 +194,10 @@ def postgres_query(IDs, start_t, stop_t, n_data, connection, config, **table_arg
 
     query = postgres_querymaker(IDs, start_t, stop_t, n_data, config, **table_args)
     # Execute query, rollback connection if it fails
-    try:
-        cursor.execute(query)
-        data = cursor.fetchall()
-    except:
-        cursor.execute("ROLLBACK")
-        connection.commit()
-        # let website handle error
-        raise	
+    cursor.execute(query)
+    data = cursor.fetchall()
 
-    return data
+    return data, query
 
 #________________________________________________________________________________________________
 # Gets the sample step size in unix miliseconds
@@ -214,7 +211,7 @@ def ps_step(connection, ID):
     start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
     stop_t  = calendar.timegm(stop_t.timetuple())  *1e3 + stop_t.microsecond/1e3 
 
-    data = postgres_query([ID], start_t, stop_t, 2, *connection, **request.args.to_dict())
+    data, query = postgres_query([ID], start_t, stop_t, 2, *connection, **request.args.to_dict())
 
     # Predeclare variable otherwise it will complain the variable doesnt exist 
     step_size = None
@@ -266,15 +263,9 @@ def pv_meta_internal(connection, ID):
                  FROM DCS_PRD.num_metadata, DCS_PRD.CHANNEL
                  WHERE DCS_PRD.CHANNEL.CHANNEL_ID=%s AND DCS_PRD.num_metadata.CHANNEL_ID=%s """ % (ID, ID)
 
-    # Execute query, rollback connection if it fails
-    try:
-        cursor.execute(query)
-        data = cursor.fetchall()
-    except:
-        print("Error! Rolling back connection")
-        cursor.execute("ROLLBACK")
-        connection.commit()
-        data = []
+    # Failure handled by decorator
+    cursor.execute(query)
+    data = cursor.fetchall()
 	
     # Format the data from database query
     ret = {}
@@ -402,6 +393,8 @@ def ps_series(connection, ID):
     args = stream_args(request.args)
     start_t = args['start']    # Start time
     if start_t is None:
+        return abort(404, "Must specify a start time to a PostgreSQL request") 
+
         start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
         start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
 
@@ -419,7 +412,7 @@ def ps_series(connection, ID):
     table_args.pop('n_data', None)
     table_args.pop('now', None)
 
-    data = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
 
     # Format the data from database query
     data_list = []
@@ -446,7 +439,7 @@ def ps_series(connection, ID):
         ID: data_list
     }
 
-    return jsonify(values=ret)
+    return jsonify(values=ret, query=query)
 
 def get_configs(connection, IDs, **kwargs):
     return pv_list(connection, IDs=tuple(IDs), **kwargs)
@@ -556,6 +549,24 @@ def pv_internal(connection, link_name=None, ret_id=None):
     else:
         return list_id # return the ids of a variable
  
+
+#__________________________________________________________________
+@postgres_route
+def get_pmt_readout_temp(connection):
+    cursor = connection[0].cursor();
+    query = """select name,last_smpl_time,to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=16"""
+
+    cursor.execute(query);
+    dbrows = cursor.fetchall();
+    cursor.close();
+
+    formatted = []
+    for row in dbrows:
+        time = row[1].strftime("%Y-%m-%d %H:%M")
+        formatted.append((row[0], time, row[2]))
+
+    return formatted
+
 #__________________________________________________________________
 @postgres_route
 def get_icarus_cryo(connection):
@@ -575,23 +586,139 @@ def get_icarus_cryo(connection):
 
 #______________________________________________________________________
 @postgres_route
-def get_icarus_tpcps(connection):
+def get_icarus_tpcps(connection, flange):
     cursor = connection[0].cursor()
-    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14"""
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99') from dcs_prd.channel where grp_id=14 and name like '%""" + flange + """%'"""
 
     cursor.execute(query)
     dbrows = cursor.fetchall();
     cursor.close();
 
-    formatted = []
-    def sort_id(var):
-        return var[0];
+    res = []
     for row in dbrows:
-        time = row[2].strftime("%Y-%m-%d %H:%M")
-        formatted.append((row[0], row[1], time, row[3]))
-        result = sorted(formatted, key = sort_id);
+        id = row[0]
+        name = row[1]
+        tmp = name.split('/')[0].split('_')
+        n = name.split('/')[1]
+        flange = tmp[2][0:2]
+        tpc = tmp[2]
+        if 'fan' in name:
+            type = 'None'
+        else:
+            type = tmp[3]
+        if row[3] is None:
+            value = "None"
+        else:
+            value = row[3]
+        res.append([id, flange, tpc, type, n, value])
+    rr = sorted(res)
 
-    return result;
+    end = []
+    
+    volt = []
+    temp = []
+    curr = []
+
+    for r in rr:
+       if 'volt' in r[4]:
+           volt.append(r)
+       elif 'temp' in r[4]:
+           temp.append(r)
+       elif 'curr' in r[4]:
+           curr.append(r)
+
+    end.append([volt, temp, curr])
+    return end;
+
+#______________________________________________________________________
+@postgres_route
+def get_icarus_pmthv(connection, side):
+    cursor = connection[0].cursor()
+    if side == 'E':
+        s = "2"
+    else:
+        s = "1"
+    query = """select channel_id, name, last_smpl_time, last_num_val, to_char(last_float_val, '0000D00') from dcs_prd.channel where grp_id=11 and name like '%pmt""" + s + """%'"""
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall()
+    cursor.close()
+
+    pmtmapE = []
+    pmtmapW = []
+    pmtm = []
+
+    try:
+        with open(app.config["PMT_MAP"] + 'Sy1527' + side + 'ch.sub.fnal') as f:
+            for line in f:
+                tmp = []
+                if "icarus" in line:
+                    l = line.split(', ');
+                    tmp.append(l[3])
+                    tmp.append(l[4])
+                    tmp.append(l[6])
+                pmtm.append(tmp)
+    except FileNotFoundError:
+        abort(404)
+
+    pmtmap = sorted(pmtm)
+
+    rows = []
+    east = []
+    west = []
+    boards = []
+    channels = []
+    pmts = []
+    v = []
+    res = []
+    for row in dbrows:
+        id = row[0]
+        name = row[1]
+        if 'bertan' not in name:
+            tmp = name.split('/')[0].split('_')
+            n = name.split('/')[1]
+            t = tmp[3]
+            board = t[1:3]
+            channel = t[4:6]
+                            
+            temp = []
+            group = 'pmt' + side
+            for p in pmtmap:
+                if p != []:
+                    if board == p[0]:
+                        if channel == p[1]:
+                            pmtt = p[2]
+                            
+            time = row[2].strftime("%Y-%m-%d %H:%M")
+            if 'onoff' in name:
+                if row[3] == 1:
+                    tmp = "On"
+                else:
+                    tmp = "Off"
+            elif 'status' in name:
+                tmp = row[3]
+            else:
+                tmp = row[4]
+            res.append([group, board, channel, pmtt, row[0], n, tmp])
+    rr = sorted(res)
+    end = []
+
+    power = []
+    status = []
+    vset = []
+    vmon = []
+    for r in rr:
+        if 'pwonoff' in r[5]:
+            power.append(r)
+        elif 'status' in r[5]:
+            status.append(r)
+        elif 'v0set' in r[5]:
+            vset.append(r)
+        else:
+            vmon.append(r)
+
+    end.append([power, vset, vmon, status])
+    return end;
 
 #________________________________________________________________________________________________
 @postgres_route
@@ -704,3 +831,22 @@ def get_epics_last_value_pv(connection,pv):
         formatted.append((row[0],row[1],time,row[3],row[4],row[5],row[6],row[7],row[8],row[9],row[10],row[11],row[12],row[13],row[14],row[15],row[16],row[17]))
 
     return formatted
+
+@postgres_route
+def get_sbnd_drifthvps(connection):
+    cursor = connection[0].cursor()
+    query = """select channel_id, name, last_smpl_time, to_char(last_float_val,'99999D99'), last_str_val from dcs_prd.channel where grp_id=6"""
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall();
+    cursor.close();
+
+    formatted = []
+    def sort_id(var):
+        return var[0];
+    for row in dbrows:
+        time = row[2].strftime("%Y-%m-%d %H:%M")
+        formatted.append((row[0], row[1], time, row[3]))
+        result = sorted(formatted, key = sort_id);
+
+    return result;

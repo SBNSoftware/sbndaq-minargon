@@ -4,66 +4,43 @@
 
 {% block body %}
 {{ super() }}
-<h2>ICARUS Cathode Drift HV Supply Status</h2>
+<h2>ICARUS TPC Power Supply Status Flange {{flange.upper()}}</h2>
 
-<P>
-<TABLE><TR><TD>Last Reading Time</TD><TD id="icarus_cathodehv_monitor/tss">&nbsp;</TD></TR></TABLE>
-<P>
 <TABLE id="main_table">
-<TR><TH>PV Name</TH><TH>Value</TH><TH>Units</TH><TH>TimeStamp</TH></TR>
+    <TR><TH>&nbsp;</TH><TH>m52</TH><TH>p12</TH><TH>p33</TH><TH>p82</TH></TR>
+    <tr>
+        <td>
+            <table id="names">
+                <tr><th>Flanges</th></tr>
+            </table>
+        </td>
+        <td>
+            <table id="m52">
+                <tr><th>Voltage (V)</th><th>Temperature (%deg;C)</th><th>Current (A)</th></tr>
+            </table>
+        </td>
+        <td>
+            <table id="p12">
+                <tr><th>Voltage (V)</th><th>Temperature (%deg;C)</th><th>Current (A)</th></tr>
+            </table>
+        </td>
+        <td>
+            <table id="p33">
+                <tr><th>Voltage (V)</th><th>Temperature (%deg;C)</th><th>Current (A)</th></tr>
+            </table>
+        </td>
+        <td>
+            <table id="p82">
+                <tr><th>Voltage (V)</th><th>Temperature (%deg;C)</th><th>Current (A)</th></tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
-<!--TR><TD>icarus_cathodehv_set/volt</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='165') }}" id="icarus_cathodehv_set/volt">&nbsp;</A></TD>
-    <TD style="text-align:center">V</TD>
-    <TD id="icarus_cathodehv_set/volt/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_set/current</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='166') }}" id="icarus_cathodehv_set/current">&nbsp;</A></TD>
-    <TD style="text-align:center">&mu;A</TD>
-    <TD    id="icarus_cathodehv_set/current/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_monitor/volt</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='163') }}" id="icarus_cathodehv_monitor/volt">&nbsp;</A></TD>
-    <TD style="text-align:center">V</TD>
-    <TD   id="icarus_cathodehv_monitor/volt/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_monitor/current</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='164') }}" id="icarus_cathodehv_monitor/current">&nbsp;</A></TD>
-    <TD style="text-align:center">&mu;A</TD>
-    <TD   id="icarus_cathodehv_monitor/current/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_monitor_ee/volt</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='170') }}" id="icarus_cathodehv_monitor_ee/volt">&nbsp;</A></TD>
-    <TD style="text-align:center">V</TD>
-    <TD   id="icarus_cathodehv_monitor_ee/volt/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_monitor_ew/volt</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='168') }}" id="icarus_cathodehv_monitor_ew/volt">&nbsp;</A></TD>
-    <TD style="text-align:center">V</TD>
-    <TD id="icarus_cathodehv_monitor_ew/volt/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_monitor_we/volt</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='169') }}" id="icarus_cathodehv_monitor_we/volt">&nbsp;</A></TD>
-    <TD style="text-align:center">V</TD>
-    <TD   id="icarus_cathodehv_monitor_we/volt/timestamp">&nbsp;</A></TD>
-</TR>
-
-<TR><TD>icarus_cathodehv_monitor_ww/volt</TD>
-    <TD style="text-align:right"><a href="{{ url_for('pv_single_stream', database=connection, ID='167') }}" id="icarus_cathodehv_monitor_ww/volt">&nbsp;</A></TD>
-    <TD style="text-align:center">V</TD>
-    <TD    id="icarus_cathodehv_monitor_ww/volt/timestamp">&nbsp;</A></TD>
-</TR-->
 
 {%endblock%}
 
 {% block script %}
-<link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
 <link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
 <script src="{{ url_for('static', filename='js/lights.js') }}"></script>
     <style>
@@ -90,36 +67,47 @@
 <!-- Populate above table -->
 <script type="text/javascript">
 $(document).ready(function() {
-  {%for row in rows%} {
-    var pvName = "{{row[1]}}";
-    var tr = document.createElement("tr");
-    tr.innerHTML = "<td id='{{row[1]}}'>{{ row[1] }}</td><td><a href='{{ url_for('pv_single_stream', database=connection, ID=row[0]) }}'>{{ row[3] }}</a></td>"
-    var units = document.createElement("td");
-    if (pvName.endsWith("temp")) {
-      units.innerHTML = "&deg;C";
-      tr.appendChild(units);
-    } else if (pvName.endsWith("curr")) {
-      units.innerHTML = "A";
-      tr.appendChild(units);
-    } else if (pvName.endsWith("volt")) {
-      units.innerHTML = "V";
-      tr.appendChild(units);
-    } else if (pvName.endsWith("fan")) {
-      units.innerHTML = "%";
-      tr.appendChild(units);
-    }
-    var ts = document.createElement("td");
-    ts.id="{{row[0]}}/timestamp";
-    ts.innerHTML = "{{row[2]}}";
-    tr.appendChild(ts);
-    document.getElementById("main_table").appendChild(tr);
+  {%set volt = rows[0][0]%}
+  {%set temp = rows[0][1]%}
+  console.log('{{temp[0]}}');
+
+  {%set curr = rows[0][2]%}
+  var flange = "{{flange}}";
+  console.log(flange);
+  {%for i in range(volt|length)%} {
+    var f = "{{volt[i][1]}}";
+        var tr_names = document.createElement("tr");
+        var tr_m52 = document.createElement("tr");
+        var tr_p12 = document.createElement("tr");
+        var tr_p33 = document.createElement("tr");
+        var tr_p82 = document.createElement("tr");
+        var ii = {{i}}*4;
+        {% if i*4 < volt|length %}
+            console.log(ii);
+            console.log('{{volt|length}}');
+            tr_names.innerHTML = "<td id='flange{{volt[i*4][2]}}'>{{volt[i*4][2]}}</td>";
+        {% endif %}
+        var t = "{{volt[i][3]}}";
+        if (t == "m52") {
+            tr_m52.innerHTML = "<td id='volt{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=volt[i][0]) }}'>{{volt[i][5]}}</a></td><td id='temp{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=temp[i][0]) }}'>{{temp[i][5]}}</a></td><td id='curr{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=curr[i][0]) }}'>{{curr[i][5]}}</a></td>";
+        } else if (t == "p12") {
+            tr_p12.innerHTML = "<td id='volt{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=volt[i][0]) }}'>{{volt[i][5]}}</a></td><td id='temp{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=temp[i][0]) }}'>{{temp[i][5]}}</a></td><td id='curr{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=curr[i][0]) }}'>{{curr[i][5]}}</a></td>";
+        } else if (t == "p33") {
+            tr_p33.innerHTML = "<td id='volt{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=volt[i][0]) }}'>{{volt[i][5]}}</a></td><td id='temp{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=temp[i][0]) }}'>{{temp[i][5]}}</a></td><td id='curr{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=curr[i][0]) }}'>{{curr[i][5]}}</a></td>";
+        } else if (t == "p82") {
+            tr_p82.innerHTML = "<td id='volt{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=volt[i][0]) }}'>{{volt[i][5]}}</a></td><td id='temp{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=temp[i][0]) }}'>{{temp[i][5]}}</a></td><td id='curr{{volt[i][2]}}'><a href='{{ url_for('pv_single_stream', database=connection, ID=curr[i][0]) }}'>{{curr[i][5]}}</a></td>";
+        }
+    document.getElementById("names").appendChild(tr_names);
+    document.getElementById("m52").appendChild(tr_m52);
+    document.getElementById("p12").appendChild(tr_p12);
+    document.getElementById("p33").appendChild(tr_p33);
+    document.getElementById("p82").appendChild(tr_p82);
   }
   {%endfor%}
-  document.getElementById("main_table").innerHTML += "</table>";
 });
 </script>
 
 
-<!-- <meta http-equiv="refresh" content="15">-->
+<!--<meta http-equiv="refresh" content="15">-->
 <!-- </html> -->
 {%endblock%}
