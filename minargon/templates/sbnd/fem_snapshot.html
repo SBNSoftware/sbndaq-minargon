@@ -33,8 +33,8 @@ d3.json($SCRIPT_ROOT + "/snapshot/sub_run", function(err, data) {
 });
 
 // draw waveform and fft
-draw.draw_waveform('waveform', {fem: {{fem}} });
-draw.draw_fft('fft', {fem: {{fem}} });
+draw.draw_waveform('waveform', {fem: {{fem}} }, "online");
+draw.draw_fft('fft', {fem: {{fem}} }, "online");
 
 function link_param() { return {}; }
 

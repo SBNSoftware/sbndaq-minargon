@@ -1,0 +1,124 @@
+{% extends "layout.html" | front_ended %}
+
+{% block title %}GIZMO Monitor Status{% endblock %}
+
+{% block body %}
+{{ super() }}
+<h2>GIZMO Monitor Status</h2>
+<P>
+<TABLE><TR>
+<TH>Last query</TH><TD ID="sbnd_gizmo/timestamp">&nbsp;</TD>
+</TR></TABLE>
+<P>
+<TABLE>
+<TR><TH>Variable</TH><TH>Last Measurement</TH><TH>Units</TH><TH>Last Change Time</TH></TR>
+
+<TR align="center"><TH>RES</TH>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='1') }}" id="sbnd_gizmo/res">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><textbox id="sbnd_gizmo/res_units">&nbsp;</textbox></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_gizmo/res_timestamp"></a></TD>
+</TR>
+
+<TR align="center"><TH>TH</TH>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='2') }}" id="sbnd_gizmo/th">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td id="sbnd_gizmo/th_units">&nbsp;</TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_gizmo/th_timestamp"></a></TD>
+</TR>
+
+<TR align="center"><TH>MAG</TH>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='3') }}" id="sbnd_gizmo/mag">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td id="sbnd_gizmo/mag_units">&nbsp;</TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_gizmo/mag_timestamp"></a></TD>
+</TR>
+
+<TR align="center"><TH>II</TH>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='4') }}" id="sbnd_gizmo/ii">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td id="sbnd_gizmo/ii_units">&nbsp;</TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_gizmo/ii_timestamp"></a></TD>
+</TR>
+
+<TR align="center"><TH>QQ</TH>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='5') }}" id="sbnd_gizmo/qq">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td id="sbnd_gizmo/qq_units">&nbsp;</TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_gizmo/qq_timestamp"></a></TD>
+</TR>
+
+</TABLE>
+</P>
+
+<A HREF="https://sbn-online.fnal.gov/cgi-bin/minargon/minargon.wsgi/pv_multiple_stream/sbnd_epics/sbnd_gizmo">Gizmo</A> history plots all on one page
+
+<P>
+
+{%endblock%}
+
+{% block style %}
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
+{% endblock %}
+
+<!---->
+{% block script %}
+
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+<script src="{{ url_for('static', filename='js/Intl.js') }}"></script>
+
+<!-- Populate above table -->
+<script type="text/javascript">
+$(document).ready(function() {
+{%for row in rows%}
+{
+  var item = document.getElementById("{{row[0]}}");
+  var pvName = "{{row[0]}}";
+
+  if (item) 
+  {
+    if ( pvName.endsWith("timestamp"))
+    {
+      var format = new Intl.DateTimeFormat('default',{ year: 'numeric', literal:'.', month: 'numeric', literal:'.', day: 'numeric', literal:' ',hour: 'numeric', minute: 'numeric', second: 'numeric'});
+      var zeit = new Date({{row[3]}}*1000);
+      item.innerHTML = format.format(zeit);
+    }
+    else
+    {
+      item.innerHTML = "{{row[3]}}";
+      zeit = document.getElementById("{{row[0]}}_timestamp");
+      if ( zeit )
+      {
+        zeit.innerHTML = "{{row[2]}}";
+      }
+
+      units = document.getElementById("{{row[0]}}_units");
+      if ( units )
+      {
+        units.innerHTML = '{{row[5]}}'.replace("&amp;","&");
+      }
+
+    }
+  }
+}
+{%endfor%}		
+});
+</script>
+
+<!-- <meta http-equiv="refresh" content="15">-->
+<!-- </html> -->
+{%endblock%}
+
