@@ -204,7 +204,7 @@ function initSearch(targets) {
 {% macro update_page(id, treeIDs, checkedIDs) %}
 <div class="form-group row">
   <div class="col-sm-12">
-    <button type="button" class="btn btn-link" onclick="updateLink{{id}}()">Update Page</button>
+    <button type="button" class="btn btn-link" onclick="updateLink{{id}}()">Update Display Variables</button>
   </div>
 </div>
 
@@ -408,18 +408,6 @@ $('#{{id}}').treeview( {
   </div>
 </div>
 
-<!-- Start -->
-<div class="form-group row">
-   <label class="col-sm-5 control-form-label col-form-label">Start Time</label> 
-   <div class="col-sm-7">
-     {% if start_time is none: %}
-	 <input id="{{id_start}}">
-     {% else: %}
-	 <input id="{{id_start}}" value="{{start_time}}">
-     {% endif %}
-  </div>
-</div>
-
 <!-- Buttons -->
 <div class="form-group row">
   <div class="col-sm-12">
@@ -510,18 +498,25 @@ function toggleLive(current_time, input, isStart) {
 
   if (this_start.isBefore(this_end)) {
 
-    if (this_end.diff(this_start, "days") > 7) {
-      var new_end = this_start.add(7, "days").format('MM/DD/YYYY HH:mm');
-      $('#{{id_end}}').val(new_end);
-      $('#{{id_end}}').datetimepicker("setOptions", {value: new_end });
-    }
+    // if (this_end.diff(this_start, "days") > 7) {
+    //   var new_end = this_start.add(7, "days").format('MM/DD/YYYY HH:mm');
+    //   $('#{{id_end}}').val(new_end);
+    //   $('#{{id_end}}').datetimepicker("setOptions", {value: new_end });
+    // }
+
+    $("#{{id_toggle}}-live").prop("checked", false);
+    $("#{{id_toggle}}-hour").prop("checked", false);
+    $("#{{id_toggle}}-8hour").prop("checked", false);
+    $("#{{id_toggle}}-day").prop("checked", false);
+    $("#{{id_toggle}}-week").prop("checked", false);
 
     $("#{{id_toggle}}-label-live").removeClass("active");
+    $("#{{id_toggle}}-label-hour").removeClass("active");
+    $("#{{id_toggle}}-label-8hour").removeClass("active");
+    $("#{{id_toggle}}-label-day").removeClass("active");
+    $("#{{id_toggle}}-label-week").removeClass("active");
     
     $("#{{id_toggle}}-label-lookback").addClass("active");
-    
-    $("#{{id_toggle}}-live").prop("checked", false);
-    
     $("#{{id_toggle}}-lookback").prop("checked", true);
     
     updateToggle("{{id_toggle}}");
