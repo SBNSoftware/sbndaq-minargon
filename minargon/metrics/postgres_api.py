@@ -50,7 +50,7 @@ class PostgresConnectionError:
     def register_postgres_error(self, err, name):
         self.err = err
         self.name = name
-        self.msg = str(err)
+        self.msg = str(err) + ("\nError occured while executing query:\n\n%s" % err.cursor.query)
         return self
 
     def register_fileopen_error(self, err, name):
@@ -135,6 +135,8 @@ def postgres_route(func):
                     return func((connection,config), *args, **kwargs)
                 except (psycopg2.Error, PostgresURLException) as err:
                     error = PostgresConnectionError().register_postgres_error(err, connection_name).with_front_end(front_end_abort)
+                    err.cursor.execute("ROLLBACK")
+                    err.cursor.connection.commit()
                     return abort(503, error)
             else:
                 error = connection.with_front_end(front_end_abort)
@@ -192,16 +194,10 @@ def postgres_query(IDs, start_t, stop_t, n_data, connection, config, **table_arg
 
     query = postgres_querymaker(IDs, start_t, stop_t, n_data, config, **table_args)
     # Execute query, rollback connection if it fails
-    try:
-        cursor.execute(query)
-        data = cursor.fetchall()
-    except:
-        cursor.execute("ROLLBACK")
-        connection.commit()
-        # let website handle error
-        raise	
+    cursor.execute(query)
+    data = cursor.fetchall()
 
-    return data
+    return data, query
 
 #________________________________________________________________________________________________
 # Gets the sample step size in unix miliseconds
@@ -215,7 +211,7 @@ def ps_step(connection, ID):
     start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
     stop_t  = calendar.timegm(stop_t.timetuple())  *1e3 + stop_t.microsecond/1e3 
 
-    data = postgres_query([ID], start_t, stop_t, 2, *connection, **request.args.to_dict())
+    data, query = postgres_query([ID], start_t, stop_t, 2, *connection, **request.args.to_dict())
 
     # Predeclare variable otherwise it will complain the variable doesnt exist 
     step_size = None
@@ -267,15 +263,9 @@ def pv_meta_internal(connection, ID):
                  FROM DCS_PRD.num_metadata, DCS_PRD.CHANNEL
                  WHERE DCS_PRD.CHANNEL.CHANNEL_ID=%s AND DCS_PRD.num_metadata.CHANNEL_ID=%s """ % (ID, ID)
 
-    # Execute query, rollback connection if it fails
-    try:
-        cursor.execute(query)
-        data = cursor.fetchall()
-    except:
-        print("Error! Rolling back connection")
-        cursor.execute("ROLLBACK")
-        connection.commit()
-        data = []
+    # Failure handled by decorator
+    cursor.execute(query)
+    data = cursor.fetchall()
 	
     # Format the data from database query
     ret = {}
@@ -422,7 +412,7 @@ def ps_series(connection, ID):
     table_args.pop('n_data', None)
     table_args.pop('now', None)
 
-    data = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
 
     # Format the data from database query
     data_list = []
@@ -449,7 +439,7 @@ def ps_series(connection, ID):
         ID: data_list
     }
 
-    return jsonify(values=ret)
+    return jsonify(values=ret, query=query)
 
 def get_configs(connection, IDs, **kwargs):
     return pv_list(connection, IDs=tuple(IDs), **kwargs)
