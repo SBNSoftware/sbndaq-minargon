@@ -1,0 +1,95 @@
+{% extends "layout.html" | front_ended %}
+
+{% block title %}ICARUS PMT Readout Temperatures{% endblock %}
+
+{% block body %}
+{{ super() }}
+<h2>ICARUS PMT Readout Temperatures</h2>
+
+<div class="row">
+<P>
+
+<TABLE>  
+  <TR>
+    <TH>Sensor</TH><TH>Temperature</TH>
+  </TR>
+  <TR>
+    <TD>icarus_slowmon_dig_ww/t1</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database=connection, ID='3047') }}"  id="icarus_slowmon_dig_ww/t1">&nbsp;</TD>
+  </TR>
+
+  <TR>
+    <TD>icarus_slowmon_dig_ww/t2</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database=connection, ID='3048') }}"  id="icarus_slowmon_dig_ww/t2">&nbsp;</TD>
+  </TR>
+
+  <TR>
+    <TD>icarus_slowmon_dig_ww/t3</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database=connection, ID='3049') }}"  id="icarus_slowmon_dig_ww/t3">&nbsp;</TD>
+  </TR>
+
+  <TR>
+    <TD>icarus_slowmon_dig_ww/t4</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database=connection, ID='3050') }}"  id="icarus_slowmon_dig_ww/t4">&nbsp;</TD>
+  </TR>
+
+  <TR>
+    <TD>icarus_slowmon_dig_ww/t5</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database=connection, ID='3051') }}"  id="icarus_slowmon_dig_ww/t5">&nbsp;</TD>
+  </TR>
+
+  <TR>
+    <TD>icarus_slowmon_dig_ww/t6</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database=connection, ID='3052') }}"  id="icarus_slowmon_dig_ww/t6">&nbsp;</TD>
+  </TR>
+</TABLE>
+
+{%endblock%}
+
+{% block script %}
+<link href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+    <style>
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
+    </style>
+
+<!-- Populate above table -->
+<script type="text/javascript">
+$(document).ready(function() 
+{
+  {%for row in rows%} 
+  {
+    var item = document.getElementById("{{row[0]}}");
+    var pvName = "{{row[0]}}";
+
+    if (item) 
+    {
+      item.innerHTML = "{{row[2]}}";
+    }
+  }
+  {%endfor%}		
+});
+</script>
+
+
+<!-- <meta http-equiv="refresh" content="15">-->
+<!-- </html> -->
+{%endblock%}
