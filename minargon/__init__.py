@@ -2,6 +2,7 @@
 # monkey.patch_all()
 from __future__ import absolute_import
 from flask.app import Flask
+from simplejson import JSONEncoder, JSONDecoder
 
 import os
 
@@ -92,3 +93,7 @@ for fname in os.listdir(redis_asset_dir):
 thisdir = os.path.dirname(os.path.abspath(__file__))
 pmt_map_dir = os.path.join(thisdir, "static/conf/")
 app.config["PMT_MAP"] = pmt_map_dir
+
+# Setup json encoding/decoding
+app.json_encoder = JSONEncoder
+app.json_decoder = JSONDecoder
