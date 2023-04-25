@@ -56,7 +56,7 @@ class PostgresConnectionError:
     def register_fileopen_error(self, err, name):
         self.err = err
         self.name = name
-        self.msg = "Error opening secret key file: %s" % err[1]
+        self.msg = "Error opening secret key file: %s" % str(err)
         return self
 
     def register_notfound_error(self, name):
