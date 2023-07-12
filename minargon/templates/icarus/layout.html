@@ -189,6 +189,13 @@
                  {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
                  {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
                   <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Wire Bias<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('WireBias_E_Monitor', 'Cryo E') }}
+                      {{ nav_link('WireBias_W_Monitor', 'Cryo W') }}
+                    </ul>
+                  </li>
+                  <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
                       {{ nav_link('icarus_tpcps', 'Flange WW', connection='epics', flange='ww') }}
