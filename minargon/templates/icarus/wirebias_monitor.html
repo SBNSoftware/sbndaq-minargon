@@ -1,0 +1,83 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}Wire Bias Monitor: Cryostat {{cryo}}{% endblock %}
+
+{# Define macro to setup plot #}
+{% macro plot_row(loc) %}
+    <h1>{{loc}}</h1>
+    <!-- Plot and Options -->
+    <div class="row">
+        <!-- Plot -->
+        <div class="col-md-8">
+            <!-- plotly div -->
+            <div style="padding:0" id="plotly-controller-{{ loc }}"></div>
+        </div>
+        <!-- Options -->
+        <div class="col-md-4 vcenter">
+            <div class="card hcenter">
+                <div class="card-header">Display Options</div>
+                <div class="card-body">
+                    <form class="form" role="form">
+                        {{ stream_options.time_range("start-"+ loc, "end-"+loc, "toggle-"+loc, live_active=false) }}
+                        {{ stream_options.download("download-"+loc) }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{# ------------------------------ Html Body --------------------------------- #}
+{% block body %}
+{{ super() }}
+<!-- Variable Header -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
+<div class="container">
+    {% for loc in keys %}
+       {{ plot_row(loc) }} 
+    {% endfor %}
+</div>
+{% endblock %}
+
+{# Define a macro to startup the javascript #}
+{% macro run_streams(database, idmap, loc, config, ytitle) %}
+{
+    // Build the link
+    var link = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, "{{ database }}", {{idmap[loc]}} ));
+    
+    // Create controller and id names
+    var controller  = "plotly-controller-{{loc}}";
+    var start_id    = "#start-{{loc}}";
+    var end_id      = "#end-{{loc}}";
+    var toggle_id   = "#toggle-{{loc}}";
+    var download_id = "#download-{{loc}}";
+
+    var config = {{config[idmap[loc]] | tojson}};
+
+    var titles = [];
+    titles.push("{{configs[idmap[loc]]['title']}}");
+    
+    // Build plotly controller
+    var plotly_controller = new module.PlotlyController(controller, link, titles, config)
+	.timeRangeController(start_id, end_id, toggle_id)
+	.downloadDataController(download_id )
+    plotly_controller.setYTitles(["{{ytitle}}"]);
+    
+    // Start it
+    plotly_controller.run();
+}
+{% endmacro %}
+
+{% block script %}
+<script defer type="module">
+    import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
+    import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
+
+    {% for loc in keys %}
+      {{ run_streams(database, IDmap, loc, configs, "") }}
+    {% endfor %}
+    
+</script>
+{% endblock %}
+{# ---------------------------------- End ----------------------------------- #}
