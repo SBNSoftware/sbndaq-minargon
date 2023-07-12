@@ -383,7 +383,7 @@ $('#{{id}}').treeview( {
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
-{% macro time_range(id_start, id_end, id_toggle, start_time=none, end_time=none) %}
+{% macro time_range(id_start, id_end, id_toggle, start_time=none, end_time=none, live_active=true) %}
 <!-- Start -->
 <div class="form-group row">
    <label class="col-sm-5 control-form-label col-form-label">Start Time</label> 
@@ -414,7 +414,11 @@ $('#{{id}}').treeview( {
     <div id="{{id_toggle}}" class="btn-group btn-group-toggle" data-toggle="buttons">
       
       <!-- Toggle Live -->
+      {% if live_active %}
       <label class="btn btn-secondary active" id="{{id_toggle}}-label-live">
+      {% else %}
+      <label class="btn btn-secondary" id="{{id_toggle}}-label-live">
+      {% endif %}
         <input type="radio" name="options" value="live" id="{{id_toggle}}-live" autocomplete="off"> Live
       </label>
 
@@ -424,7 +428,11 @@ $('#{{id}}').treeview( {
       </label>
 
       <!-- Toggle 8 Hour -->
+      {% if live_active %}
       <label class="btn btn-secondary" id="{{id_toggle}}-label-8hour" >
+      {% else %}
+      <label class="btn btn-secondary active" id="{{id_toggle}}-label-8hour" >
+      {% endif %}
         <input type="radio" name="options" value="live" id="{{id_toggle}}-8hour" autocomplete="off" > Last 8 Hrs
       </label>
 

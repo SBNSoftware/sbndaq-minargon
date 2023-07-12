@@ -521,6 +521,51 @@ def Impedance_Ground_Monitor():
     }
     return render_template('icarus/impedance_ground_monitor.html', **render_args)
 
+@app.route('/WireBias_E_Monitor')
+def WireBias_E_Monitor():
+    return WireBias_Monitor("E")
+@app.route('/WireBias_W_Monitor')
+def WireBias_W_Monitor():
+    return WireBias_Monitor("W")
+
+def WireBias_Monitor(cryo):
+    database = "epics"
+    IDmap = {
+      "East-Cryostat-I1-Current": 3055,
+      "East-Cryostat-I2-Current": 3057,
+      "East-Cryostat-C-Current":  3059,
+      "East-Cryostat-I1-Voltage": 3056,
+      "East-Cryostat-I2-Voltage": 3058,
+      "East-Cryostat-C-Voltage":  3060,
+      "West-Cryostat-I1-Current": 3061,
+      "West-Cryostat-I2-Current": 3063,
+      "West-Cryostat-C-Current":  3065,
+      "West-Cryostat-I1-Voltage": 3062,
+      "West-Cryostat-I2-Voltage": 3064,
+      "West-Cryostat-C-Voltage":  3066,
+    }
+    keys = [
+      "East-Cryostat-I1-Current", "East-Cryostat-I2-Current", "East-Cryostat-C-Current",
+      "East-Cryostat-I1-Voltage", "East-Cryostat-I2-Voltage", "East-Cryostat-C-Voltage",
+      "West-Cryostat-I1-Current", "West-Cryostat-I2-Current", "West-Cryostat-C-Current",
+      "West-Cryostat-I1-Voltage", "West-Cryostat-I2-Voltage", "West-Cryostat-C-Voltage",
+    ]
+
+    IDmap = dict([l for l in IDmap.items() if l[0].startswith(cryo)])
+    keys = [k for k in keys if k.startswith(cryo)]
+    configs = {}
+    for _,i in IDmap.items():
+        configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database,
+      "IDmap": IDmap,
+      "keys": keys,
+    }
+
+    return render_template('icarus/wirebias_monitor.html', **render_args)
+
 @app.route('/Level_Monitor')
 def Level_Monitor():
     database = "epics"
