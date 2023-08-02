@@ -1,0 +1,12 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}Slow Control Alarms{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="col-md-8 hcenter">
+<h1>
+Alarms! From Elasticsearch!
+</h1>
+
+<pre style="background-color: #F5F5DC"><code>{{ pvs_alarms_pretty|safe }}</code></pre>
+
+{%endblock%}
