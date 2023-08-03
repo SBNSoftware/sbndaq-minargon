@@ -1,11 +1,18 @@
 from elasticsearch import Elasticsearch
 from flask import jsonify, json
 
-def make_connection(config):
+from minargon import app
+
+ES_INSTANCES = app.config["ELASTICSEARCH_INSTANCES"]
+
+
+def make_connection(database):
+    config = ES_INSTANCES[database]
     host, port = str(config["host"]), str(config["port"])
     es = Elasticsearch(hosts="http://" + host + ":" + port)
 
     return es
+
 
 def get_alarm_data(es, topic, source_cols):
     indices = list(es.indices.get(index=topic).keys()) # can raise elasticsearch.NotFoundError
