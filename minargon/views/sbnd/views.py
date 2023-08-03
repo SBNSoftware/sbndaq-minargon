@@ -163,10 +163,11 @@ def DAB_Impedence_Ground_Monitor():
 
 @app.route('/Slow_Control_Alarms')
 def es_alarms():
+    database = "sbnd_alarm_logger"
     topic = "sbnd_alarms_state_2023-06-01"
     source_cols = [ "message_time", "time", "value", "message", "severity", "latch" ]
 
-    es = elasticsearch_api.make_connection({ "host" : "sbnd-dcs01.fnal.gov", "port" : 9200 })
+    es = elasticsearch_api.make_connection(database)
     pvs_alarms = elasticsearch_api.get_alarm_data(es, topic, source_cols)
 
     pvs_alarms_pretty = pvs_alarms.get_data(as_text=True).replace("\n", "<br>")
