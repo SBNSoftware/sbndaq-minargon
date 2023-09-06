@@ -9,4 +9,181 @@ Alarms! From Elasticsearch!
 
 <pre style="background-color: #F5F5DC"><code>{{ pvs_alarms_pretty|safe }}</code></pre>
 
+<div id="tableDiv"> </div>
+
+<div id="histoDiv"> </div>
+
+<div id="traceDiv"> </div>
+
+{% block script %}
+<script defer type="module">
+  const pvsAlarms =  {{ pvs_alarms|tojson }};
+
+  const alarmNames = Object.keys(pvsAlarms);
+
+  var allAlarmsHistData = [ ];
+  for (let iAlarm = 0; iAlarm < alarmNames.length; iAlarm++) {
+    const alarmName = alarmNames[iAlarm];
+
+    const alarmData = pvsAlarms[alarmName].filter(function(alarm) {
+      return alarm["message"] != "NO_ALARM";
+    });
+
+    const alarmTimes = alarmData.map(function(alarm) {
+      return alarm["time"];
+    }); 
+
+    const alarmHistData = {
+      "x" : alarmTimes,
+      "type" : "histogram",
+      "xbins" : { "size" : "D1" },
+      "name" : alarmName,
+      "meta" : [ alarmName ],
+      "hovertemplate" : "<b>%{y}</b>"
+    }
+    allAlarmsHistData.push(alarmHistData);
+  }
+
+  const alarmHistLayout = {
+    "xaxis": {
+      "automargin": true
+    },
+    "yaxis": {
+      "automargin": true,
+      "title": { "text": "alarm count" }
+    },
+    "margin": { "t": 200, "l": 10, "r": 10 , "b" : 200 },
+    "height": 800,
+    "title" : "All Alarm Messages (1 Day Binning)",
+    "barmode" : "stack",
+    "showlegend" : false,
+    "hoverlabel" : {
+      "font" : {
+        "size" : 12,
+        "family" : "Rockwell",
+      },
+      "namelength" : -1
+    },
+    "hovermode" : "x unified"
+  }
+
+  Plotly.newPlot("histoDiv", allAlarmsHistData, alarmHistLayout);
+</script>
+
+<script defer type="module">
+  const pvsAlarms =  {{ pvs_alarms|tojson }};
+
+  const alarmNames = Object.keys(pvsAlarms);
+
+  var entryNames = [ ];
+  var entryTimes = [ ];
+  var entryMessages = [ ];
+  var entryValues = [ ];
+
+  for (let iAlarm = 0; iAlarm < alarmNames.length; iAlarm++) {
+    const alarmName = alarmNames[iAlarm];
+    for (let iAlarmEntry = 0; iAlarmEntry < pvsAlarms[alarmName].length; iAlarmEntry++) {
+      const alarmData = pvsAlarms[alarmName][iAlarmEntry];
+      entryNames.push(alarmName);
+      entryTimes.push(alarmData["time"]);
+      entryMessages.push(alarmData["message"]);
+      entryValues.push(alarmData["value"]);
+    }
+  }
+
+  const alarmTableEntries = [ entryNames, entryTimes, entryMessages, entryValues ];
+
+  const alarmTableData = [{
+    "type" : "table",
+    "columnwidth" : [4, 1.3, 1, 1],
+    "header" : {
+      "values" : [
+        [ "<b>pv Name</b>" ],
+        [ "<b>Time</b>" ],
+        [ "<b>Message</b>" ],
+        [ "<b>Value</b>" ]
+      ],
+      "align" : "center"
+    },
+    "cells" : {
+      "values" : alarmTableEntries,
+      "align" : "left"
+    }
+  }]
+
+  const alarmTableLayout = {
+    "title" : "Alarm History",
+    "responsive" : true,
+    "autosize" : true,
+    "height" : 800
+  }
+
+  Plotly.newPlot("tableDiv", alarmTableData, alarmTableLayout);
+</script>
+
+<script defer type="module">
+  const pvsAlarms =  {{ pvs_alarms|tojson }};
+  const alarmNames = Object.keys(pvsAlarms);
+
+  function makeTraceData(alarmData, alarmName) {
+    const alarmTimes = alarmData.map(function(alarm) {
+      return alarm["time"];
+    }); 
+    const alarmValues = alarmData.map(function(alarm) {
+      return alarm["value"];
+    }); 
+    const alarmMessages = alarmData.map(function(alarm) {
+      return [ alarm["message"] ];
+    }); 
+    return {
+      "x" : alarmTimes,
+      "y" : alarmValues,
+      "type" : "lines",
+      "line" : { "shape" : "hv" },
+      "customdata" : alarmMessages,
+      "hovertemplate" : (
+        "<b>Value</b>: %{y}<br>" +
+        "<b>Status</b>: %{customdata[0]}<br>" +
+        "<b>Time</b>: %{x}<br>" +
+        "<extra></extra>"
+      ),
+      "visible" : false,
+      "name" : alarmName
+    }
+  }
+  
+  function makeTraceButton(iTrace, numTraces, alarmName) {
+    let traceMask = new Array(numTraces).fill(false);
+    traceMask[iTrace] = true;
+    return {
+      "method" : "restyle",
+      "args" : ["visible", traceMask],
+      "label" : alarmName
+    }
+  }
+
+  var traceButtons = [ ];
+  var traceData = [ ];
+  for (let iAlarm = 0; iAlarm < alarmNames.length; iAlarm++) {
+    const alarmName = alarmNames[iAlarm];
+    const alarmData = pvsAlarms[alarmName];
+    traceData.push(makeTraceData(alarmData, alarmName));
+    traceButtons.push(makeTraceButton(iAlarm, alarmNames.length, alarmName));
+  }
+
+  const traceLayout = {
+    "updatemenus" : [{
+      "y" : -0.1,
+      "x" : 1.0,
+      "yanchor" : "top",
+      "buttons" : traceButtons
+    }],
+    "height" : 500,
+    "margin" : { "b" : 200 }
+  }
+    
+  Plotly.newPlot("traceDiv", traceData, traceLayout);
+</script>
+{% endblock %}
+
 {%endblock%}
