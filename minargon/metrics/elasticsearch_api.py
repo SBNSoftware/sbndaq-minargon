@@ -27,7 +27,7 @@ def get_alarm_data(es, topic, source_cols):
         _pack_alarm_data(res, pvs_alarms, source_cols)
 
     # return json.dumps(pvs_alarms, indent=2)
-    return jsonify(pvs_alarms)
+    return pvs_alarms
         
 def _pack_alarm_data(es_res, pvs_alarms, source_cols):
     for hit in es_res["hits"]["hits"]:
