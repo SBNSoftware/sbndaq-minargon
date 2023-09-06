@@ -170,12 +170,12 @@ def es_alarms():
     es = elasticsearch_api.make_connection(database)
     pvs_alarms = elasticsearch_api.get_alarm_data(es, topic, source_cols)
 
-    pvs_alarms_pretty = pvs_alarms.get_data(as_text=True).replace("\n", "<br>")
+    pvs_alarms_pretty = (
+        "".join(jsonify(pvs_alarms).get_data(as_text=True).replace("\n", "<br>").split("],")[:3]) +
+        "], ..."
+    )
 
-    render_args = {
-        "pvs_alarms" : pvs_alarms,
-        "pvs_alarms_pretty" : pvs_alarms_pretty
-    }
+    render_args = { "pvs_alarms" : pvs_alarms, "pvs_alarms_pretty" : pvs_alarms_pretty }
 
     return render_template('sbnd/es_alarms.html', **render_args)
 
