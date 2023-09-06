@@ -102,8 +102,37 @@ def wireplane_view_dab():
 # CRT
 @app.route('/CRT_board')
 def CRT_board():
-				    return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
+    return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
 
+@app.route('/PMT')
+@app.route('/PMT/<hw_selector:hw_select>')
+@app.route('/PMT/<PMTLOC>')
+def PMT(hw_select=None, PMTLOC=None):
+    if PMTLOC:
+        hw_select = hardwaredb.HWSelector("pmt_placements", ["pmt_in_tpc_plane"], [PMTLOC])
+   
+    print(hw_select)
+    args = dict(**request.args)
+    args["data"] = "rms"
+    args["stream"] = "fast"
+    return timeseries_view(args, "PMT", "", "pmtLink", hw_select=hw_select)
+
+@app.route('/PMT_snapshot')
+def PMT_snapshot():
+    channel = request.args.get("PMT", 0, type=int)
+    group_name = "PMT"
+    # TODO: fix hardcode
+    pmt_range = list(range(360))
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+
+    template_args = {
+      "channel": channel,
+      "config": config,
+      "pmt_range": pmt_range,
+      "view_ind": {"PMT": channel},
+      "view_ind_opts": {"PMT": pmt_range},
+    }
+    return render_template("sbnd/pmt_snapshot.html", **template_args)
 
 @app.route('/purity')
 def purity():
