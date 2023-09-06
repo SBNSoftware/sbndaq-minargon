@@ -222,6 +222,7 @@ def pv_single_stream(database, ID):
         end_timestamp_int = None
 
     dbrows = postgres_api.get_epics_last_value_pv(database,ID, front_end_abort=True)
+#    dbrows = []
 
     render_args = {
       "ID": ID,
