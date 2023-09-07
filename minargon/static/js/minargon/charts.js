@@ -384,6 +384,7 @@ export class LineChart {
     // 	      plotly plot. If range is "undefined",
     //        then the plot will switch to the default Plotly range.
     updateRange(range) {
+        this.range = range;
         this.range_trace();
         this.draw(this.layout);
     }
