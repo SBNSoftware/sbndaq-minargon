@@ -7,7 +7,29 @@
 Alarms! From Elasticsearch!
 </h1>
 
-<pre style="background-color: #F5F5DC"><code>{{ pvs_alarms_pretty|safe }}</code></pre>
+<!--
+<pre style="background-color: #F5F5DC"><code>{{ alarms_pretty|safe }}</code></pre>
+-->
+
+<select id="systSelect" onchange="updateSubDropdown(1)">
+  <option selected disabled value="Empty">Choose system</option>
+</select>
+
+<select id="subSyst1Select" onchange="updateSubDropdown(2)">
+  <option selected disabled value="Empty">Choose next subsytem</option>
+</select>
+
+<select id="subSyst2Select" onchange="updateSubDropdown(3)">
+  <option selected disabled value="Empty">Choose next subsytem</option>
+</select>
+
+<select id="subSyst3Select">
+  <option selected disabled value="Empty">Choose next subsytem</option>
+</select>
+
+<button type="button" onclick="makePlots()">Go!</button>
+
+<br><br> <br><br> <br><br>
 
 <div id="tableDiv"> </div>
 
@@ -15,175 +37,326 @@ Alarms! From Elasticsearch!
 
 <div id="traceDiv"> </div>
 
-{% block script %}
-<script defer type="module">
-  const pvsAlarms =  {{ pvs_alarms|tojson }};
+<script>
+  const ALARMS =  {{ alarms|tojson }};
+  const NESTEDCOMPONENTS = {{ components|tojson }};
 
-  const alarmNames = Object.keys(pvsAlarms);
+  const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select", "subSyst3Select"];
 
-  var allAlarmsHistData = [ ];
-  for (let iAlarm = 0; iAlarm < alarmNames.length; iAlarm++) {
-    const alarmName = alarmNames[iAlarm];
+  initSystDropdown();
 
-    const alarmData = pvsAlarms[alarmName].filter(function(alarm) {
-      return alarm["message"] != "NO_ALARM";
+  // dropdown menu control--------------------------------------- 
+
+  function updateDropdown(select, names) {
+    clearDropdown(select);
+
+    addSelectOption(select, "All");
+
+    for(var iSyst = 0; iSyst < names.length; iSyst++) {
+      addSelectOption(select, names[iSyst]);
+    }
+    select.value = "Empty";
+  }
+
+  function initSystDropdown() {
+    var select = document.getElementById("systSelect");
+    updateDropdown(select, Object.keys(NESTEDCOMPONENTS));
+    for (let i = 1; i < SELECTIDS.length; i++) {
+      const select = document.getElementById(SELECTIDS[i]);
+      select.value = "";
+    }
+  }
+
+  function updateSubDropdown(ID) {
+    var parentSelected = document.getElementById(SELECTIDS[ID - 1]).value;
+    var select = document.getElementById(SELECTIDS[ID]);
+
+    if (parentSelected == "All") {
+      clearDropdown(select);
+      return;
+    }
+
+    var components = getComponentsAtID(NESTEDCOMPONENTS, ID);
+    if (components == null) {
+      clearDropdown(select);
+      return;
+    }
+
+    const names = Object.keys(components);
+    updateDropdown(select, names);
+  }
+
+  function addSelectOption(select, name) {
+    var el = document.createElement("option");
+    el.textContent = name;
+    el.value = name;
+    select.appendChild(el);
+  }
+
+  function clearDropdown(select) {
+    const L = select.options.length - 1
+    for (var i = 0; i < L; i++) {
+      select.remove(1);
+    }
+    select.value = "";
+  }
+
+  function getComponentsAtID(NESTEDCOMPONENTS, ID) {
+    var components = NESTEDCOMPONENTS;
+    for (let i = 0; i < ID; i++) { 
+      const ID = SELECTIDS[i];
+      components = components[document.getElementById(ID).value];
+      if (components == null) {
+        break;
+      }
+    }
+    return components;
+  }
+
+  // end-------------------------------------------------------- 
+
+  // plot generation--------------------------------------------
+
+  function makePlots() {
+    dropdownRes = getDropdownResults();
+    const title = dropdownRes.join("/");
+    alarmHits = getAlarmHits(dropdownRes);
+    alarmHits.sort(function(a, b) {
+      return Date.parse(a["time"]) - Date.parse(b["time"]);
     });
 
-    const alarmTimes = alarmData.map(function(alarm) {
-      return alarm["time"];
-    }); 
+    makeTablePlot(alarmHits);
+    makeHistoPlot(alarmHits);
+    makeTracesPlot(alarmHits);
+  }
 
-    const alarmHistData = {
-      "x" : alarmTimes,
-      "type" : "histogram",
-      "xbins" : { "size" : "D1" },
-      "name" : alarmName,
-      "meta" : [ alarmName ],
-      "hovertemplate" : "<b>%{y}</b>"
+  // end-------------------------------------------------------- 
+
+  // plot data preparation--------------------------------------
+
+  function getDropdownResults() {
+    var dropdownRes = [ ];
+    for (let i = 0; i < SELECTIDS.length; i++) {
+      const select = document.getElementById(SELECTIDS[i]);
+      if (select.value == "") {
+        break;
+      }
+      dropdownRes.push(select.value);
     }
-    allAlarmsHistData.push(alarmHistData);
+    return dropdownRes;
   }
 
-  const alarmHistLayout = {
-    "xaxis": {
-      "automargin": true
-    },
-    "yaxis": {
-      "automargin": true,
-      "title": { "text": "alarm count" }
-    },
-    "margin": { "t": 200, "l": 10, "r": 10 , "b" : 200 },
-    "height": 800,
-    "title" : "All Alarm Messages (1 Day Binning)",
-    "barmode" : "stack",
-    "showlegend" : false,
-    "hoverlabel" : {
-      "font" : {
-        "size" : 12,
-        "family" : "Rockwell",
-      },
-      "namelength" : -1
-    },
-    "hovermode" : "x unified"
-  }
-
-  Plotly.newPlot("histoDiv", allAlarmsHistData, alarmHistLayout);
-</script>
-
-<script defer type="module">
-  const pvsAlarms =  {{ pvs_alarms|tojson }};
-
-  const alarmNames = Object.keys(pvsAlarms);
-
-  var entryNames = [ ];
-  var entryTimes = [ ];
-  var entryMessages = [ ];
-  var entryValues = [ ];
-
-  for (let iAlarm = 0; iAlarm < alarmNames.length; iAlarm++) {
-    const alarmName = alarmNames[iAlarm];
-    for (let iAlarmEntry = 0; iAlarmEntry < pvsAlarms[alarmName].length; iAlarmEntry++) {
-      const alarmData = pvsAlarms[alarmName][iAlarmEntry];
-      entryNames.push(alarmName);
-      entryTimes.push(alarmData["time"]);
-      entryMessages.push(alarmData["message"]);
-      entryValues.push(alarmData["value"]);
+  function getAlarmHits(selectedComponents) {
+    var selectedHits = [];
+    var selectedAlarms = ALARMS;
+    var handleAll = false;
+    for (let i = 0; i < selectedComponents.length; i++) {
+      const component = selectedComponents[i];
+      if (component == "All") {
+        handleAll = true;
+        break;
+      }
+      selectedAlarms = selectedAlarms[component];
     }
-  }
-
-  const alarmTableEntries = [ entryNames, entryTimes, entryMessages, entryValues ];
-
-  const alarmTableData = [{
-    "type" : "table",
-    "columnwidth" : [4, 1.3, 1, 1],
-    "header" : {
-      "values" : [
-        [ "<b>pv Name</b>" ],
-        [ "<b>Time</b>" ],
-        [ "<b>Message</b>" ],
-        [ "<b>Value</b>" ]
-      ],
-      "align" : "center"
-    },
-    "cells" : {
-      "values" : alarmTableEntries,
-      "align" : "left"
+    if (handleAll) {
+      selectedAlarms = mergeComponentAlarmHits(selectedAlarms);
     }
-  }]
-
-  const alarmTableLayout = {
-    "title" : "Alarm History",
-    "responsive" : true,
-    "autosize" : true,
-    "height" : 800
+    return selectedAlarms;
   }
 
-  Plotly.newPlot("tableDiv", alarmTableData, alarmTableLayout);
-</script>
-
-<script defer type="module">
-  const pvsAlarms =  {{ pvs_alarms|tojson }};
-  const alarmNames = Object.keys(pvsAlarms);
-
-  function makeTraceData(alarmData, alarmName) {
-    const alarmTimes = alarmData.map(function(alarm) {
-      return alarm["time"];
-    }); 
-    const alarmValues = alarmData.map(function(alarm) {
-      return alarm["value"];
-    }); 
-    const alarmMessages = alarmData.map(function(alarm) {
-      return [ alarm["message"] ];
-    }); 
-    return {
-      "x" : alarmTimes,
-      "y" : alarmValues,
-      "type" : "lines",
-      "line" : { "shape" : "hv" },
-      "customdata" : alarmMessages,
-      "hovertemplate" : (
-        "<b>Value</b>: %{y}<br>" +
-        "<b>Status</b>: %{customdata[0]}<br>" +
-        "<b>Time</b>: %{x}<br>" +
-        "<extra></extra>"
-      ),
-      "visible" : false,
-      "name" : alarmName
+  function mergeComponentAlarmHits(selectedAlarms) {
+    selectedAlarmsFlat = flatten(selectedAlarms, "");
+    selectedAlarmsMerged = [];
+    for (const [components, alarmHits] of Object.entries(selectedAlarmsFlat)) {
+      for (const alarmHit of alarmHits) { 
+        alarmHit["pv"] = components + "/" + alarmHit["pv"];
+        selectedAlarmsMerged.push(alarmHit);
+      }
     }
+    return selectedAlarmsMerged;
   }
-  
-  function makeTraceButton(iTrace, numTraces, alarmName) {
-    let traceMask = new Array(numTraces).fill(false);
-    traceMask[iTrace] = true;
-    return {
-      "method" : "restyle",
-      "args" : ["visible", traceMask],
-      "label" : alarmName
+
+  function flatten(d, parentKey) {
+    flat_d = {};
+    for (const key in d) {
+      if (d[key].constructor == Object) {
+        flatten(d[key], parentKey + key + "/");
+      }
+      else {
+        flat_d[parentKey + key] = d[key];
+      } 
     }
+    return flat_d;
   }
 
-  var traceButtons = [ ];
-  var traceData = [ ];
-  for (let iAlarm = 0; iAlarm < alarmNames.length; iAlarm++) {
-    const alarmName = alarmNames[iAlarm];
-    const alarmData = pvsAlarms[alarmName];
-    traceData.push(makeTraceData(alarmData, alarmName));
-    traceButtons.push(makeTraceButton(iAlarm, alarmNames.length, alarmName));
-  }
+  // end-------------------------------------------------------- 
 
-  const traceLayout = {
-    "updatemenus" : [{
-      "y" : -0.1,
-      "x" : 1.0,
-      "yanchor" : "top",
-      "buttons" : traceButtons
-    }],
-    "height" : 500,
-    "margin" : { "b" : 200 }
-  }
+  // plot drawing-----------------------------------------------
+
+  function makeTracesPlot(alarmHits) {
+    function makeTraceData(alarmData, alarmName) {
+      const alarmTimes = alarmData.map(function(alarm) {
+        return alarm["time"];
+      }); 
+      const alarmValues = alarmData.map(function(alarm) {
+        return alarm["value"];
+      }); 
+      const alarmMessages = alarmData.map(function(alarm) {
+        return [ alarm["message"] ];
+      }); 
+      return {
+        "x" : alarmTimes,
+        "y" : alarmValues,
+        "type" : "lines",
+        "line" : { "shape" : "hv" },
+        "customdata" : alarmMessages,
+        "hovertemplate" : (
+          "<b>Value</b>: %{y}<br>" +
+          "<b>Status</b>: %{customdata[0]}<br>" +
+          "<b>Time</b>: %{x}<br>" +
+          "<extra></extra>"
+        ),
+        "visible" : false,
+        "name" : alarmName
+      }
+    }
     
-  Plotly.newPlot("traceDiv", traceData, traceLayout);
+    function makeTraceButton(iTrace, numTraces, alarmName) {
+      let traceMask = new Array(numTraces).fill(false);
+      traceMask[iTrace] = true;
+      return {
+        "method" : "restyle",
+        "args" : ["visible", traceMask],
+        "label" : alarmName
+      }
+    }
+    
+    var alarmDataObj = { };
+    for (const alarmHit of alarmHits) {
+      if (!(alarmHit["pv"] in alarmDataObj)) {
+        alarmDataObj[alarmHit["pv"]] = [ ];
+      }
+      alarmDataObj[alarmHit["pv"]].push(alarmHit);
+    }
+
+    var traceButtons = [ ];
+    var traceData = [ ];
+    var iAlarm = 0;
+    for (const [alarmName, alarmHits] of Object.entries(alarmDataObj)) {
+      traceData.push(makeTraceData(alarmHits, alarmName));
+      traceButtons.push(makeTraceButton(iAlarm++, Object.keys(alarmDataObj).length, alarmName));
+    }
+
+    const traceLayout = {
+      "updatemenus" : [{
+        "y" : -0.1,
+        "x" : 1.0,
+        "yanchor" : "top",
+        "buttons" : traceButtons
+      }],
+      "height" : 500,
+      "margin" : { "b" : 200 }
+    }
+      
+    Plotly.newPlot("traceDiv", traceData, traceLayout);
+  }
+
+  function makeHistoPlot(alarmHits) {
+    var alarmsHistDataObj = { };
+    for (const alarmHit of alarmHits) {
+      if (alarmHit["message"] == "NO_ALARM") {
+        continue;
+      }
+
+      if (!(alarmHit["pv"] in alarmsHistDataObj)) {
+        alarmsHistDataObj[alarmHit["pv"]] = {
+          "x" : [ ],
+          "type" : "histogram",
+          "xbins" : { "size" : "D1" },
+          "name" : alarmHit["pv"],
+          "meta" : [ alarmHit["pv"] ],
+          "hovertemplate" : "<b>%{y}</b>"
+        }
+      }
+      alarmsHistDataObj[alarmHit["pv"]]["x"].push(alarmHit["time"]);
+    }
+    var alarmsHistData = [];
+    for (const [alarmName, alarmHistData] of Object.entries(alarmsHistDataObj)) {
+      alarmsHistData.push(alarmHistData);
+    }
+
+    const alarmHistLayout = {
+      "xaxis": {
+        "automargin": true
+      },
+      "yaxis": {
+        "automargin": true,
+        "title": { "text": "alarm count" }
+      },
+      "margin": { "t": 200, "l": 10, "r": 10 , "b" : 200 },
+      "height": 800,
+      "title" : "All Alarm Messages (1 Day Binning)",
+      "barmode" : "stack",
+      "showlegend" : false,
+      "hoverlabel" : {
+        "font" : {
+          "size" : 12,
+          "family" : "Rockwell",
+        },
+        "namelength" : -1
+      },
+      "hovermode" : "x unified"
+    }
+
+    Plotly.newPlot("histoDiv", alarmsHistData, alarmHistLayout);
+  }
+
+
+  function makeTablePlot(alarmHits) {
+    var entryNames = [ ];
+    var entryTimes = [ ];
+    var entryMessages = [ ];
+    var entryValues = [ ];
+
+    for (const alarmHit of alarmHits) {
+      entryNames.push(alarmHit["pv"]);
+      entryTimes.push(alarmHit["time"]);
+      entryMessages.push(alarmHit["message"]);
+      entryValues.push(alarmHit["value"]);
+    }
+
+    const alarmTableEntries = [ entryNames, entryTimes, entryMessages, entryValues ];
+
+    const alarmTableData = [{
+      "type" : "table",
+      "columnwidth" : [4, 1.3, 1, 1],
+      "header" : {
+        "values" : [
+          [ "<b>pv Name</b>" ],
+          [ "<b>Time</b>" ],
+          [ "<b>Message</b>" ],
+          [ "<b>Value</b>" ]
+        ],
+        "align" : "center"
+      },
+      "cells" : {
+        "values" : alarmTableEntries,
+        "align" : "left"
+      }
+    }]
+
+    const alarmTableLayout = {
+      "title" : "Alarm History",
+      "responsive" : true,
+      "autosize" : true,
+      "height" : 800
+    }
+
+    Plotly.newPlot("tableDiv", alarmTableData, alarmTableLayout);
+  }
+
+  // end-------------------------------------------------------- 
+
 </script>
-{% endblock %}
 
 {%endblock%}
