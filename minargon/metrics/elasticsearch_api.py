@@ -23,7 +23,6 @@ def get_alarm_data(database):
     indices, extra_render_args = _handle_index_gathering(
         es, ES_INSTANCES[database]["index_gatherer"]
     )
-    print(indices)
 
     hits = []
     for index in indices:

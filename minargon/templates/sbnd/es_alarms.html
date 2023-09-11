@@ -374,7 +374,7 @@
     var entryMessages = [ ];
     var entryValues = [ ];
 
-    for (const alarmHit of alarmHits) {
+    for (const alarmHit of alarmHits.reverse()) {
       entryNames.push(alarmHit["pv"]);
       entryTimes.push(alarmHit["time"]);
       entryMessages.push(alarmHit["message"]);
