@@ -4,32 +4,44 @@
 {{ super() }}
 <div class="col-md-8 hcenter">
 <h1>
-Alarms! From Elasticsearch!
+  <p> Slow Control Alarms History </p>
 </h1>
 
-<!--
-<pre style="background-color: #F5F5DC"><code>{{ alarms_pretty|safe }}</code></pre>
--->
+<p> Plots can be zoomed, dragged and hovered. Double click to snap axis to fit data. Email alexander.wilkinson.20@ucl.ac.uk with any questions. </p>
+
+<h2>
+  <p> Select system(s) to show alarm data for: </p>
+</h2>
 
 <select id="systSelect" onchange="updateSubDropdown(1)">
   <option selected disabled value="Empty">Choose system</option>
 </select>
 
+&nbsp;
+
 <select id="subSyst1Select" onchange="updateSubDropdown(2)">
   <option selected disabled value="Empty">Choose next subsytem</option>
 </select>
+
+&nbsp;
 
 <select id="subSyst2Select" onchange="updateSubDropdown(3)">
   <option selected disabled value="Empty">Choose next subsytem</option>
 </select>
 
+&nbsp;
+
 <select id="subSyst3Select">
   <option selected disabled value="Empty">Choose next subsytem</option>
 </select>
 
+&nbsp; &nbsp;
+
 <button type="button" onclick="makePlots()">Go!</button>
 
-<br><br> <br><br> <br><br>
+<br><br>
+
+<div id="selectionTitleDiv"> </div>
 
 <div id="tableDiv"> </div>
 
@@ -40,6 +52,8 @@ Alarms! From Elasticsearch!
 <script>
   const ALARMS =  {{ alarms|tojson }};
   const NESTEDCOMPONENTS = {{ components|tojson }};
+  const CURRENTTIME = "{{ current_time|safe }}";
+  const EARLIESTTIME = "{{ earliest_time|safe }}";
 
   const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select", "subSyst3Select"];
 
@@ -50,7 +64,7 @@ Alarms! From Elasticsearch!
   function updateDropdown(select, names) {
     clearDropdown(select);
 
-    addSelectOption(select, "All");
+    addSelectOption(select, "all");
 
     for(var iSyst = 0; iSyst < names.length; iSyst++) {
       addSelectOption(select, names[iSyst]);
@@ -71,7 +85,7 @@ Alarms! From Elasticsearch!
     var parentSelected = document.getElementById(SELECTIDS[ID - 1]).value;
     var select = document.getElementById(SELECTIDS[ID]);
 
-    if (parentSelected == "All") {
+    if (parentSelected == "all") {
       clearDropdown(select);
       return;
     }
@@ -119,11 +133,14 @@ Alarms! From Elasticsearch!
 
   function makePlots() {
     dropdownRes = getDropdownResults();
+
     const title = dropdownRes.join("/");
+    document.getElementById("selectionTitleDiv").innerHTML = (
+      "<p>Alarms for " + title + " from " + EARLIESTTIME + " to " + CURRENTTIME + "</p>"
+    );
+
     alarmHits = getAlarmHits(dropdownRes);
-    alarmHits.sort(function(a, b) {
-      return Date.parse(a["time"]) - Date.parse(b["time"]);
-    });
+    alarmHits.sort(function(a, b) { return Date.parse(a["time"]) - Date.parse(b["time"]); });
 
     makeTablePlot(alarmHits);
     makeHistoPlot(alarmHits);
@@ -152,7 +169,7 @@ Alarms! From Elasticsearch!
     var handleAll = false;
     for (let i = 0; i < selectedComponents.length; i++) {
       const component = selectedComponents[i];
-      if (component == "All") {
+      if (component == "all") {
         handleAll = true;
         break;
       }
@@ -195,15 +212,11 @@ Alarms! From Elasticsearch!
 
   function makeTracesPlot(alarmHits) {
     function makeTraceData(alarmData, alarmName) {
-      const alarmTimes = alarmData.map(function(alarm) {
-        return alarm["time"];
-      }); 
-      const alarmValues = alarmData.map(function(alarm) {
-        return alarm["value"];
-      }); 
-      const alarmMessages = alarmData.map(function(alarm) {
-        return [ alarm["message"] ];
-      }); 
+      const alarmTimes = alarmData.map(function(alarm) { return alarm["time"]; }); 
+      const alarmValues = alarmData.map(function(alarm) { return alarm["value"]; }); 
+      const alarmMessages = alarmData.map(function(alarm) { return [ alarm["message"] ]; }); 
+      const alarmMarkerSymbols = alarmData.map(function(alarm) { return [ alarm["marker_sym"] ]; }); 
+      console.log(alarmMarkerSymbols);
       return {
         "x" : alarmTimes,
         "y" : alarmValues,
@@ -217,7 +230,11 @@ Alarms! From Elasticsearch!
           "<extra></extra>"
         ),
         "visible" : false,
-        "name" : alarmName
+        "name" : alarmName,
+        "marker" : {
+          "size" : 12,
+          "symbol" : alarmMarkerSymbols
+        }
       }
     }
     
@@ -225,16 +242,36 @@ Alarms! From Elasticsearch!
       let traceMask = new Array(numTraces).fill(false);
       traceMask[iTrace] = true;
       return {
-        "method" : "restyle",
-        "args" : ["visible", traceMask],
+        "method" : "update",
+        "args" : [
+          {"visible": traceMask},
+          {"xaxis" : { "range" : [EARLIESTTIME, CURRENTTIME] } }
+        ],
         "label" : alarmName
       }
     }
     
     var alarmDataObj = { };
-    for (const alarmHit of alarmHits) {
+    for (var alarmHit of alarmHits) {
       if (!(alarmHit["pv"] in alarmDataObj)) {
         alarmDataObj[alarmHit["pv"]] = [ ];
+      }
+      switch(alarmHit["message"]) {
+        case "LOLO_ALARM":
+          alarmHit["marker_sym"] = 106;
+          break;
+        case "LOW_ALARM":
+          alarmHit["marker_sym"] = 6;
+          break;
+        case "NO_ALARM":
+          alarmHit["marker_sym"] = 0;
+          break;
+        case "HIGH_ALARM":
+          alarmHit["marker_sym"] = 5;
+          break;
+        case "HIHI_ALARM":
+          alarmHit["marker_sym"] = 105;
+          break;
       }
       alarmDataObj[alarmHit["pv"]].push(alarmHit);
     }
@@ -242,9 +279,10 @@ Alarms! From Elasticsearch!
     var traceButtons = [ ];
     var traceData = [ ];
     var iAlarm = 0;
-    for (const [alarmName, alarmHits] of Object.entries(alarmDataObj)) {
+    const numAlarmNames = Object.keys(alarmDataObj).length;
+    for (var [alarmName, alarmHits] of Object.entries(alarmDataObj)) {
       traceData.push(makeTraceData(alarmHits, alarmName));
-      traceButtons.push(makeTraceButton(iAlarm++, Object.keys(alarmDataObj).length, alarmName));
+      traceButtons.push(makeTraceButton(iAlarm++, numAlarmNames, alarmName));
     }
 
     const traceLayout = {
@@ -254,8 +292,24 @@ Alarms! From Elasticsearch!
         "yanchor" : "top",
         "buttons" : traceButtons
       }],
-      "height" : 500,
-      "margin" : { "b" : 200 }
+      "height" : 600,
+      "margin" : { "b" : 200 },
+      "hoverlabel" : {
+        "font" : {
+          "size" : 12,
+          "family" : "Rockwell",
+        },
+        "namelength" : -1
+      },
+      "yaxis" : {
+        "title" : { "text": "value" },
+        "automargin" : true
+      },
+      "xaxis": {
+        "automargin": true,
+        "range" : [EARLIESTTIME, CURRENTTIME]
+      },
+      "title" : "Alarm History for Single PVs (select one from dropdown)"
     }
       
     Plotly.newPlot("traceDiv", traceData, traceLayout);
@@ -287,14 +341,16 @@ Alarms! From Elasticsearch!
 
     const alarmHistLayout = {
       "xaxis": {
-        "automargin": true
+        "automargin": true,
+        "range" : [EARLIESTTIME, CURRENTTIME]
       },
       "yaxis": {
         "automargin": true,
         "title": { "text": "alarm count" }
       },
-      "margin": { "t": 200, "l": 10, "r": 10 , "b" : 200 },
-      "height": 800,
+      "margin": { "t": 100, "l": 100, "r": 100 , "b" : 100 },
+      "height": 600,
+      "autosize" : true,
       "title" : "All Alarm Messages (1 Day Binning)",
       "barmode" : "stack",
       "showlegend" : false,
@@ -349,7 +405,9 @@ Alarms! From Elasticsearch!
       "title" : "Alarm History",
       "responsive" : true,
       "autosize" : true,
-      "height" : 800
+      "automargin" : true,
+      "height" : 800,
+      "style_table" : {'overflowX': 'auto'}
     }
 
     Plotly.newPlot("tableDiv", alarmTableData, alarmTableLayout);
