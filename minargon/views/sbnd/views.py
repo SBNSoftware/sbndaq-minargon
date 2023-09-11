@@ -198,16 +198,10 @@ def es_alarms():
     alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
     alarms, component_hierarchy = elasticsearch_api.prep_alarms(alarm_hits, source_cols)
 
-    # alarms_pretty = (
-    #     "<br>".join(
-    #         jsonify(alarms).get_data(as_text=True).replace("\n", "<br>").split("<br>")[:50]
-    #     )
-    # )
     render_args = {
         "alarms" : alarms, "components" : component_hierarchy
     }
     render_args.update(extra_render_args)
-    print(render_args["current_time"], render_args["earliest_time"])
 
     return render_template('sbnd/es_alarms.html', **render_args)
 
