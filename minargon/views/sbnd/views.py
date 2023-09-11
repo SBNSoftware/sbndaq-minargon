@@ -9,7 +9,7 @@ import sys
 import random
 from . import constants
 import sys
-from minargon.metrics import postgres_api
+from minargon.metrics import postgres_api, elasticsearch_api
 from minargon.views.common.views import timeseries_view
 import subprocess
 import re
@@ -189,4 +189,19 @@ def DAB_Impedence_Ground_Monitor():
       "database": database
     }
     return render_template('sbnd/dab_impedence_ground_monitor.html', **render_args)
+
+@app.route('/Slow_Control_Alarms')
+def es_alarms():
+    database = "sbnd_alarm_logger"
+    source_cols = [ "message_time", "time", "value", "message", "severity", "config" ]
+
+    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
+    alarms, component_hierarchy = elasticsearch_api.prep_alarms(alarm_hits, source_cols)
+
+    render_args = {
+        "alarms" : alarms, "components" : component_hierarchy
+    }
+    render_args.update(extra_render_args)
+
+    return render_template('sbnd/es_alarms.html', **render_args)
 
