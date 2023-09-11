@@ -17,25 +17,73 @@ def make_connection(database):
     return es
 
 
-def get_alarm_data(es, topic):
-    indices = list(es.indices.get(index=topic).keys()) # can raise elasticsearch.NotFoundError
+def get_alarm_data(database):
+    """Get raw hits from specified indices in elasticsearch db"""
+    es = make_connection(database)
+    indices, extra_render_args = _handle_index_gathering(
+        es, ES_INSTANCES[database]["index_gatherer"]
+    )
+    print(indices)
 
-    pvs_alarms = {}
+    hits = []
     for index in indices:
-        # can raise elasticsearch.ApiError: ApiError(503, 'search_phase_execution_exception', None)
-        num_hits = es.search(index=index, size=0)["hits"]["total"]["value"]
-        # res is elastic_transport.ObjectApiResponse.
-        # res.body for python dict, res.meta for metadata
-        res = es.search(index=index, size=num_hits)
-        hits = res["hits"]["hits"]
+        try:
+            num_hits = es.search(index=index, size=0)["hits"]["total"]["value"]
+            res = es.search(index=index, size=num_hits)
+        except Exception as e: # XXX Temporary, need to figure out why some shards are corrupted
+            continue
+        hits += res["hits"]["hits"]
 
-    return hits
+    return hits, extra_render_args
 
 
-# ----------slow control alarms specific stuff------------------------------------
+def _handle_index_gathering(es, gather_cfg):
+    try:
+        if gather_cfg["type"] == "single_topic":
+            indices = list(es.indices.get(index=topic).keys())
+            extra_render_args = {}
+        elif gather_cfg["type"] == "monthly":
+            indices, extra_render_args = _gather_monthly_indices(
+                es, gather_cfg["topic"], gather_cfg["max_indices"], gather_cfg["strptime_fmt"]
+            )
+    except KeyError as e:
+        print(
+            "Ensure index_gather is correctly configured for given type '{}'".format(
+                gather_cfg["type"]
+            )
+        )
+        raise e
+
+    return indices, extra_render_args
+
+
+def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
+    """Gather indices starting with the most recent"""
+    all_indices = list(es.indices.get(index=topic).keys())
+    all_indices.sort(key=lambda index: datetime.strptime(index.split(topic[:-1])[1], strptime_fmt))
+    selected_indices = all_indices[-max_indices:]
+
+    utc_zone = pytz.timezone("UTC")
+    fnal_zone = pytz.timezone("America/Chicago")
+    
+    extra_render_args = {
+        "current_time" : datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+        "earliest_time" : _convert_timezone(
+            datetime.strptime(selected_indices[0].split(topic[:-1])[1], strptime_fmt),
+            utc_zone,
+            fnal_zone
+        ).strftime("%Y-%m-%d %H:%M:%S.%f")
+    }
+
+    return selected_indices, extra_render_args
+
+
+# end-----------------------------------------------------------------------------
+
+# slow control alarm specific stuff-----------------------------------------------
 
 def prep_alarms(hits, source_cols):
-    """Categorise and convert timezone"""
+    """Categorise and convert timezone (elasticsearch uses UTC for all times)"""
     alarms, component_hierarchy = {}, {}
     utc_zone = pytz.timezone("UTC")
     fnal_zone = pytz.timezone("America/Chicago")
@@ -51,28 +99,31 @@ def prep_alarms(hits, source_cols):
     return alarms, component_hierarchy
 
 
-# def _get_nested_keys(nested_dict):
-#     def replace_nested_vals(d_nested, replacement):
-#         for key, val in d_nested.items():
-#             if isinstance(val, dict):
-#                 replace_nested_vals(val, replacement)
-#             else:
-#                 d_nested[key] = replacement
-# 
-#     import copy
-#     nested_dict = copy.deepcopy(nested_dict)
-#     replace_nested_vals(nested_dict, None)
-#     return nested_dict
+def _get_pv_categs(pv_path):
+    """Get components of pv path assuming the pv name has a single / in it """
+    components = pv_path.split("state:/SBND/")[1].split("/")
+    pv = "/".join(components[-2:])
+    components = components[:-2]
+    return components, pv
 
+
+# end-----------------------------------------------------------------------------
+
+# Utility functions---------------------------------------------------------------
 
 def _convert_timezones(hit_data, original_tz, new_tz):
     for time_key in ["time", "message_time"]:
         if time_key not in hit_data:
             continue
         original_time = datetime.strptime(hit_data[time_key], "%Y-%m-%d %H:%M:%S.%f")
-        original_time = original_tz.localize(original_time)
-        new_time = original_time.astimezone(new_tz)
+        new_time = _convert_timezone(original_time, original_tz, new_tz)
         hit_data[time_key] = new_time.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def _convert_timezone(original_time, original_tz, new_tz):
+    original_time = original_tz.localize(original_time)
+    new_time = original_time.astimezone(new_tz)
+    return new_time
 
 
 def _nested_append(d, keys, value):
@@ -94,15 +145,7 @@ def _get_pv_categs(pv_path):
     pv = "/".join(components[-2:])
     components = components[:-2]
     return components, pv
-        
 
-def _pack_alarm_data(es_res, pvs_alarms, source_cols):
-    for hit in es_res["hits"]["hits"]:
-        hit_data = { key : hit["_source"][key] for key in source_cols }
 
-        pv_alarms = pvs_alarms.get(hit["_source"]["config"])
-        if pv_alarms is None:
-            pvs_alarms[hit["_source"]["config"]] = [ hit_data ]
-        else:
-            pv_alarms.append(hit_data)
+# end-----------------------------------------------------------------------------
 
