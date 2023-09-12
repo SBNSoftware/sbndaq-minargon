@@ -71,7 +71,7 @@ def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
             datetime.strptime(selected_indices[0].split(topic[:-1])[1], strptime_fmt),
             utc_zone,
             fnal_zone
-            ).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        ).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     }
 
     return selected_indices, extra_render_args
