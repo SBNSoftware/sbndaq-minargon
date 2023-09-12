@@ -194,9 +194,12 @@ def DAB_Impedence_Ground_Monitor():
 def es_alarms():
     database = "sbnd_alarm_logger"
     source_cols = [ "message_time", "time", "value", "message", "severity", "config" ]
+    component_depth = 3
 
     alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
-    alarms, component_hierarchy = elasticsearch_api.prep_alarms(alarm_hits, source_cols)
+    alarms, component_hierarchy = elasticsearch_api.prep_alarms(
+        alarm_hits, source_cols, component_depth
+    )
 
     render_args = {
         "alarms" : alarms, "components" : component_hierarchy
