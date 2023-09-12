@@ -66,12 +66,12 @@ def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
     fnal_zone = pytz.timezone("America/Chicago")
     
     extra_render_args = {
-        "current_time" : datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+        "current_time" : datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
         "earliest_time" : _convert_timezone(
             datetime.strptime(selected_indices[0].split(topic[:-1])[1], strptime_fmt),
             utc_zone,
             fnal_zone
-        ).strftime("%Y-%m-%d %H:%M:%S.%f")
+            ).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     }
 
     return selected_indices, extra_render_args
@@ -79,9 +79,9 @@ def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
 
 # end-----------------------------------------------------------------------------
 
-# slow control alarm specific stuff-----------------------------------------------
+# SBND slow control alarm specific stuff------------------------------------------
 
-def prep_alarms(hits, source_cols):
+def prep_alarms(hits, source_cols, component_depth):
     """Categorise and convert timezone (elasticsearch uses UTC for all times)"""
     alarms, component_hierarchy = {}, {}
     utc_zone = pytz.timezone("UTC")
@@ -89,8 +89,9 @@ def prep_alarms(hits, source_cols):
 
     for hit in hits:
         hit_data = { key : hit["_source"][key] for key in source_cols }
-        components, pv = _get_pv_categs(hit["_source"]["config"])
+        components, pv = _get_pv_categs(hit["_source"]["config"], component_depth)
         hit_data["pv"] = pv
+        print(components)
         _convert_timezones(hit_data, utc_zone, fnal_zone)
         _nested_append(alarms, components, hit_data)
         _nested_set(component_hierarchy, components, None)
@@ -98,13 +99,20 @@ def prep_alarms(hits, source_cols):
     return alarms, component_hierarchy
 
 
-def _get_pv_categs(pv_path):
+def _get_pv_categs(pv_path, component_depth):
     """Get components of pv path assuming the pv name has a single / in it """
+    pv_path = _pv_path_clean(pv_path)
     components = pv_path.split("state:/SBND/")[1].split("/")
     pv = "/".join(components[-2:])
     components = components[:-2]
+    while len(components) < component_depth:
+        components.append(components[-1])
     return components, pv
 
+def _pv_path_clean(pv_path):
+    """May need to be update if new pvs are added"""
+    pv_path = pv_path.replace("(Gizmo/GPS)", "(Gizmo or GPS)")
+    return pv_path
 
 # end-----------------------------------------------------------------------------
 
@@ -116,7 +124,7 @@ def _convert_timezones(hit_data, original_tz, new_tz):
             continue
         original_time = datetime.strptime(hit_data[time_key], "%Y-%m-%d %H:%M:%S.%f")
         new_time = _convert_timezone(original_time, original_tz, new_tz)
-        hit_data[time_key] = new_time.strftime("%Y-%m-%d %H:%M:%S.%f")
+        hit_data[time_key] = new_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
 def _convert_timezone(original_time, original_tz, new_tz):
@@ -136,14 +144,6 @@ def _nested_set(d, keys, value):
     for key in keys[:-1]:
         d = d.setdefault(key, {})
     d[keys[-1]] = value
-
-
-def _get_pv_categs(pv_path):
-    """Get components of pv path assuming the pv name has a single / in it """
-    components = pv_path.split("state:/SBND/")[1].split("/")
-    pv = "/".join(components[-2:])
-    components = components[:-2]
-    return components, pv
 
 
 # end-----------------------------------------------------------------------------

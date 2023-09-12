@@ -25,15 +25,17 @@
 
 &nbsp;
 
-<select id="subSyst2Select" onchange="updateSubDropdown(3)">
+<select id="subSyst2Select">
   <option selected disabled value="Empty">Choose next subsytem</option>
 </select>
 
+<!--
 &nbsp;
 
 <select id="subSyst3Select">
   <option selected disabled value="Empty">Choose next subsytem</option>
 </select>
+-->
 
 &nbsp; &nbsp;
 
@@ -55,7 +57,7 @@
   const CURRENTTIME = "{{ current_time|safe }}";
   const EARLIESTTIME = "{{ earliest_time|safe }}";
 
-  const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select", "subSyst3Select"];
+  const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select"]
 
   initSystDropdown();
 
@@ -63,13 +65,18 @@
 
   function updateDropdown(select, names) {
     clearDropdown(select);
-
-    addSelectOption(select, "all");
-
-    for(var iSyst = 0; iSyst < names.length; iSyst++) {
-      addSelectOption(select, names[iSyst]);
+    if (names.length == 1) {
+      addSelectOption(select, names[0]);
+      select.value = names[0];
     }
-    select.value = "Empty";
+    else {
+      addSelectOption(select, "all");
+      for(var iSyst = 0; iSyst < names.length; iSyst++) {
+        addSelectOption(select, names[iSyst]);
+      }
+      select.value = "Empty";
+    }
+    triggerOnChange(select);
   }
 
   function initSystDropdown() {
@@ -85,7 +92,7 @@
     var parentSelected = document.getElementById(SELECTIDS[ID - 1]).value;
     var select = document.getElementById(SELECTIDS[ID]);
 
-    if (parentSelected == "all") {
+    if (parentSelected == "all" || parentSelected == "") {
       clearDropdown(select);
       return;
     }
@@ -108,11 +115,12 @@
   }
 
   function clearDropdown(select) {
-    const L = select.options.length - 1
+    const L = select.options.length - 1;
     for (var i = 0; i < L; i++) {
       select.remove(1);
     }
     select.value = "";
+    triggerOnChange(select);
   }
 
   function getComponentsAtID(NESTEDCOMPONENTS, ID) {
@@ -127,6 +135,11 @@
     return components;
   }
 
+  function triggerOnChange(element) {
+    const ev = new Event("change");
+    element.dispatchEvent(ev);
+  }
+
   // end-------------------------------------------------------- 
 
   // plot generation--------------------------------------------
@@ -134,13 +147,14 @@
   function makePlots() {
     dropdownRes = getDropdownResults();
 
-    const title = dropdownRes.join("/");
-    document.getElementById("selectionTitleDiv").innerHTML = (
-      "<p>Alarms for " + title + " from " + EARLIESTTIME + " to " + CURRENTTIME + "</p>"
-    );
-
     alarmHits = getAlarmHits(dropdownRes);
     alarmHits.sort(function(a, b) { return Date.parse(a["time"]) - Date.parse(b["time"]); });
+
+    const title = dropdownRes.join("/");
+    document.getElementById("selectionTitleDiv").innerHTML = (
+        "<p>Showing  alarms for <b>" + title + "</b> from " + EARLIESTTIME + " to " + CURRENTTIME +
+        ". Total logged alarms: " + alarmHits.length + "</p>"
+    );
 
     makeTablePlot(alarmHits);
     makeHistoPlot(alarmHits);
@@ -182,22 +196,21 @@
   }
 
   function mergeComponentAlarmHits(selectedAlarms) {
-    selectedAlarmsFlat = flatten(selectedAlarms, "");
+    selectedAlarmsFlat = flatten(selectedAlarms);
     selectedAlarmsMerged = [];
     for (const [components, alarmHits] of Object.entries(selectedAlarmsFlat)) {
       for (const alarmHit of alarmHits) { 
-        alarmHit["pv"] = components + "/" + alarmHit["pv"];
+        alarmHit["pv"] = components + "/" + alarmHit["pv"].split("/").slice(-2).join("/");
         selectedAlarmsMerged.push(alarmHit);
       }
     }
     return selectedAlarmsMerged;
   }
 
-  function flatten(d, parentKey) {
-    flat_d = {};
+  function flatten(d, parentKey="", flat_d={}) {
     for (const key in d) {
       if (d[key].constructor == Object) {
-        flatten(d[key], parentKey + key + "/");
+        flatten(d[key], parentKey + key + "/", flat_d);
       }
       else {
         flat_d[parentKey + key] = d[key];
@@ -216,7 +229,6 @@
       const alarmValues = alarmData.map(function(alarm) { return alarm["value"]; }); 
       const alarmMessages = alarmData.map(function(alarm) { return [ alarm["message"] ]; }); 
       const alarmMarkerSymbols = alarmData.map(function(alarm) { return [ alarm["marker_sym"] ]; }); 
-      console.log(alarmMarkerSymbols);
       return {
         "x" : alarmTimes,
         "y" : alarmValues,
@@ -272,6 +284,8 @@
         case "HIHI_ALARM":
           alarmHit["marker_sym"] = 105;
           break;
+        default: // Unkown messages
+          alarmHit["marker_sym"] = 101;
       }
       alarmDataObj[alarmHit["pv"]].push(alarmHit);
     }
