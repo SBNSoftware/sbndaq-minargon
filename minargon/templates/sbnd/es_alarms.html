@@ -147,6 +147,11 @@
   function makePlots() {
     dropdownRes = getDropdownResults();
 
+    if (dropdownRes.includes("Empty")) {
+      alert("Invalid system selection!");
+      return;
+    }
+
     alarmHits = getAlarmHits(dropdownRes);
     alarmHits.sort(function(a, b) { return Date.parse(a["time"]) - Date.parse(b["time"]); });
 
@@ -244,7 +249,7 @@
         "visible" : false,
         "name" : alarmName,
         "marker" : {
-          "size" : 12,
+          "size" : 14,
           "symbol" : alarmMarkerSymbols
         }
       }
@@ -306,8 +311,8 @@
         "yanchor" : "top",
         "buttons" : traceButtons
       }],
-      "height" : 600,
-      "margin" : { "b" : 200 },
+      "height" : 900,
+      "margin" : { "b" : 400 },
       "hoverlabel" : {
         "font" : {
           "size" : 12,
