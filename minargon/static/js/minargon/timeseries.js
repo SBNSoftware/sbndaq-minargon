@@ -169,7 +169,7 @@ export class PlotlyController {
   // ---------------------------------------------------------------------------
   // update the data step
   updateStep(step) {
-    if (step < 1000) step = 1000;
+    if (step < 10000) step = 10000;
     this.step = step;
     // set the plot to ignore data from big skips in time
     this.scatter.crop_range = this.step * 100;
@@ -299,6 +299,16 @@ export class PlotlyController {
 
       self.runBuffer();
     });
+
+    //loading the page it makes plots with a fixed time of 6 hours
+    var toggle_val = $(id_toggle).val();
+    if (toggle_val == "startWith6hour"){
+      var d = new Date();
+      d.setHours(d.getHours()-6);
+      self.start = d;
+      self.end = Date.now();
+      self.is_live = false;
+    }
     return this;
   }
   // ---------------------------------------------------------------------------
