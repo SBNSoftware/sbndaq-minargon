@@ -57,7 +57,8 @@
 
     var titles = [];
     titles.push("{{configs[idmap[loc]]['title']}}");
-    
+    $(toggle_id).val("startWith6hour");    
+
     // Build plotly controller
     var plotly_controller = new module.PlotlyController(controller, link, titles, config)
 	.timeRangeController(start_id, end_id, toggle_id)
