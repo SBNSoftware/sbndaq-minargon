@@ -541,10 +541,12 @@ def WireBias_Monitor(cryo):
       "East-Cryostat-C-Voltage":  3054,
       "West-Cryostat-I1-Current": 3061,
       "West-Cryostat-I2-Current": 3063,
-      "West-Cryostat-C-Current":  3065,
+      #"West-Cryostat-C-Current":  3065,
+      "West-Cryostat-C-Current":  3059,
       "West-Cryostat-I1-Voltage": 3062,
       "West-Cryostat-I2-Voltage": 3064,
-      "West-Cryostat-C-Voltage":  3066,
+      #"West-Cryostat-C-Voltage":  3066,
+      "West-Cryostat-C-Voltage":  3060,
     }
     keys = [
       "East-Cryostat-I1-Current", "East-Cryostat-I2-Current", "East-Cryostat-C-Current",
