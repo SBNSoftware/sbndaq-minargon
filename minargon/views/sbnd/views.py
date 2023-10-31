@@ -99,6 +99,10 @@ def wireplane_view_dab():
     instance_name = "tpc_channel_dab" 
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
+@app.route('/Trigger')
+def Trigger():
+    return ""
+
 # CRT
 @app.route('/CRT_board')
 def CRT_board():
