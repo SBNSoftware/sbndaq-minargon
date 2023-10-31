@@ -15,12 +15,12 @@
         {% endblock %}
         <script src="{{ url_for('static', filename='js/library/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/library/d3.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/moment/moment.min.js') }}"></script> 
+        <script src="{{ url_for('static', filename='js/moment/moment.min.js') }}"></script> 
         <script src="{{ url_for('static', filename='js/library/plotly.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/library/bootstrap.min.js') }}" defer></script>
         <script src="{{ url_for('static', filename='js/library/bootstrap-treeview.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/library/cubism.v1.js') }}"></script> 
-	<script src="{{ url_for('static', filename='js/moment/moment-timezone-with-data.min.js') }}" defer></script> 
+        <script src="{{ url_for('static', filename='js/library/cubism.v1.js') }}"></script> 
+        <script src="{{ url_for('static', filename='js/moment/moment-timezone-with-data.min.js') }}" defer></script> 
         <script src="{{ url_for('static', filename='js/library/jquery.datetimepicker.js') }}"></script>
 
         <!-- $SCRIPT_ROOT for app location -->
@@ -109,7 +109,12 @@
                   {{ nav_link('channel_snapshot_dab', 'Waveform') }}
                 </ul>
               </li>
-               
+              <li class='dropdown nav-item'>
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('Trigger', 'Trigger') }}
+                </ul>
+              </li>
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
