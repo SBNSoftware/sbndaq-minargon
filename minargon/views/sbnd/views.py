@@ -108,6 +108,10 @@ def Trigger():
 def CRT_board():
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
 
+@app.route('/CRT_channel')
+def CRT_channel():
+    return timeseries_view(request.args, "CRT_channel", "", "crtChannelLink")
+
 @app.route('/PMT')
 @app.route('/PMT/<hw_selector:hw_select>')
 @app.route('/PMT/<PMTLOC>')
@@ -137,6 +141,36 @@ def PMT_snapshot():
       "view_ind_opts": {"PMT": pmt_range},
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
+
+@app.route('/LLT_rates')
+def LLT_rates():
+    return "LLT_rates"
+
+@app.route('/HLT_rates')
+def HLT_rates():
+    return "HLT_rates"
+
+@app.route('/PTB_TDC_diff')
+def PTB_TDC_diff():
+    return "PTB_TDC_diff"
+
+@app.route('/MSUM_snapshot')
+def MSUM_snapshot():
+    channel = request.args.get("MSUM", 3, type=int)
+    group_name = "MSUM"
+    # TODO: fix hardcode
+    msum_range = list(range(10))
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+
+    template_args = {
+      "channel": channel,
+      "config": config,
+      "msum_range": msum_range,
+      "view_ind": {"MSUM": channel},
+      "view_ind_opts": {"MSUM": msum_range},
+    }
+    return render_template("sbnd/msum_snapshot.html", **template_args)
+
 
 @app.route('/purity')
 def purity():
