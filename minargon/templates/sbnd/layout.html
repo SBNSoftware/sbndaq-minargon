@@ -96,32 +96,43 @@
           <div class="navbar-collapse collapse" id="navbar">
             <ul class="navbar-nav mr-auto">
               <li class='dropdown nav-item'>
-                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>SBN-ND TPC<b class='caret'></b></a>
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('wireplane_view', 'Metrics', data='rms') }}
                   {{ nav_link('channel_snapshot', 'Waveform') }}
                 </ul>
               </li>
-              <li class='dropdown nav-item'>
+              <!-- <li class='dropdown nav-item'>
                 <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>DAB TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('wireplane_view_dab', 'Metrics', data='rms') }}
                   {{ nav_link('channel_snapshot_dab', 'Waveform') }}
                 </ul>
-              </li>
-               
+              </li> -->
+
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
-									{{ nav_link('CRT_board', 'CRT') }}
+									{{ nav_link('CRT_board', 'Board Metrics') }}
+									{{ nav_link('CRT_channel', 'Channel Metrics') }}
 								</ul>
 						  </li>
 							
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
-									{{ nav_link('PMT', 'PMT') }}
+									{{ nav_link('PMT', 'Metrics') }}
 									{{ nav_link('PMT_snapshot', 'Waveforms') }}
+								</ul>
+						  </li>
+
+              <li class='dropdown nav-item'>
+							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
+						    <ul class='dropdown-menu bg-maroon'>  
+									{{ nav_link('LLT_rates', 'LLT') }}
+									{{ nav_link('HLT_rates', 'HLT') }}
+									{{ nav_link('PTB_TDC_diff', 'PTB vs. TDC') }}
+									{{ nav_link('MSUM_snapshot', 'MSUM Waveforms') }}
 								</ul>
 						  </li>
 
