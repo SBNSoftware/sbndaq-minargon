@@ -99,10 +99,6 @@ def wireplane_view_dab():
     instance_name = "tpc_channel_dab" 
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
-@app.route('/Trigger')
-def Trigger():
-    return ""
-
 # CRT
 @app.route('/CRT_board')
 def CRT_board():
@@ -144,11 +140,32 @@ def PMT_snapshot():
 
 @app.route('/LLT_rates')
 def LLT_rates():
-    return "LLT_rates"
+    args = dict(**request.args)
+    args["data"] = "LLT_rate"
+    args["stream"] = "fast"
+    return timeseries_view(args, "LLT_ID", "", "ptbLltLink")
+    # return args
 
 @app.route('/HLT_rates')
 def HLT_rates():
-    return "HLT_rates"
+    return timeseries_view(request.args, "HLT_ID", "", "ptbHltLink")
+
+@app.route('/PTB_snapshot')
+def PTB_snapshot():
+    channel = request.args.get("PTB", 0, type=int)
+    group_name = "PTB"
+    # TODO: fix hardcode
+    ptb_range = list(range(30))
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+
+    template_args = {
+      "channel": channel,
+      "config": config,
+      "ptb_range": ptb_range,
+      "view_ind": {"PTB": channel},
+      "view_ind_opts": {"PTB": ptb_range},
+    }
+    return render_template("sbnd/ptb_waveform_snapshot.html", **template_args)
 
 @app.route('/PTB_TDC_diff')
 def PTB_TDC_diff():
