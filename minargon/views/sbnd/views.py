@@ -143,6 +143,9 @@ def LLT_rates():
     args = dict(**request.args)
     args["data"] = "LLT_rate"
     args["stream"] = "fast"
+    print("args")
+    for k in args.keys():
+        print("key", k, "value", args[k])
     return timeseries_view(args, "LLT_ID", "", "ptbLltLink")
     # return args
 

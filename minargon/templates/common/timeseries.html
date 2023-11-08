@@ -85,7 +85,7 @@ var config = {{config|tojson|safe}};
 
 var channels = {{channels}};
 
-var config_controller = new Config.GroupConfigController(config, {{link_function}}, ["{{metric}}"], channels, 0, 25, {{hw_select}}, {{channel_map}})
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, ["{{metric}}"], channels, 0, 50, {{hw_select}}, {{channel_map}})
     .metricController("#form-metric")
     .streamController("#form-stream"); 
 
