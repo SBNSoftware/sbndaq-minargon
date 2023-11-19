@@ -47,6 +47,7 @@
     <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
       <div id ="time-scatter"></div>
     </div>
+       <!-- <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter"> -->
        <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
         <div class="card">
             <div class="card-header">TimeSeries Options</div>
@@ -84,7 +85,7 @@ var config = {{config|tojson|safe}};
 
 var channels = {{channels}};
 
-var config_controller = new Config.GroupConfigController(config, {{link_function}}, ["{{metric}}"], channels, 0, 25, {{hw_select}}, {{channel_map}})
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, ["{{metric}}"], channels, 0, 50, {{hw_select}}, {{channel_map}})
     .metricController("#form-metric")
     .streamController("#form-stream"); 
 
@@ -146,6 +147,14 @@ function pmtLink(group, instance) {
 
 function crtBoardLink(group, instance) {
   return "CRT_board_snapshot?board_no=" + instance;
+}
+
+function ptbLltLink(group, instance) {
+  return "PTB_snapshot?PTB=" + instance;
+}
+
+function ptbHltLink(group, instance) {
+  return "PTB_snapshot?PTB=" + instance;
 }
 
 // setup polling for event/run/subrun/time
