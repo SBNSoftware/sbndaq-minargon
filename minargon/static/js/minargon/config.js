@@ -22,7 +22,7 @@ export class HWGroupConfigController {
                                       this.config.group,
                                       this.metric,
                                       this.hw_selects,
-                                      10 /* Set downsample to 10 for now -- TODO: evaluate this */);
+                                      1 /* Set downsample to 10 for now -- TODO: evaluate this */);
   }
 
   data_titles() {
