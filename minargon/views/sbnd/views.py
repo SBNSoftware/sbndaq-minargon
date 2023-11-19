@@ -9,7 +9,7 @@ import sys
 import random
 from . import constants
 import sys
-from minargon.metrics import postgres_api
+from minargon.metrics import postgres_api, elasticsearch_api
 from minargon.views.common.views import timeseries_view
 import subprocess
 import re
@@ -99,10 +99,18 @@ def wireplane_view_dab():
     instance_name = "tpc_channel_dab" 
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
+@app.route('/Trigger')
+def Trigger():
+    return ""
+
 # CRT
 @app.route('/CRT_board')
 def CRT_board():
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
+
+@app.route('/CRT_channel')
+def CRT_channel():
+    return timeseries_view(request.args, "CRT_channel", "", "crtChannelLink")
 
 @app.route('/PMT')
 @app.route('/PMT/<hw_selector:hw_select>')
@@ -133,6 +141,36 @@ def PMT_snapshot():
       "view_ind_opts": {"PMT": pmt_range},
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
+
+@app.route('/LLT_rates')
+def LLT_rates():
+    return "LLT_rates"
+
+@app.route('/HLT_rates')
+def HLT_rates():
+    return "HLT_rates"
+
+@app.route('/PTB_TDC_diff')
+def PTB_TDC_diff():
+    return "PTB_TDC_diff"
+
+@app.route('/MSUM_snapshot')
+def MSUM_snapshot():
+    channel = request.args.get("MSUM", 3, type=int)
+    group_name = "MSUM"
+    # TODO: fix hardcode
+    msum_range = list(range(10))
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+
+    template_args = {
+      "channel": channel,
+      "config": config,
+      "msum_range": msum_range,
+      "view_ind": {"MSUM": channel},
+      "view_ind_opts": {"MSUM": msum_range},
+    }
+    return render_template("sbnd/msum_snapshot.html", **template_args)
+
 
 @app.route('/purity')
 def purity():
@@ -189,4 +227,22 @@ def DAB_Impedence_Ground_Monitor():
       "database": database
     }
     return render_template('sbnd/dab_impedence_ground_monitor.html', **render_args)
+
+@app.route('/Slow_Control_Alarms')
+def es_alarms():
+    database = "sbnd_alarm_logger"
+    source_cols = [ "message_time", "time", "value", "message", "severity", "config" ]
+    component_depth = 3
+
+    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
+    alarms, component_hierarchy = elasticsearch_api.prep_alarms(
+        alarm_hits, source_cols, component_depth
+    )
+
+    render_args = {
+        "alarms" : alarms, "components" : component_hierarchy
+    }
+    render_args.update(extra_render_args)
+
+    return render_template('sbnd/es_alarms.html', **render_args)
 
