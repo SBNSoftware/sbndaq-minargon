@@ -144,10 +144,7 @@ def LLT_rates():
     args["data"] = "LLT_rate"
     args["stream"] = "fast"
     print("args")
-    for k in args.keys():
-        print("key", k, "value", args[k])
     return timeseries_view(args, "LLT_ID", "", "ptbLltLink")
-    # return args
 
 @app.route('/HLT_rates')
 def HLT_rates():
@@ -158,7 +155,7 @@ def PTB_snapshot():
     channel = request.args.get("PTB", 0, type=int)
     group_name = "PTB"
     # TODO: fix hardcode
-    ptb_range = list(range(30))
+    ptb_range = list(range(32))
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
     template_args = {
