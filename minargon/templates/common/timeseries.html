@@ -149,12 +149,16 @@ function crtBoardLink(group, instance) {
   return "CRT_board_snapshot?board_no=" + instance;
 }
 
+function crtChannelLink(group, instance) {
+  return "CRT_channel_snapshot?channel_no=" + instance;
+}
+
 function ptbLltLink(group, instance) {
-  return "PTB_snapshot?PTB=" + instance;
+  return "PTB_snapshot?trigger_no=" + instance;
 }
 
 function ptbHltLink(group, instance) {
-  return "PTB_snapshot?PTB=" + instance;
+  return "PTB_snapshot?trigger_no=" + instance;
 }
 
 // setup polling for event/run/subrun/time
