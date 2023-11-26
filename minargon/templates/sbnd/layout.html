@@ -131,7 +131,17 @@
 						    <ul class='dropdown-menu bg-maroon'>  
 									{{ nav_link('LLT_rates', 'LLT') }}
 									{{ nav_link('HLT_rates', 'HLT') }}
-									{{ nav_link('PTB_TDC_diff', 'PTB vs. TDC') }}
+                  <!-- <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PTB-TDC<b class='caret'></b></a> -->
+                      <!-- <ul class="dropdown-menu bg-maroon"> -->
+                        {{ nav_link('LLT27_TDC_1', 'LLT27_TDC_1') }}
+                        {{ nav_link('LLT28_TDC_2', 'LLT28_TDC_2') }}
+                        {{ nav_link('HLT_TDC_4', 'HLT_TDC_4') }}
+                        {{ nav_link('HLT_TDC_5', 'HLT_TDC_5') }}
+                        {{ nav_link('HLT_diff_TDC_channel_4', 'HLT_-_TDC_channel_4') }}
+                        {{ nav_link('HLT_diff_TDC_flash', 'HLT_-_TDC_flash') }}
+                      <!-- </ul> -->
+                  <!-- </li> -->
 									{{ nav_link('MSUM_snapshot', 'MSUM Waveforms') }}
 								</ul>
 						  </li>
@@ -164,7 +174,7 @@
                   {{ nav_link('pvTree', 'SBND Test Stand', connection='sbn_epics') }}
                 </ul>
               </li>
-              {{ nav_link('view_streams', 'Data Browser')}}
+              <!-- {{ nav_link('view_streams', 'Data Browser')}} -->
               {{ nav_link('es_alarms', 'Slow Control Alarms')}}
             </ul>
           </div><!--/.navbar-collapse -->
