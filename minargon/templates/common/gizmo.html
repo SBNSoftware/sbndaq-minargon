@@ -6,9 +6,11 @@
 {{ super() }}
 <h2>GIZMO Monitor Status</h2>
 <P>
+<!--
 <TABLE><TR>
 <TH>Last query</TH><TD ID="sbnd_gizmo/timestamp">&nbsp;</TD>
 </TR></TABLE>
+-->
 <P>
 <TABLE>
 <TR><TH>Variable</TH><TH>Last Measurement</TH><TH>Units</TH><TH>Last Change Time</TH></TR>
@@ -46,9 +48,8 @@
 </TABLE>
 </P>
 
-<A HREF="https://sbn-online.fnal.gov/cgi-bin/minargon/minargon.wsgi/pv_multiple_stream/sbnd_epics/sbnd_gizmo">Gizmo</A> history plots all on one page
-
-<P>
+<A HREF="https://sbn-online.fnal.gov/cgi-bin/minargon/minargon.wsgi/Impedance_Ground_Monitor">Gizmo Shifter Summary</A> history plots all on one page<P>
+<A HREF="/cgi-bin/minargon/minargon.wsgi/pv_multiple_stream/sbnd_epics/sbnd_gizmo">Gizmo Expert</A> history plots for grounding experts<P>
 
 {%endblock%}
 

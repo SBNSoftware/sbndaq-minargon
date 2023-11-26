@@ -626,7 +626,7 @@ export class CubismController {
     var ret = [];
     var n_data = this.data_link.accessors().length;
     for (var j  = 0; j < n_data; j++) {
-      ret.push( build_data_link(j, buffers[j]) );
+      ret.push(build_data_link(j, buffers[j]) );
     }
     return ret;
   }
@@ -738,8 +738,8 @@ function create_cubism_context(target, step) {
 function build_data_link(ind, buffer) {
   return function(start, stop, step, callback) {
     // setup timestamps
-    var tz_start = moment.tz(start, "US/Central");
-    var tz_stop = moment.tz(stop, "US/Central");  
+    var tz_start = moment.tz(start, "America/Chicago");
+    var tz_stop = moment.tz(stop, "America/Chicago");  
     var ts_start = tz_start.unix() * 1000;
     var ts_stop = tz_stop.unix() * 1000;
     var n_data = (ts_stop - ts_start) / step;
