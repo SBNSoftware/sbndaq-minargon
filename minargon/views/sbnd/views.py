@@ -23,6 +23,18 @@ from six.moves import range
 def introduction():
     return render_template('sbnd/introduction.html')
 
+@app.route('/TPC_status')
+def TPC_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/tpc_status.html', **render_args) 
+
+
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')
 def noise_snapshot():
@@ -100,6 +112,17 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
+@app.route('/CRT_status')
+def CRT_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/crt_status.html', **render_args) 
+
 @app.route('/CRT_board')
 def CRT_board():
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
@@ -152,6 +175,19 @@ def CRT_channel_snapshot():
 
     return render_template("sbnd/crt_channel_snapshot.html", **template_args)
 
+# PMTs
+@app.route('/PMT_status')
+def PMT_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/pmt_status.html', **render_args) 
+
+
 @app.route('/PMT')
 @app.route('/PMT/<hw_selector:hw_select>')
 @app.route('/PMT/<PMTLOC>')
@@ -181,6 +217,19 @@ def PMT_snapshot():
       "view_ind_opts": {"PMT": pmt_range},
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
+
+# Penn Trigger Board
+@app.route('/PTB_status')
+def PTB_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/trigger_status.html', **render_args) 
+
 
 # @app.route('/LLT_rates')
 # def LLT_rates():

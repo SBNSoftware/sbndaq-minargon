@@ -93,11 +93,12 @@
                   aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>-->
-          <div class="navbar-collapse collapse" id="navbar">
+          <div class="navbar-collapse collapse bg-maroon" id="navbar">
             <ul class="navbar-nav mr-auto">
               <li class='dropdown nav-item'>
                 <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('TPC_status', 'Status') }}
                   {{ nav_link('wireplane_view', 'Metrics', data='rms') }}
                   {{ nav_link('channel_snapshot', 'Waveform') }}
                 </ul>
@@ -113,6 +114,7 @@
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
+									{{ nav_link('CRT_status', 'Status') }}
 									{{ nav_link('CRT_board', 'Board Metrics') }}
 									{{ nav_link('CRT_channel', 'Channel Metrics') }}
 								</ul>
@@ -121,6 +123,7 @@
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
+									<!-- {{ nav_link('PMT_status', 'Status') }} -->
 									{{ nav_link('PMT', 'Metrics') }}
 									{{ nav_link('PMT_snapshot', 'Waveforms') }}
 								</ul>
@@ -129,19 +132,20 @@
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
+									{{ nav_link('PTB_status', 'Status') }}
 									{{ nav_link('LLT_rates', 'LLT') }}
 									{{ nav_link('HLT_rates', 'HLT') }}
                   <!-- <li class="dropdown-submenu bg-maroon nav-item">
-                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PTB-TDC<b class='caret'></b></a> -->
-                      <!-- <ul class="dropdown-menu bg-maroon"> -->
-                        {{ nav_link('LLT27_TDC_1', 'LLT27_TDC_1') }}
-                        {{ nav_link('LLT28_TDC_2', 'LLT28_TDC_2') }}
-                        {{ nav_link('HLT_TDC_4', 'HLT_TDC_4') }}
-                        {{ nav_link('HLT_TDC_5', 'HLT_TDC_5') }}
-                        {{ nav_link('HLT_diff_TDC_channel_4', 'HLT_-_TDC_channel_4') }}
-                        {{ nav_link('HLT_diff_TDC_flash', 'HLT_-_TDC_flash') }}
-                      <!-- </ul> -->
-                  <!-- </li> -->
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PTB-TDC<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon"> -->
+                  {{ nav_link('LLT27_TDC_1', 'LLT 27 - TDC 1') }}
+                  {{ nav_link('LLT28_TDC_2', 'LLT 28 - TDC 2') }}
+                  {{ nav_link('HLT_TDC_4', 'HLT - TDC 4') }}
+                  {{ nav_link('HLT_TDC_5', 'HLT - TDC 5') }}
+                  {{ nav_link('HLT_diff_TDC_channel_4', 'HLT - TDC channel 4') }}
+                  {{ nav_link('HLT_diff_TDC_flash', 'HLT - TDC flash') }}
+                    <!-- </ul>
+                  </li> -->
 									{{ nav_link('MSUM_snapshot', 'MSUM Waveforms') }}
 								</ul>
 						  </li>

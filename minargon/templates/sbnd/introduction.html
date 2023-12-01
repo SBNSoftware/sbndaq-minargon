@@ -2,13 +2,18 @@
 {% block title %}Introduction to Minargon{% endblock %}
 {% block body %}
 {{ super() }}
-<div class="col-md-8 hcenter">
+<!-- <div class="col-md-8 hcenter"> -->
+<div class="container">
+<div class="row">
 <h1>
 SBND Online Monitoring
 </h1>
+</div>
 <p>
 Online monitoring website for SBND (under development, email munjung@uchicago.edu for more info). 
 </p>
+
+<div class="row">
 
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
 	<h3 class="hcenter"> 
@@ -29,6 +34,32 @@ Online monitoring website for SBND (under development, email munjung@uchicago.ed
       <th><span id="OM-status"> </span></th>
     </tr>
 	</table>
+</div>
+
+<div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter">
+  Detector Status
+  </h3>
+  <table class="table table-striped">
+  <tr>
+    <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
+    <th><span id="TPC-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
+    <th><span id="PMT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('CRT_status')}}">CRT Status:</a></th>
+    <th><span id="CRT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
+    <th><span id="Trigger-Status"> </span></th>
+  </tr>
+  </table>
+</div>
+
 </div>
 
 {%endblock%}
@@ -119,6 +150,19 @@ poll_redis_mem_frac.add_callback(function(data) {
    
 });
 poll_redis_mem_frac.run();
+
+// Placeholders for detector status until we have a real status criteria
+$("#TPC-Status").text("Under Development");
+$("#TPC-Status").css({"color": "orange"});
+
+$("#PMT-Status").text("Under Development");
+$("#PMT-Status").css({"color": "orange"});
+
+$("#CRT-Status").text("Under Development");
+$("#CRT-Status").css({"color": "orange"});
+
+$("#Trigger-Status").text("Under Development");
+$("#Trigger-Status").css({"color": "orange"});
 
 </script> 
 {%endblock%}
