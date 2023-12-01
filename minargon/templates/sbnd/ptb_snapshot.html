@@ -1,0 +1,53 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}{{title}}{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+<div class="row">
+    {% include 'data_header.html' | front_ended %}
+</div>
+
+<div class="row">
+<h1>PTB Trigger {{trigger_no}} Data</h1>
+</div>
+<div class="row">
+<div class="col-md-4 vcenter">
+        <div class="card hcenter">
+            <div class="card-header">Display Options</div>
+            <div class="card-body">
+                <form class="form" role="form">
+                    {{ stream_options.metric_option(trigger_config["metric_config"], metric, "trigger-form-metric") }}
+                    {{ stream_options.stream_option(trigger_config.streams, trigger_config.streams[0], "trigger-form-stream") }}
+                    {{ stream_options.download("trigger-download") }}
+                </form>
+            </div>  
+       	    </div>    
+         </div>
+         <div class="col-md-8" style="padding:0" id="trigger-time-scatter"></div>
+</div>
+
+</div>
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+
+// get the configuration
+var trigger_config = {{trigger_config|tojson|safe}};
+
+var trigger_config_controller = new Config.GroupConfigController(trigger_config, undefined, ["{{trigger_config['metric_list'][0]}}"], [{{trigger_no}}], 0, 32)
+    .metricController("#trigger-form-metric")
+    .streamController("#trigger-form-stream"); 
+
+var trigger_plotly = trigger_config_controller.addPlotlyController("trigger-time-scatter")
+   .timeRangeController("#trigger-start", "#trigger-end", "#trigger-toggle")
+   .downloadDataController("#trigger-download");
+
+
+// start the controllers
+trigger_config_controller.runAll();
+
+</script>
+{% endblock %}
