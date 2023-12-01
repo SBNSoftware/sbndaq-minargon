@@ -1,0 +1,42 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}PTB Status{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+<div class="row">
+<h1 class="hcenter">
+Trigger System Status
+</h1>
+</div>
+
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: ? </th>
+    <th>Subrun: ? </th>
+    <th>Event: ? </th>
+  </tr>
+</table>
+</div>
+
+<div class="row">
+<h4 class="hcenter">
+Limits on [?] are between [?] and [?]
+</h4>
+</div>
+<br>
+<br>
+
+<div class="row">
+  <div class="col-lg-4 col-md-4" style="padding:0">
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th> LLT </th>
+        <th> Periodicity </th>
+      </tr>
+      </thead>
+    </table>
+  </div>
+
+{%endblock%}
