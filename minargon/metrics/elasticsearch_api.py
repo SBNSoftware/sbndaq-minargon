@@ -82,7 +82,22 @@ def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
 # SBND slow control alarm specific stuff------------------------------------------
 
 def prep_alarms(hits, source_cols, component_depth):
-    """Categorise and convert timezone (elasticsearch uses UTC for all times)"""
+    """
+    Categorise and convert timezone (elasticsearch uses UTC for all times).
+
+    alarms will be a nested dictionary like:
+    { system :
+        { subsystem :
+            { subsubsystem :
+                [ { alarm hit dictionary }, ... ]
+            }
+        }
+    }
+    component_hierarchy will be a nested dictionary like
+    { system : { subsystem : { subsubsystem : None } } }
+
+    Duplicate alarms (same (pv,time,value,message) are ignored.
+    """
     alarms, component_hierarchy = {}, {}
     utc_zone = pytz.timezone("UTC")
     fnal_zone = pytz.timezone("America/Chicago")
@@ -91,7 +106,6 @@ def prep_alarms(hits, source_cols, component_depth):
         hit_data = { key : hit["_source"][key] for key in source_cols }
         components, pv = _get_pv_categs(hit["_source"]["config"], component_depth)
         hit_data["pv"] = pv
-        print(components)
         _convert_timezones(hit_data, utc_zone, fnal_zone)
         _nested_append(alarms, components, hit_data)
         _nested_set(component_hierarchy, components, None)
@@ -109,10 +123,12 @@ def _get_pv_categs(pv_path, component_depth):
         components.append(components[-1])
     return components, pv
 
+
 def _pv_path_clean(pv_path):
     """May need to be update if new pvs are added"""
     pv_path = pv_path.replace("(Gizmo/GPS)", "(Gizmo or GPS)")
     return pv_path
+
 
 # end-----------------------------------------------------------------------------
 
