@@ -9,37 +9,68 @@
 
 <p> Plots can be zoomed, dragged and hovered. Double click to snap axis to fit data. Email alexander.wilkinson.20@ucl.ac.uk with any questions. </p>
 
-<h2>
-  <p> Select system(s) to show alarm data for: </p>
-</h2>
 
-<select id="systSelect" onchange="updateSubDropdown(1)">
-  <option selected disabled value="Empty">Choose system</option>
-</select>
+<div id="selectDropdowns">
+  <label>Show alarms for system(s):</label>
+  <ul>
+    <select id="systSelect" onchange="updateSubDropdown(1)">
+      <option selected disabled value="Empty">Choose system</option>
+    </select>
 
-&nbsp;
+    &nbsp;
 
-<select id="subSyst1Select" onchange="updateSubDropdown(2)">
-  <option selected disabled value="Empty">Choose next subsytem</option>
-</select>
+    <select id="subSyst1Select" onchange="updateSubDropdown(2)">
+      <option selected disabled value="Empty">Choose next subsytem</option>
+    </select>
 
-&nbsp;
+    &nbsp;
 
-<select id="subSyst2Select">
-  <option selected disabled value="Empty">Choose next subsytem</option>
-</select>
+    <select id="subSyst2Select">
+      <option selected disabled value="Empty">Choose next subsytem</option>
+    </select>
 
-<!--
-&nbsp;
+    <!--
+    &nbsp;
 
-<select id="subSyst3Select">
-  <option selected disabled value="Empty">Choose next subsytem</option>
-</select>
--->
+    <select id="subSyst3Select">
+      <option selected disabled value="Empty">Choose next subsytem</option>
+    </select>
+    -->
+  </ul>
+</div>
 
-&nbsp; &nbsp;
+<label>Hide alarms for:</label>
+<div style="width:400px;height:150px;overflow:scroll;" id="hideCheckboxes">
+  <ul>
+    <li><input id="hideOK" type="checkbox"> OK</li>
+    <li><input id="hideDisconnected" type="checkbox"> Disconnected</li>
+    <li><input id="hidedisconnected" type="checkbox"> disconnected</li>
+    <li><input id="hideUDF_ALARM" type="checkbox"> UDF_ALARM</li>
+    <li><input id="hideLOLO_ALARM" type="checkbox"> LOLO_ALARM</li>
+    <li><input id="hideLOW_ALARM" type="checkbox"> LOW_ALARM</li>
+    <li><input id="hideNO_ALARM" type="checkbox"> NO_ALARM</li>
+    <li><input id="hideHIGH_ALARM" type="checkbox"> HIGH_ALARM</li>
+    <li><input id="hideHIHI_ALARM" type="checkbox"> HIHI_ALARM</li>
+    <li><input id="hideREAD_ALARM" type="checkbox"> READ_ALARM</li>
+    <li><input id="hideWRITE_ALARM" type="checkbox"> WRITE_ALARM</li>
+    <li><input id="hideCALC_ALARM" type="checkbox"> CALC_ALARM</li>
+    <li><input id="hideTIMEOUT_ALARM" type="checkbox"> TIMEOUT_ALARM</li>
+    <li><input id="hideLINK_ALARM" type="checkbox"> LINK_ALARM</li>
+    <li><input id="hideCOMM_ALARM" type="checkbox"> COMM_ALARM</li>
+    <li><input id="hideSTATE_ALARM" type="checkbox"> STATE_ALARM</li>
+    <li><input id="hideSCAN_ALARM" type="checkbox"> SCAN_ALARM</li>
+    <li><input id="hideDisable_ALARM" type="checkbox"> Disable_ALARM</li>
+    <li><input id="hideWrite_Error" type="checkbox"> Write_Error</li>
+    <li><input id="hideArchive_Off" type="checkbox"> Archive_Off</li>
+    <li><input id="hideNaN" type="checkbox"> NaN</li>
+  </ul>
+</div>
 
-<button type="button" onclick="makePlots()">Go!</button>
+<br>
+
+<div>
+  <button type="button" onclick="makePlots()">Go!</button>
+</div>
 
 <br><br>
 
@@ -57,11 +88,35 @@
   const CURRENTTIME = "{{ current_time|safe }}";
   const EARLIESTTIME = "{{ earliest_time|safe }}";
 
-  const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select"]
+  const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select"];
+  const CHECKBOXIDS = [
+    "hideOK",
+    "hideDisconnected",
+    "hidedisconnected",
+    "hideUDF_ALARM",
+    "hideLOLO_ALARM",
+    "hideLOW_ALARM",
+    "hideNO_ALARM",
+    "hideHIGH_ALARM",
+    "hideHIHI_ALARM",
+    "hideREAD_ALARM",
+    "hideWRITE_ALARM",
+    "hideCALC_ALARM",
+    "hideTIMEOUT_ALARM",
+    "hideLINK_ALARM",
+    "hideCOMM_ALARM",
+    "hideSTATE_ALARM",
+    "hideSCAN_ALARM",
+    "hideDisable_ALARM",
+    "hideWrite_Error",
+    "hideArchive_Off",
+    "hideNaN"
+  ];
 
   initSystDropdown();
+  initHideCheckbox()
 
-  // dropdown menu control--------------------------------------- 
+  // alarm selection menus control--------------------------------------- 
 
   function updateDropdown(select, names) {
     clearDropdown(select);
@@ -85,6 +140,13 @@
     for (let i = 1; i < SELECTIDS.length; i++) {
       const select = document.getElementById(SELECTIDS[i]);
       select.value = "";
+    }
+  }
+
+  function initHideCheckbox() {
+    for (let i = 0; i < CHECKBOXIDS.length; i++) {
+      const res = document.getElementById(CHECKBOXIDS[i]);
+      res.checked = false;
     }
   }
 
@@ -146,13 +208,14 @@
 
   function makePlots() {
     dropdownRes = getDropdownResults();
+    checkboxRes = getCheckboxResults();
 
     if (dropdownRes.includes("Empty")) {
       alert("Invalid system selection!");
       return;
     }
 
-    alarmHits = getAlarmHits(dropdownRes);
+    alarmHits = getAlarmHits(dropdownRes, checkboxRes);
     alarmHits.sort(function(a, b) { return Date.parse(a["time"]) - Date.parse(b["time"]); });
 
     const title = dropdownRes.join("/");
@@ -182,7 +245,18 @@
     return dropdownRes;
   }
 
-  function getAlarmHits(selectedComponents) {
+  function getCheckboxResults() {
+    var checkboxRes = new Set([ ]);
+    for (let i =0; i < CHECKBOXIDS.length; i++) {
+      const res = document.getElementById(CHECKBOXIDS[i]);
+      if (res.checked) {
+        checkboxRes.add(CHECKBOXIDS[i].slice(4));
+      }
+    }
+    return checkboxRes;
+  }
+
+  function getAlarmHits(selectedComponents, hiddenAlarms) {
     var selectedHits = [];
     var selectedAlarms = ALARMS;
     var handleAll = false;
@@ -197,15 +271,22 @@
     if (handleAll) {
       selectedAlarms = mergeComponentAlarmHits(selectedAlarms);
     }
+    else {
+      selectedAlarms = selectedAlarms.map(
+        (alarmHit) => ({...alarmHit, "histoCateg": alarmHit["pv"]})
+      )
+    }
+    selectedAlarms = selectedAlarms.filter((alarmHit) => !(hiddenAlarms.has(alarmHit["message"])));
     return selectedAlarms;
   }
 
-  function mergeComponentAlarmHits(selectedAlarms) {
+  function mergeComponentAlarmHits(selectedAlarms, hiddenAlarms) {
     selectedAlarmsFlat = flatten(selectedAlarms);
     selectedAlarmsMerged = [];
     for (const [components, alarmHits] of Object.entries(selectedAlarmsFlat)) {
       for (const alarmHit of alarmHits) { 
         alarmHit["pv"] = components + "/" + alarmHit["pv"].split("/").slice(-2).join("/");
+        alarmHit["histoCateg"] = components.split("/")[0];
         selectedAlarmsMerged.push(alarmHit);
       }
     }
@@ -337,21 +418,21 @@
   function makeHistoPlot(alarmHits) {
     var alarmsHistDataObj = { };
     for (const alarmHit of alarmHits) {
-      if (alarmHit["message"] == "NO_ALARM") {
-        continue;
-      }
+      // if (alarmHit["message"] == "NO_ALARM") {
+      //   continue;
+      // }
 
-      if (!(alarmHit["pv"] in alarmsHistDataObj)) {
-        alarmsHistDataObj[alarmHit["pv"]] = {
+      if (!(alarmHit["histoCateg"] in alarmsHistDataObj)) {
+        alarmsHistDataObj[alarmHit["histoCateg"]] = {
           "x" : [ ],
           "type" : "histogram",
           "xbins" : { "size" : "D1" },
-          "name" : alarmHit["pv"],
-          "meta" : [ alarmHit["pv"] ],
+          "name" : alarmHit["histoCateg"],
+          "meta" : [ alarmHit["histoCateg"] ],
           "hovertemplate" : "<b>%{y}</b>"
         }
       }
-      alarmsHistDataObj[alarmHit["pv"]]["x"].push(alarmHit["time"]);
+      alarmsHistDataObj[alarmHit["histoCateg"]]["x"].push(alarmHit["time"]);
     }
     var alarmsHistData = [];
     for (const [alarmName, alarmHistData] of Object.entries(alarmsHistDataObj)) {
