@@ -116,7 +116,7 @@
   initSystDropdown();
   initHideCheckbox()
 
-  // dropdown menu control--------------------------------------- 
+  // alarm selection menus control--------------------------------------- 
 
   function updateDropdown(select, names) {
     clearDropdown(select);
@@ -271,7 +271,12 @@
     if (handleAll) {
       selectedAlarms = mergeComponentAlarmHits(selectedAlarms);
     }
-    selectedAlarms = selectedAlarms.filter(alarmHit => !(hiddenAlarms.has(alarmHit["message"])));
+    else {
+      selectedAlarms = selectedAlarms.map(
+        (alarmHit) => ({...alarmHit, "histoCateg": alarmHit["pv"]})
+      )
+    }
+    selectedAlarms = selectedAlarms.filter((alarmHit) => !(hiddenAlarms.has(alarmHit["message"])));
     return selectedAlarms;
   }
 
@@ -281,6 +286,7 @@
     for (const [components, alarmHits] of Object.entries(selectedAlarmsFlat)) {
       for (const alarmHit of alarmHits) { 
         alarmHit["pv"] = components + "/" + alarmHit["pv"].split("/").slice(-2).join("/");
+        alarmHit["histoCateg"] = components.split("/")[0];
         selectedAlarmsMerged.push(alarmHit);
       }
     }
@@ -412,21 +418,21 @@
   function makeHistoPlot(alarmHits) {
     var alarmsHistDataObj = { };
     for (const alarmHit of alarmHits) {
-      if (alarmHit["message"] == "NO_ALARM") {
-        continue;
-      }
+      // if (alarmHit["message"] == "NO_ALARM") {
+      //   continue;
+      // }
 
-      if (!(alarmHit["pv"] in alarmsHistDataObj)) {
-        alarmsHistDataObj[alarmHit["pv"]] = {
+      if (!(alarmHit["histoCateg"] in alarmsHistDataObj)) {
+        alarmsHistDataObj[alarmHit["histoCateg"]] = {
           "x" : [ ],
           "type" : "histogram",
           "xbins" : { "size" : "D1" },
-          "name" : alarmHit["pv"],
-          "meta" : [ alarmHit["pv"] ],
+          "name" : alarmHit["histoCateg"],
+          "meta" : [ alarmHit["histoCateg"] ],
           "hovertemplate" : "<b>%{y}</b>"
         }
       }
-      alarmsHistDataObj[alarmHit["pv"]]["x"].push(alarmHit["time"]);
+      alarmsHistDataObj[alarmHit["histoCateg"]]["x"].push(alarmHit["time"]);
     }
     var alarmsHistData = [];
     for (const [alarmName, alarmHistData] of Object.entries(alarmsHistDataObj)) {
