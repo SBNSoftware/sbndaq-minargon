@@ -82,18 +82,38 @@ def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
 # SBND slow control alarm specific stuff------------------------------------------
 
 def prep_alarms(hits, source_cols, component_depth):
-    """Categorise and convert timezone (elasticsearch uses UTC for all times)"""
+    """
+    Categorise and convert timezone (elasticsearch uses UTC for all times).
+
+    alarms will be a nested dictionary like:
+    { system :
+        { subsystem :
+            { subsubsystem :
+                [ { alarm hit dictionary }, ... ]
+            }
+        }
+    }
+    component_hierarchy will be a nested dictionary like
+    { system : { subsystem : { subsubsystem : None } } }
+
+    Duplicate alarms (same (pv,time,value,message)) are ignored.
+    """
     alarms, component_hierarchy = {}, {}
     utc_zone = pytz.timezone("UTC")
     fnal_zone = pytz.timezone("America/Chicago")
+    identical_checker = lambda x, y: (
+        x["time"] == y["time"] and
+        x["pv"] == y["pv"] and
+        x["value"] == y["value"] and
+        x["message"] == y["message"]
+    )
 
     for hit in hits:
         hit_data = { key : hit["_source"][key] for key in source_cols }
         components, pv = _get_pv_categs(hit["_source"]["config"], component_depth)
         hit_data["pv"] = pv
-        print(components)
         _convert_timezones(hit_data, utc_zone, fnal_zone)
-        _nested_append(alarms, components, hit_data)
+        _nested_append_unique(alarms, components, hit_data, identical_checker)
         _nested_set(component_hierarchy, components, None)
 
     return alarms, component_hierarchy
@@ -109,10 +129,12 @@ def _get_pv_categs(pv_path, component_depth):
         components.append(components[-1])
     return components, pv
 
+
 def _pv_path_clean(pv_path):
     """May need to be update if new pvs are added"""
     pv_path = pv_path.replace("(Gizmo/GPS)", "(Gizmo or GPS)")
     return pv_path
+
 
 # end-----------------------------------------------------------------------------
 
@@ -131,6 +153,16 @@ def _convert_timezone(original_time, original_tz, new_tz):
     original_time = original_tz.localize(original_time)
     new_time = original_time.astimezone(new_tz)
     return new_time
+
+
+def _nested_append_unique(d, keys, value, identical_checker):
+    for key in keys[:-1]:
+        d = d.setdefault(key, {})
+    l = d.setdefault(keys[-1], [])
+    for other_value in l:
+        if identical_checker(value, other_value):
+            return
+    l.append(value)
 
 
 def _nested_append(d, keys, value):
