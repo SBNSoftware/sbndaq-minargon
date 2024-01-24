@@ -9,7 +9,7 @@ import sys
 import random
 from . import constants
 import sys
-from minargon.metrics import postgres_api, elasticsearch_api
+from minargon.metrics import postgres_api, elasticsearch_api, ignition_api
 from minargon.views.common.views import timeseries_view
 import subprocess
 import re
@@ -42,6 +42,8 @@ def noise_snapshot():
         'n_channels': constants.N_CHANNELS
     }
     return render_template('sbnd/noise_snapshot.html', **template_args)
+
+
 
 # snapshot of data on channel (fft and waveform)
 @app.route('/fem_snapshot')
@@ -438,4 +440,22 @@ def es_alarms():
     render_args.update(extra_render_args)
 
     return render_template('sbnd/es_alarms.html', **render_args)
+
+@app.route('/cryo_monitor')
+def cryo_monitor():
+    database = "sbnd_ignition"
+    pv_lists = {"cryostattemperature": ["te-8108a"]}
+    dbrows = []
+    for k in pv_lists.keys():
+        this_list = pv_lists[k]
+        for pv in this_list:
+            this_dbrow = ignition_api.get_ignition_last_value_pv(database, "01", k, pv)
+            dbrows = dbrows + this_dbrow
+    print(dbrows)
+    return render_template('sbnd/cryo_monitor.html', rows = dbrows)
+
+    # try:
+    #     return render_template('sbnd/cryo_monitor.html', row = dbrows)
+    # except jinja2.exceptions.TemplateNotFound:
+    #     abort(404)
 
