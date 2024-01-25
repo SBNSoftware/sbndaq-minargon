@@ -444,12 +444,16 @@ def es_alarms():
 @app.route('/cryo_monitor')
 def cryo_monitor():
     database = "sbnd_ignition"
-    pv_lists = {"cryostattemperature": ["te-8108a"]}
+    pv_lists = {"east_apa": ["te-8101a", "te-8106a"],
+		"west_apa": ["te-8107a", "te-8112a"],
+		"cryo_wall": ["te-8035a"],
+		"cryo_bottom": ["te-8062a", "te-8022a"],
+		"cryo_top": ["te-8003a"]}
     dbrows = []
     for k in pv_lists.keys():
         this_list = pv_lists[k]
         for pv in this_list:
-            this_dbrow = ignition_api.get_ignition_last_value_pv(database, "01", k, pv)
+            this_dbrow = ignition_api.get_ignition_last_value_pv(database, "01", "", pv)
             dbrows = dbrows + this_dbrow
     print(dbrows)
     return render_template('sbnd/cryo_monitor.html', rows = dbrows)
