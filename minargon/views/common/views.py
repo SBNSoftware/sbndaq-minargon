@@ -3,6 +3,7 @@ from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
 import jinja2
 from minargon.metrics import postgres_api
+from minargon.metrics import ignition_api
 
 from minargon.tools import parseiso, RedisDataStream, PostgresDataStream
 from minargon.metrics import online_metrics
@@ -120,6 +121,10 @@ def single_stream(stream_name):
 @app.route('/<connection>/pvTree')
 def pvTree(connection):
     return render_template('common/pvTree.html', data=postgres_api.pv_internal(connection, "pv_single_stream", front_end_abort=True))
+
+@app.route('/<connection>/pvTree_cryo')
+def pvTree_cryo(connection):
+    return render_template('common/pvTree_cryo.html', data=ignition_api.pv_internal(connection, "pv_single_stream", front_end_abort=True))
 
 def timeseries_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None, db="online"):
     # TODO: what to do with this?

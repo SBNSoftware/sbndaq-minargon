@@ -2,13 +2,18 @@
 {% block title %}Introduction to Minargon{% endblock %}
 {% block body %}
 {{ super() }}
-<div class="col-md-8 hcenter">
+<!-- <div class="col-md-8 hcenter"> -->
+<div class="container">
+<div class="row">
 <h1>
 SBND Online Monitoring
 </h1>
+</div>
 <p>
 Online monitoring website for SBND (under development, email munjung@uchicago.edu for more info). 
 </p>
+
+<div class="row">
 
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
 	<h3 class="hcenter"> 
@@ -18,10 +23,146 @@ Online monitoring website for SBND (under development, email munjung@uchicago.ed
   <table class="table table-striped">
 	<tr>
 	  <th> dcs_prd disk usage: </th>
-		<th><span id="dcs_prd-disk_usage"> </span></th>	
-  </tr>
+	  <th><span id="dcs_prd-disk_usage"> </span></th>	
+	</tr>
+	<tr>
+	  <th>Redis memory usage: </th>
+	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
+	</tr>
+    <tr>
+      <th>DAQConsumer: </th>
+      <th><span id="OM-status"> </span></th>
+    </tr>
 	</table>
 </div>
 
+<div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter">
+  Detector Status
+  </h3>
+  <table class="table table-striped">
+  <tr>
+    <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
+    <th><span id="TPC-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
+    <th><span id="PMT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('CRT_status')}}">CRT Status:</a></th>
+    <th><span id="CRT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
+    <th><span id="Trigger-Status"> </span></th>
+  </tr>
+  </table>
+</div>
 
+</div>
+
+{%endblock%}
+
+
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+import {throw_database_error} from "{{ url_for('static', filename='js/minargon/error.js') }}";
+
+// monitor DAQConsumer
+var timeout = 5 * 1000; // ms
+
+function time_delta(earlier) {
+  var now = moment(new Date).tz("America/Chicago").unix() * 1000. /* s -> ms */;
+  return Math.max(0, now - earlier);
+}
+
+function is_recent(time, time_is_ok) {
+  return time_delta(time) < time_is_ok;
+}
+
+
+function update_is_recent(data_link, spanid, time_is_ok) {
+  data_link.get_data(function(err, data) {
+    if (err) {
+      throw_database_error(err, "update_heartbeat: " + data_link.accessors()[0][0]);
+      return;
+    }
+
+    var datalist = data.values[data_link.accessors()[0][0]];
+    var recent;
+    var delta_str = "";
+    
+    if (datalist.length == 0) {
+      recent = false;
+    }
+    else {
+      recent = is_recent(datalist[datalist.length-1][0], time_is_ok);
+      var delta = (time_delta(datalist[datalist.length-1][0]) / 1000.).toFixed(0);
+      delta_str = " (" + String(delta) + "s)";
+    }
+    if (recent) {
+      $(spanid).text("ON" + delta_str);
+      $(spanid).css({"color": "green"});
+    }
+    else {
+      $(spanid).text("OFF" + delta_str);
+      $(spanid).css({"color": "red"});
+    }
+    setTimeout(function() {update_is_recent(data_link, spanid, time_is_ok);}, timeout);
+  });
+
+}
+
+
+var data_link_ar = new Data.D3DataLink(new DataLink.SingleStreamLink($SCRIPT_ROOT + "/online", "archiver_heartbeat"));
+update_is_recent(data_link_ar, "#AR-status", 120 * 1000 /* ms */);
+
+var data_link_om = new Data.D3DataLink(new DataLink.SingleStreamLink($SCRIPT_ROOT + "/online", "DAQConsumer")); 
+update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
+
+
+var poll_redis_mem_gb = new Poll.Poll($SCRIPT_ROOT + "/online/total_memory_usage");
+poll_redis_mem_gb.add_callback(function(data) {
+    if (!data || !data.val) return;
+    var spanid = "#redis-mem-GB";
+    $(spanid).text((data.val / (1024 * 1024 * 1024)).toFixed(2));
+});
+poll_redis_mem_gb.run();
+
+var poll_redis_mem_frac = new Poll.Poll($SCRIPT_ROOT + "/online/total_memory_usage_fraction");
+poll_redis_mem_frac.add_callback(function(data) {
+    if (!data || !data.val) return;
+    var spanid = "#redis-mem-percent";
+    $(spanid).text((data.val * 100).toFixed(2));
+
+    spanid = "#redis-mem";
+    if (data.val > 0.85) {
+      $(spanid).css({"color": "red"});
+    }
+    else {
+      $(spanid).css({"color": "green"});
+    }
+   
+});
+poll_redis_mem_frac.run();
+
+// Placeholders for detector status until we have a real status criteria
+$("#TPC-Status").text("Under Development");
+$("#TPC-Status").css({"color": "orange"});
+
+$("#PMT-Status").text("Under Development");
+$("#PMT-Status").css({"color": "orange"});
+
+$("#CRT-Status").text("Under Development");
+$("#CRT-Status").css({"color": "orange"});
+
+$("#Trigger-Status").text("Under Development");
+$("#Trigger-Status").css({"color": "orange"});
+
+</script> 
 {%endblock%}

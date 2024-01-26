@@ -9,7 +9,7 @@ import sys
 import random
 from . import constants
 import sys
-from minargon.metrics import postgres_api, elasticsearch_api
+from minargon.metrics import postgres_api, elasticsearch_api, ignition_api
 from minargon.views.common.views import timeseries_view
 import subprocess
 import re
@@ -23,6 +23,18 @@ from six.moves import range
 def introduction():
     return render_template('sbnd/introduction.html')
 
+@app.route('/TPC_status')
+def TPC_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/tpc_status.html', **render_args) 
+
+
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')
 def noise_snapshot():
@@ -30,6 +42,8 @@ def noise_snapshot():
         'n_channels': constants.N_CHANNELS
     }
     return render_template('sbnd/noise_snapshot.html', **template_args)
+
+
 
 # snapshot of data on channel (fft and waveform)
 @app.route('/fem_snapshot')
@@ -100,13 +114,81 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
+@app.route('/CRT_status')
+def CRT_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/crt_status.html', **render_args) 
+
 @app.route('/CRT_board')
 def CRT_board():
     return timeseries_view(request.args, "CRT_board", "", "crtBoardLink")
 
+@app.route('/CRT_board_snapshot')
+def CRT_board_snapshot():
+    board_no = int(request.args.get("board_no", 0))
+    # get the config for this group from redis
+    config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+    config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+
+    view_ind = {'board_no': board_no}
+    view_ind_opts = {'board_no': list(range(20))}
+
+    # TODO: implement real channel mapping
+    board_channels = list(range(board_no*32, (board_no+1)*32))
+
+    template_args = {
+        'title': ("CRT Board %i Snapshot" % board_no),
+        'board_config': config_board,
+        'channel_config': config_channel,
+        'board_no': board_no,
+        'view_ind': view_ind,
+        'view_ind_opts': view_ind_opts,
+        'board_channels': board_channels
+    }
+
+    return render_template("sbnd/crt_board_snapshot.html", **template_args)
+
 @app.route('/CRT_channel')
 def CRT_channel():
     return timeseries_view(request.args, "CRT_channel", "", "crtChannelLink")
+    # return timeseries_view(request.args, "CRT_channel", "")
+
+@app.route('/CRT_channel_snapshot')
+def CRT_channel_snapshot():
+    channel_no = int(request.args.get("channel_no", 0))
+    config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+
+    view_ind = {'channel_no': channel_no}
+    view_ind_opts = {'channel_no': list(range(20))}
+
+    template_args = {
+        'title': ("CRT channel %i Snapshot" % channel_no),
+        'channel_config': config_channel,
+        'channel_no': channel_no,
+        'view_ind': view_ind,
+        'view_ind_opts': view_ind_opts,
+    }
+
+    return render_template("sbnd/crt_channel_snapshot.html", **template_args)
+
+# PMTs
+@app.route('/PMT_status')
+def PMT_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/pmt_status.html', **render_args) 
+
 
 @app.route('/PMT')
 @app.route('/PMT/<hw_selector:hw_select>')
@@ -138,34 +220,130 @@ def PMT_snapshot():
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
 
+# Penn Trigger Board
+@app.route('/PTB_status')
+def PTB_status():
+    crts = [79,80]
+
+    render_args = {
+      "crts": crts,
+      "eventmeta_key": False, # TODO
+    }
+
+    return render_template('sbnd/trigger_status.html', **render_args) 
+
+
+# @app.route('/LLT_rates')
+# def LLT_rates():
+#     args = dict(**request.args)
+#     # args["data"] = "LLT_rate"
+#     # args["stream"] = "fast"
+#     # print("args")
+#     return timeseries_view(request.args, "LLT_ID", "", "ptbLltLink")
+
+
 @app.route('/LLT_rates')
 def LLT_rates():
-    args = dict(**request.args)
-    args["data"] = "LLT_rate"
-    args["stream"] = "fast"
-    print("args")
-    return timeseries_view(args, "LLT_ID", "", "ptbLltLink")
+    initial_datum = "LLT_rate"
+    instance_name = "LLT_ID"
+    view_ident = ""
+    link_function = "ptbLltLink"
+    eventmeta_key = None
+    hw_select = None
+    db = "online"
+    
+    # get the config for this group from redis
+    config = online_metrics.get_group_config(db, instance_name, front_end_abort=True)
+
+    channels = "undefined"
+    channel_map = "undefined"
+
+    title = instance_name
+
+    if hw_select is None:
+        hw_select = "undefined"
+    else:
+        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
+        hw_select = hw_select.to_url()
+
+    render_args = {
+        'title': "LLT Test",
+        'link_function': link_function,
+        'view_ident': view_ident,
+        'config': config,
+        'metric': initial_datum,
+        'eventmeta_key': eventmeta_key,
+        'channels': channels,
+        'hw_select': hw_select,
+        'channel_map': channel_map,
+        'dbname': db
+    }
+    return render_template('sbnd/llt.html', **render_args)
 
 @app.route('/HLT_rates')
 def HLT_rates():
     return timeseries_view(request.args, "HLT_ID", "", "ptbHltLink")
 
+#TODO: group the LLT_TDCs together?
+@app.route('/LLT27_TDC_1')
+def LLT27_TDC_1():
+    render_args = {
+        "stream_name": 'LLT27_TDC_1',
+    }
+    return render_template('common/single_stream.html', **render_args) 
+
+@app.route('/LLT28_TDC_2')
+def LLT28_TDC_2():
+    render_args = {
+        "stream_name": 'LLT28_TDC_2',
+    }
+    return render_template('common/single_stream.html', **render_args) 
+
+@app.route('/HLT_TDC_4')
+def HLT_TDC_4():
+    render_args = {
+        "stream_name": 'HLT_TDC_4',
+    }
+    return render_template('common/single_stream.html', **render_args) 
+
+@app.route('/HLT_TDC_5')
+def HLT_TDC_5():
+    render_args = {
+        "stream_name": 'HLT_TDC_5',
+    }
+    return render_template('common/single_stream.html', **render_args) 
+
+@app.route('/HLT_diff_TDC_channel_4')
+def HLT_diff_TDC_channel_4():
+    render_args = {
+        "stream_name": 'HLT_-_TDC_channel_4',
+    }
+    return render_template('common/single_stream.html', **render_args) 
+
+@app.route('/HLT_diff_TDC_flash')
+def HLT_diff_TDC_flash():
+    render_args = {
+        "stream_name": 'HLT_-_TDC_flash',
+    }
+    return render_template('common/single_stream.html', **render_args) 
+
 @app.route('/PTB_snapshot')
 def PTB_snapshot():
-    channel = request.args.get("PTB", 0, type=int)
-    group_name = "PTB"
-    # TODO: fix hardcode
-    ptb_range = list(range(32))
-    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+    trigger_no = int(request.args.get("trigger_no", 0))
+    config_trigger = online_metrics.get_group_config("online", "CRT_trigger", front_end_abort=True)
+
+    view_ind = {'trigger_no': trigger_no}
+    view_ind_opts = {'trigger_no': list(range(32))}
 
     template_args = {
-      "channel": channel,
-      "config": config,
-      "ptb_range": ptb_range,
-      "view_ind": {"PTB": channel},
-      "view_ind_opts": {"PTB": ptb_range},
+        'title': ("PTB trigger %i Snapshot" % trigger_no),
+        'trigger_config': config_trigger,
+        'trigger_no': trigger_no,
+        'view_ind': view_ind,
+        'view_ind_opts': view_ind_opts,
     }
-    return render_template("sbnd/ptb_waveform_snapshot.html", **template_args)
+
+    return render_template("sbnd/ptb_snapshot.html", **template_args)
 
 @app.route('/PTB_TDC_diff')
 def PTB_TDC_diff():
@@ -262,4 +440,26 @@ def es_alarms():
     render_args.update(extra_render_args)
 
     return render_template('sbnd/es_alarms.html', **render_args)
+
+@app.route('/cryo_monitor')
+def cryo_monitor():
+    database = "sbnd_ignition"
+    pv_lists = {"east_apa": ["te-8101a", "te-8106a"],
+		"west_apa": ["te-8107a", "te-8112a"],
+		"cryo_wall": ["te-8035a"],
+		"cryo_bottom": ["te-8062a", "te-8022a"],
+		"cryo_top": ["te-8003a"]}
+    dbrows = []
+    for k in pv_lists.keys():
+        this_list = pv_lists[k]
+        for pv in this_list:
+            this_dbrow = ignition_api.get_ignition_last_value_pv(database, "01", "", pv)
+            dbrows = dbrows + this_dbrow
+    print(dbrows)
+    return render_template('sbnd/cryo_monitor.html', rows = dbrows)
+
+    # try:
+    #     return render_template('sbnd/cryo_monitor.html', row = dbrows)
+    # except jinja2.exceptions.TemplateNotFound:
+    #     abort(404)
 
