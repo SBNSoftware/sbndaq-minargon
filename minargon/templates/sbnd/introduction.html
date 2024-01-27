@@ -4,48 +4,41 @@
 {{ super() }}
 <!-- <div class="col-md-8 hcenter"> -->
 <div class="container">
-<div class="row">
-<h1>
-SBND Online Monitoring
-</h1>
-</div>
 
+<center>
+<div class="row">
+<h1 class="hcenter">SBND Online Monitoring</h1>
+</div>
+<br>
 <p>
 operations wiki: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki">click here</a>
 <br>
 shifter feedback: <a href="https://docs.google.com/forms/d/e/1FAIpQLSeacwY7BIyRl7Z3bWRUjkXlYVJtcIg07pnkq0Rh1QshmJmGtg/viewform?usp=sf_link">click here</a>
 </p>
 <br>
+</center>
+
 <div class="row">
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-	<h3 class="hcenter"> 
-		Meta Data
-  </h3>
-
+  <h3 class="hcenter"> Meta Data </h3>
   <table class="table table-striped">
-	<tr>
-	  <th> dcs_prd disk usage: </th>
-	  <th><span id="dcs_prd-disk_usage"> </span></th>	
-	</tr>
-	<tr>
+        <tr>
 	  <th>Redis memory usage: </th>
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
 	</tr>
 	<tr>
-	  <th>Redis heartbeat </th>
+	  <th>Redis heartbeat: </th>
 	  <th><span id="redis-ping"></span></th>
 	</tr>
-    <tr>
-      <th>DAQConsumer: </th>
-      <th><span id="OM-status"> </span></th>
+      <tr>
+        <th>DAQConsumer: </th>
+        <th><span id="OM-status"> </span></th>
     </tr>
-	</table>
+  </table>
 </div>
 
 <div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
-  <h3 class="hcenter">
-  Detector Status
-  </h3>
+  <h3 class="hcenter">Detector Status</h3>
   <table class="table table-striped">
   <tr>
     <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
@@ -134,11 +127,16 @@ update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
 
 var poll_redis_ping = new Poll.Poll($SCRIPT_ROOT + "/online/ping_redis");
 poll_redis_ping.add_callback(function(data) {
-    if (!data || !data.val) {
-      $(spanid).text("blah");
-    }
     var spanid = "#redis-ping";
-    $(spanid).text(data.val);
+    if (data == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("ON");
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("OFF");
+    }
+
 });
 poll_redis_ping.run();
 
