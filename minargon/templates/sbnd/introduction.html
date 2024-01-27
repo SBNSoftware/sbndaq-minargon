@@ -9,12 +9,14 @@
 SBND Online Monitoring
 </h1>
 </div>
+
 <p>
-Online monitoring website for SBND (under development, email munjung@uchicago.edu for more info). 
+operations wiki: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki">click here</a>
+<br>
+shifter feedback: <a href="https://docs.google.com/forms/d/e/1FAIpQLSeacwY7BIyRl7Z3bWRUjkXlYVJtcIg07pnkq0Rh1QshmJmGtg/viewform?usp=sf_link">click here</a>
 </p>
-
+<br>
 <div class="row">
-
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
 	<h3 class="hcenter"> 
 		Meta Data
@@ -28,6 +30,10 @@ Online monitoring website for SBND (under development, email munjung@uchicago.ed
 	<tr>
 	  <th>Redis memory usage: </th>
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
+	</tr>
+	<tr>
+	  <th>Redis heartbeat </th>
+	  <th><span id="redis-ping"></span></th>
 	</tr>
     <tr>
       <th>DAQConsumer: </th>
@@ -126,6 +132,16 @@ var data_link_om = new Data.D3DataLink(new DataLink.SingleStreamLink($SCRIPT_ROO
 update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
 
 
+var poll_redis_ping = new Poll.Poll($SCRIPT_ROOT + "/online/ping_redis");
+poll_redis_ping.add_callback(function(data) {
+    if (!data || !data.val) {
+      $(spanid).text("blah");
+    }
+    var spanid = "#redis-ping";
+    $(spanid).text(data.val);
+});
+poll_redis_ping.run();
+
 var poll_redis_mem_gb = new Poll.Poll($SCRIPT_ROOT + "/online/total_memory_usage");
 poll_redis_mem_gb.add_callback(function(data) {
     if (!data || !data.val) return;
@@ -152,16 +168,16 @@ poll_redis_mem_frac.add_callback(function(data) {
 poll_redis_mem_frac.run();
 
 // Placeholders for detector status until we have a real status criteria
-$("#TPC-Status").text("Under Development");
+$("#TPC-Status").text("need alarm limits");
 $("#TPC-Status").css({"color": "orange"});
 
-$("#PMT-Status").text("Under Development");
+$("#PMT-Status").text("need alarm limits");
 $("#PMT-Status").css({"color": "orange"});
 
-$("#CRT-Status").text("Under Development");
+$("#CRT-Status").text("need alarm limits");
 $("#CRT-Status").css({"color": "orange"});
 
-$("#Trigger-Status").text("Under Development");
+$("#Trigger-Status").text("need alarm limits");
 $("#Trigger-Status").css({"color": "orange"});
 
 </script> 
