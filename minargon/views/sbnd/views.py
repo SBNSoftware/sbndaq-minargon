@@ -463,3 +463,30 @@ def cryo_monitor():
     # except jinja2.exceptions.TemplateNotFound:
     #     abort(404)
 
+@app.route('/cryo_stream/<pv>')
+def cryo_stream(pv):
+    
+    # Get the list of IDs for the var name
+#    IDs = postgres_api.pv_internal(database, ret_id=var, front_end_abort=True)
+#
+#    # get the configs for each ID
+#    configs, starts, ends, toggles, downloads = [], [], [], [], []
+#    for ID in IDs:
+#        configs.append(postgres_api.pv_meta_internal(database, ID, front_end_abort=True))
+#        starts.append("start-"+str(ID))
+#        ends.append("end-"+str(ID))
+#        toggles.append("toggle-"+str(ID))
+#        downloads.append("download-"+str(ID))
+#
+#    # print config
+    render_args = {
+      "pv": pv, 
+#      "IDs": IDs,
+#      "configs": configs,
+#      "starts" : starts,
+#      "ends" : ends,
+#      "toggles" : toggles,
+#      "downloads" : downloads,
+#      "database": database
+    }
+    return render_template('common/cryo_stream.html', **render_args)
