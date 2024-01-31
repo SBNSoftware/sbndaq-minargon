@@ -319,7 +319,7 @@
         "x" : alarmTimes,
         "y" : alarmValues,
         "type" : "lines",
-        "line" : { "shape" : "hv" },
+        "line" : { "shape" : "vh" }, // think data order is reversed so "vh" gives "hv effect (which I want)
         "customdata" : alarmMessages,
         "hovertemplate" : (
           "<b>Value</b>: %{y}<br>" +
