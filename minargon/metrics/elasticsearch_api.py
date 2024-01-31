@@ -26,12 +26,15 @@ def get_alarm_data(database):
 
     hits = []
     for index in indices:
-        try:
-            num_hits = es.search(index=index, size=0)["hits"]["total"]["value"]
-            res = es.search(index=index, size=num_hits)
-        except Exception as e: # XXX Temporary, need to figure out why some shards are corrupted
-            continue
-        hits += res["hits"]["hits"]
+        page = es.search(index=index, scroll="2m", size=1000)
+        sid = page["_scroll_id"]
+        scroll_size = len(page["hits"]["hits"])
+
+        while scroll_size > 0:
+            hits += page["hits"]["hits"]
+            page = es.scroll(scroll_id=sid, scroll="2m")
+            sid = page["_scroll_id"]
+            scroll_size = len(page["hits"]["hits"])
 
     return hits, extra_render_args
 
@@ -101,19 +104,21 @@ def prep_alarms(hits, source_cols, component_depth):
     alarms, component_hierarchy = {}, {}
     utc_zone = pytz.timezone("UTC")
     fnal_zone = pytz.timezone("America/Chicago")
-    identical_checker = lambda x, y: (
-        x["time"] == y["time"] and
-        x["pv"] == y["pv"] and
-        x["value"] == y["value"] and
-        x["message"] == y["message"]
-    )
-
+    
+    seen_hits = set()
     for hit in hits:
         hit_data = { key : hit["_source"][key] for key in source_cols }
+
+        hit_summary = (hit_data["config"], hit_data["time"], hit_data["value"], hit_data["message"])
+        if hit_summary not in seen_hits:
+            seen_hits.add(hit_summary)
+        else:
+            continue
+
         components, pv = _get_pv_categs(hit["_source"]["config"], component_depth)
         hit_data["pv"] = pv
         _convert_timezones(hit_data, utc_zone, fnal_zone)
-        _nested_append_unique(alarms, components, hit_data, identical_checker)
+        _nested_append(alarms, components, hit_data)
         _nested_set(component_hierarchy, components, None)
 
     return alarms, component_hierarchy
