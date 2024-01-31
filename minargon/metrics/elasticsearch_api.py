@@ -26,12 +26,15 @@ def get_alarm_data(database):
 
     hits = []
     for index in indices:
-        try:
-            num_hits = es.search(index=index, size=0)["hits"]["total"]["value"]
-            res = es.search(index=index, size=num_hits)
-        except Exception as e: # XXX Temporary, need to figure out why some shards are corrupted
-            continue
-        hits += res["hits"]["hits"]
+        page = es.search(index=index, scroll="2m", size=1000)
+        sid = page["_scroll_id"]
+        scroll_size = len(page["hits"]["hits"])
+
+        while scroll_size > 0:
+            hits += page["hits"]["hits"]
+            page = es.scroll(scroll_id=sid, scroll="2m")
+            sid = page["_scroll_id"]
+            scroll_size = len(page["hits"]["hits"])
 
     return hits, extra_render_args
 
