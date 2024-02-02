@@ -466,7 +466,7 @@ def cryo_monitor():
             except:
                 formatted_time = this_dbrow[0][2]
             timestamp_diff = current_timestamp*1000 - this_dbrow[0][2]
-            alarm_time = 300
+            alarm_time = 180
             this_dbrow = [(this_dbrow[0][0], this_dbrow[0][1], formatted_time, alarm_time, timestamp_diff/1000)]
             dbrows = dbrows + this_dbrow
     print(dbrows)
@@ -476,6 +476,21 @@ def cryo_monitor():
     #     return render_template('sbnd/cryo_monitor.html', row = dbrows)
     # except jinja2.exceptions.TemplateNotFound:
     #     abort(404)
+
+@app.route('/ping_ignition')
+def ping_ignition():
+    database = "sbnd_ignition"
+    pv = "te-8101a"
+    current_time = datetime.now()
+    this_month = current_time.month
+    month_2digit = str(this_month).zfill(2)
+    tstamp = 0
+    this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+    tstamp = this_dbrow[0][2]
+    pong = False
+    if (tstamp > 0):
+        pong = True
+    return jsonify(str(pong))
 
 @app.route('/cryo_stream/<pv>')
 def cryo_stream(pv):
