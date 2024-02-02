@@ -18,9 +18,9 @@
 <TR align="center"><TD>timestamp</TD>
 <TD style="text-align:center"><a id="3536/last_read_time"></a></TD>
 <TD style="text-align:center"><a id="3551/last_read_time"></a></TD>
-<TR align="center"><TD>status</TD>
-<TD style="text-align:center"><a id="3536/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
-<TD style="text-align:center"><a id="3551/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3536/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="3551/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
 
@@ -37,9 +37,9 @@
 <TR align="center"><TD>timestamp</TD>
 <TD style="text-align:center"><a id="3554/last_read_time"></a></TD>
 <TD style="text-align:center"><a id="3569/last_read_time"></a></TD>
-<TR align="center"><TD>status</TD>
-<TD style="text-align:center"><a id="3554/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
-<TD style="text-align:center"><a id="3569/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3554/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="3569/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
 
@@ -53,8 +53,8 @@
 <TD style="text-align:center"><a id="3458/value"></a></TD>
 <TR align="center"><TD>timestamp</TD>
 <TD style="text-align:center"><a id="3458/last_read_time"></a></TD>
-<TR align="center"><TD>status</TD>
-<TD style="text-align:center"><a id="3458/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3458/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
 
@@ -71,9 +71,9 @@
 <TR align="center"><TD>timestamp</TD>
 <TD style="text-align:center"><a id="3413/last_read_time"></a></TD>
 <TD style="text-align:center"><a id="3419/last_read_time"></a></TD>
-<TR align="center"><TD>status</TD>
-<TD style="text-align:center"><a id="3413/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
-<TD style="text-align:center"><a id="3419/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3413/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="3419/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
 
@@ -87,8 +87,8 @@
 <TD style="text-align:center"><a id="3512/value"></a></TD>
 <TR align="center"><TD>timestamp</TD>
 <TD style="text-align:center"><a id="3512/last_read_time"></a></TD>
-<TR align="center"><TD>status</TD>
-<TD style="text-align:center"><a id="3512/status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3512/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
 </P>
@@ -135,6 +135,17 @@ $(document).ready(function() {
   var item_tstamp = document.getElementById("{{row[0]}}"+"/last_read_time");
   var pv_tstamp = "{{row[2]}}";
   item_tstamp.innerHTML = "{{row[2]}}";
+
+  var alarm_time = {{row[3]}};
+  var pv_dbupdate = {{row[4]}};
+  var item_dbupdate = document.getElementById("{{row[0]}}"+"/db_update");
+  if (pv_dbupdate > alarm_time)
+  {
+    <!-- item_dbupdate.innerHTML = "{{row[4]}}"; -->
+    item_dbupdate.className = "led-red";
+  }
+  else
+  item_dbupdate.className = "led-green";
 }
 {%endfor%}
 });
