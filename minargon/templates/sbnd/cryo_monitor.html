@@ -4,9 +4,19 @@
 
 {% block body %}
 {{ super() }}
-<h2>SBND Cryo Monitor</h2>
+<h2 class="hcenter">
+SBND Cryo Monitor
+</h2>
+<br>
+<h5 class="hcenter">
+"DB update" will flash red when the latest timestamp of a PV is older than 3 minutes
+</h5>
 
 <P>
+
+<div class="row">
+
+<div class="col-lg-4 col-md-4" style="padding:10">
 <h4>East APA</h4>
 <TABLE>
 <TR><TH>PV</TH>
@@ -23,9 +33,9 @@
 <TD style="text-align:center"><a id="3551/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
+</div>
 
-<br>
-
+<div class="col-lg-4 col-md-4" style="padding:0">
 <h4>West APA</h4>
 <TABLE>
 <TR><TH>PV</TH>
@@ -42,9 +52,16 @@
 <TD style="text-align:center"><a id="3569/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
+</div>
+
+</div>
 
 <br>
+<br>
 
+<div class="row">
+
+<div class="col-lg-3 col-md-3" style="padding:10">
 <h4>Cryo Wall</h4>
 <TABLE>
 <TR><TH>PV</TH>
@@ -57,9 +74,9 @@
 <TD style="text-align:center"><a id="3458/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
+</div>
 
-<br>
-
+<div class="col-lg-4 col-md-4" style="padding:0">
 <h4>Cryo Bottom</h4>
 <TABLE>
 <TR><TH>PV</TH>
@@ -76,9 +93,9 @@
 <TD style="text-align:center"><a id="3419/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TR>
 </TABLE>
+</div>
 
-<br>
-
+<div class="col-lg-4 col-md-4" style="padding:10">
 <h4>Cryo Top</h4>
 <TABLE>
 <TR><TH>PV</TH>
@@ -92,7 +109,9 @@
 </TR>
 </TABLE>
 </P>
+</div>
 
+</div>
 
 {%endblock%}
 
