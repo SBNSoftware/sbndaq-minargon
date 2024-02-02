@@ -212,19 +212,18 @@ def get_ignition_last_value_pv(connection, month, group, pv):
     AND s.tagpath LIKE '%{}%'
     ORDER BY d.t_stamp DESC 
     LIMIT 1""".format(month, group, pv)
-    print(query)
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
     cursor.close()
     formatted = []
     for row in dbrows:
-        try:
-            time = datetime.fromtimestamp(row[2]/1000) # ms since epoch
-            time = time.strftime("%Y-%m-%d %H:%M")
-        except:
-            time = row[2]
-        formatted.append((row[0], row[1], time))
+#        try:
+#            time = datetime.fromtimestamp(row[2]/1000) # ms since epoch
+#            time = time.strftime("%Y-%m-%d %H:%M")
+#        except:
+#            time = row[2]
+        formatted.append((row[0], row[1], row[2]))
     return formatted
 
 

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
 import time
+from datetime import datetime
 from os.path import join
 import simplejson as json
 import os
@@ -450,10 +451,23 @@ def cryo_monitor():
 		"cryo_bottom": ["te-8062a", "te-8022a"],
 		"cryo_top": ["te-8003a"]}
     dbrows = []
+    current_time = datetime.now()
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+    print(month_2digit)
     for k in pv_lists.keys():
         this_list = pv_lists[k]
         for pv in this_list:
-            this_dbrow = ignition_api.get_ignition_last_value_pv(database, "01", "", pv)
+            this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+            try:
+                formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
+                formatted_time = time.strftime("%Y-%m-%d %H:%M")
+            except:
+                formatted_time = this_dbrow[0][2]
+            timestamp_diff = current_timestamp*1000 - this_dbrow[0][2]
+            alarm_time = 300
+            this_dbrow = [(this_dbrow[0][0], this_dbrow[0][1], formatted_time, alarm_time, timestamp_diff/1000)]
             dbrows = dbrows + this_dbrow
     print(dbrows)
     return render_template('sbnd/cryo_monitor.html', rows = dbrows)
