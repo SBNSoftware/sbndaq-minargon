@@ -12,6 +12,7 @@ from pytz import timezone
 
 from . import redis_api
 from . import postgres_api
+from . import ignition_api
 from psycopg2.extras import RealDictCursor
 from minargon.hardwaredb import select
 import six
