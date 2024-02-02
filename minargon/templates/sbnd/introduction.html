@@ -26,12 +26,16 @@ E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
   <h3 class="hcenter"> Meta Data </h3>
   <table class="table table-striped">
         <tr>
-	  <th>Redis memory usage: </th>
+	  <th>Redis DB memory usage: </th>
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
 	</tr>
 	<tr>
-	  <th>Redis heartbeat: </th>
+	  <th>Redis DB connection: </th>
 	  <th><span id="redis-ping"></span></th>
+	</tr>
+	<tr>
+	  <th>Cryo DB connection: </th>
+	  <th><span id="ignition-ping"></span></th>
 	</tr>
       <tr>
         <th>DAQConsumer: </th>
@@ -167,6 +171,21 @@ poll_redis_mem_frac.add_callback(function(data) {
    
 });
 poll_redis_mem_frac.run();
+
+var poll_ignition_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_ignition");
+poll_ignition_ping.add_callback(function(data) {
+    var spanid = "#ignition-ping";
+    if (data == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("ON");
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("OFF");
+    }
+
+});
+poll_ignition_ping.run();
 
 // Placeholders for detector status until we have a real status criteria
 $("#TPC-Status").text("need alarm limits");
