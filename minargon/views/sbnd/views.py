@@ -466,7 +466,7 @@ def cryo_monitor():
             except:
                 formatted_time = this_dbrow[0][2]
             timestamp_diff = current_timestamp*1000 - this_dbrow[0][2]
-            alarm_time = 300
+            alarm_time = 180
             this_dbrow = [(this_dbrow[0][0], this_dbrow[0][1], formatted_time, alarm_time, timestamp_diff/1000)]
             dbrows = dbrows + this_dbrow
     print(dbrows)
