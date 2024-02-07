@@ -68,7 +68,7 @@
 {% endmacro %}
 
 {% macro run_atan(database, IDA, IDB, configA, configB, ytitle, plotid, lo, hi) %}
-
+{
   var linkA = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{database}}', "{{IDA}}"));
   var configA = {{configA|tojson}};
   var nameA = "{{configA['yTitle']}}";
@@ -83,12 +83,12 @@
     .timeRangeController("#start-{{plotid}}", "#end-{{plotid}}", "#toggle-{{plotid}}")
     .downloadDataController("#download-{{plotid}}");
 
-  plot_controller.setTitle("{{ytitle}}");
+  plot_controller.setYTitle("{{ytitle}}");
   // plot_controller.setYRange({{lo}}, {{hi}});
    
   // start it
   plot_controller.run();
-
+}
 {% endmacro %}
 
 {% block script %}
