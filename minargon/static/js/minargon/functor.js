@@ -44,6 +44,7 @@ export class FunctorController {
 
     // plot title
     var plot_title = fname.replace("{A}", nameA).replace("{B}", nameB);
+    console.log(plot_title);
     // make a new plotly scatter plot
     this.scatter = new FunctorScatter(target, plot_title, nameA, nameB, func); 
     this.scatter.draw();
@@ -241,4 +242,3 @@ export class FunctorController {
     }
   }
 }
-
