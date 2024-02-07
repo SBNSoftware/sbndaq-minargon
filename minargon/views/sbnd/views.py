@@ -391,6 +391,7 @@ def Impedence_Ground_Monitor():
       "configs": configs,
       "database": database
     }
+    print(render_args)
     return render_template('sbnd/impedence_ground_monitor.html', **render_args)
 
 @app.route('/Impedence_Ground_Monitor_CSU')
