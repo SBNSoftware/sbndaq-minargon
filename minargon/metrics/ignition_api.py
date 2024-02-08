@@ -150,44 +150,35 @@ def is_valid_connection(connection_name):
 
 #--------------------
 # make the db query and return the data
-def ignition_querymaker(IDs, start_t, stop_t, n_data, config, **table_args):
-    # value string
-    value_string = ""
-    for i, v in enumerate(config["value_names"]):
-        value_string += ", %s as VAL%i" % (v, i)
-
-    # table name
-    try:
-        table_name = config["table_func"](**table_args)
-    except TypeError:
-        raise IgnitionURLException("Incorrect args to access table for database %s" % config["name"])
-
-    # ndata string
-    if isinstance(n_data, int):
-        ndata_str = "LIMIT %i" % n_data
-    else:
-        ndata_str = ""
-
-    # info needed by the query
+def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     query_builder = {
-        "TIME": config["time_name"],
-        "VALUE_STRING": value_string,
-        "TABLE": table_name,
+        "MONTH": config["time_name"],
+        "GROUP": config["group_name"],
+        "PV": pv,
         "START": str(start_t/1000.),
         "STOP": str(stop_t/1000.),
-        "IDs": ",".join(IDs),
-        "NDATA_STR": ndata_str,
     }
 
-    # db query to execute, times converted to unix [ms]
-    query = "SELECT extract(epoch FROM {})*1000 AS SAMPLE_TIME, CHANNEL_ID AS ID {VALUE_STRING} FROM {TABLE} WHERE CHANNEL_ID in ({IDs})"\
-            " AND {TIME} BETWEEN to_timestamp({START}) AND to_timestamp({STOP}) ORDER BY {TIME} DESC {NDATA_STR}".format(**query_builder)
+    query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
+    FROM cryo_prd.sqlt_data_1_2024_{MONTH} d, cryo_prd.sqlth_te s
+    WHERE d.tagid=s.id
+    AND s.tagpath LIKE '%sbnd%'
+    AND s.tagpath LIKE '%value%'
+    AND s.tagpath LIKE '%{PV}%'
+    AND d.t_stamp BETWEEN to_timestamp({START}) AND to_timestamp({STOP})
+    ORDER BY d.t_stamp DESC
+    LIMIT 2""".format(**query_builder)
+
+
     return query
 
 
-def ignition_query(IDs, start_t, stop_t, n_data, connection, config, **table_args):
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
-    query = ignition_querymaker(IDs, start_t, stop_t, n_data, config, **table_args)
+@ignition_route
+def ignition_query(pv, start_t, stop_t, n_data, connection, month):
+    cursor = connection[0].cursor()
+    database = connection[1]["name"]
+    print("database: ", database)
+    query = ignition_querymaker(pv, start_t, stop_t, n_data, month)
     # execute the query, rollback connection if it fails
     try:
         cursor.execute(query)
@@ -228,8 +219,115 @@ def get_ignition_last_value_pv(connection, month, group, pv):
 
 
 
+@app.route("/<connection>/cryo_ps_series/<month>/<pv>")
+@ignition_route
+def cryo_ps_series(connection, month, pv):
+    cursor = connection[0].cursor()
+    database = connection[1]["name"]
+
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        # return abort(404, "Must specify a start time to a Ignition request") 
+        start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
+        start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
+    stop_t  = args['stop']     # Stop time
+    if (stop_t is None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+    start = str(int(start_t))
+    stop = str(int(stop_t))
+    print("start_t: ", start_t)
+    print("Start: ", start)
+    print("stop_t: ", stop_t)
+    print("Stop: ", stop)
+    n_data = args['n_data']    # Number of data points
+    n_data = 1000
+
+    query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
+    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    WHERE d.tagid=s.id
+    AND s.tagpath LIKE '%sbnd%'
+    AND s.tagpath LIKE '%{}%'
+    AND s.tagpath LIKE '%value%'
+    AND d.t_stamp BETWEEN {} AND {}
+    ORDER BY d.t_stamp DESC 
+    LIMIT {}""".format(month, pv, start, stop, n_data)
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall()
+    cursor.close()
+    formatted = []
+    for row in dbrows:
+        # formatted.append((row[0], row[1], row[2]))
+        formatted.append((float(row[2]), float(row[1])))
+    ret = {
+        pv: formatted
+    }
+    return jsonify(values=ret, query=query)
+
+# Gets the sample step size in unix miliseconds
+@app.route("/<connection>/cryo_ps_step/<month>/<pv>")
+@ignition_route
+def cryo_ps_step(connection, month, pv):
+    cursor = connection[0].cursor()
+    database = connection[1]["name"]
+
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        # return abort(404, "Must specify a start time to a Ignition request") 
+        start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
+        start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
+    stop_t  = args['stop']     # Stop time
+    if (stop_t is None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+    start = str(int(start_t))
+    stop = str(int(stop_t))
+    n_data = args['n_data']    # Number of data points
+    n_data = 1000
+
+    query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
+    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    WHERE d.tagid=s.id
+    AND s.tagpath LIKE '%sbnd%'
+    AND s.tagpath LIKE '%{}%'
+    AND s.tagpath LIKE '%value%'
+    AND d.t_stamp BETWEEN {} AND {}
+    ORDER BY d.t_stamp DESC 
+    LIMIT {}""".format(month, pv, start, stop, n_data)
+
+    cursor.execute(query)
+    data = cursor.fetchall()
+    cursor.close()
+
+    # Predeclare variable otherwise it will complain the variable doesnt exist 
+    step_size = None
+    print("Data: ", data[len(data)-2])
+
+    # Get the sample size from last two values in query
+    try:
+        step_size = data[len(data) - 2][2] - data[len(data) - 1][2] 
+    except:
+        print("Error in step size")
+
+    # Catch for if no step size exists
+    if (step_size is None):
+        step_size = 1e3
+
+    return jsonify(step=float(step_size))
 
 
+@app.route("/<connection>/cryo_pv_meta/<pv>")
+def cryo_pv_meta(connection, pv):
+    return jsonify(metadata=cryo_pv_meta_internal(connection, pv))
 
-
-
+@ignition_route
+def cryo_pv_meta_internal(connection, pv):
+    ret = {}
+    ret["unit"] = "K"
+    ret["yTitle"] = "Temperature"
+    ret["title"] = str(pv)
+    return ret
+ 
