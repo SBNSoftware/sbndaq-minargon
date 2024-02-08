@@ -139,9 +139,9 @@ export class TimeSeriesScatter {
     updateData(buffers) {
       for (var i = 0; i < buffers.length; i++) {
         var buffer = buffers[i];
-        this.data[i].length = 0;
-        this.times[i].length = 0;
-        this.timestamps[i].length = 0;
+        // this.data[i].length = 0;
+        // this.times[i].length = 0;
+        // this.timestamps[i].length = 0;
         for (var j = 0; j < buffer.size; j++) {
           var dat = buffer.get(j);
 
@@ -153,8 +153,8 @@ export class TimeSeriesScatter {
           }
           this.timestamps[i][j] = Math.round(dat[0] / 1000); // ms -> s
           this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)) // ms -> s
-            .tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
-            // .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+            // .tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+            .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
           // this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)).format("YYYY-MM-DD HH:mm:ss");
           this.data[i][j] = dat[1];
          }
@@ -236,13 +236,13 @@ export class TimeSeriesScatter {
         }
         var min_time; var max_time;
         if (min_times.length > 0) {
-          // min_time = moment.unix(Math.min(...min_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
-          min_time = moment.unix(Math.min(...min_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+          min_time = moment.unix(Math.min(...min_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          // min_time = moment.unix(Math.min(...min_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
         }
         else min_time = -1;
         if (max_times.length > 0) { 
-          // max_time = moment.unix(Math.max(...max_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
-          max_time = moment.unix(Math.max(...max_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+          max_time = moment.unix(Math.max(...max_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          // max_time = moment.unix(Math.max(...max_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
         }
         else max_time = 10;
         return [min_time, max_time];
