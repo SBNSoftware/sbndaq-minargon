@@ -50,6 +50,18 @@ class PostgresDataStream(DataStream):
         config = pv_meta_internal(database, self.ID, front_end_abort=True)
         return (dtype, self.ID, database, config)  
 
+class IgnitionDataStream(DataStream):
+    def __init__(self, name, ID):
+        super(IgnitionDataStream, self).__init__(name)
+        self.ID = ID
+
+    def to_config(self):
+        # from .metrics.ignition_api import pv_meta_internal
+        dtype = "ignition"
+        database = "ignition"
+        # config = pv_meta_internal(database, self.ID, front_end_abort=True)
+        return (dtype, self.ID, database)  
+
 class StreamConverter(BaseConverter):
     def to_python(self, value):
         database = value.split(",")[0]
