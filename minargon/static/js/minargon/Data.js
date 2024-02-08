@@ -234,6 +234,7 @@ export class D3DataPoll {
             })
             .catch(function(error) {
               throw_database_error(error, "poll_run");
+              throw_database_error(error, "poll_run_error");
             })
             .finally(function() { clearTimeout(timeout); remove_alert(alertID); });
     }
