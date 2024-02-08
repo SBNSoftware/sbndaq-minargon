@@ -34,6 +34,38 @@ export class EpicsStreamLink {
 
 }
 
+export class IgnitionStreamLink {
+  constructor(root, database, month, pv) {
+    this.root = root;
+    this.database = database;
+//    this.pv = String(pv);
+//    this.month = String(month);
+    this.pv = pv;
+    this.month = month;
+  }
+
+  step_link() {
+    return this.root + "/" + this.database + "/cryo_ps_step/" + this.month + "/" + this.pv;
+  }
+
+  data_link(start, stop, n_data) {
+    return this.root + "/" + this.database + "/cryo_ps_series/" + this.month + "/" + this.pv + '?' + $.param(timeArgs(start, stop, n_data));
+  }
+
+  config_link() {
+    return this.root + "/" + this.database + "/cryo_pv_meta/" + this.pv;
+  }
+
+  accessors() {
+    return [[this.pv]];
+  }
+
+  name() {
+    return this.pv;
+  }
+
+}
+
 
 // DataLink which connects a raw stream name with the backend API for online metrics
 
