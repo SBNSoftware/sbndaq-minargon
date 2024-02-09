@@ -102,7 +102,7 @@ export class FunctorScatter {
         var dat = buffer_A.get(j);
         timestamps_A[j] = Math.round(dat[0] / 1000);
         times_A[j] =  moment.unix(Math.round(dat[0] / 1000))
-            .tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+            .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
         data_A[j] = dat[1];
 
         if (j > 0) {
@@ -119,7 +119,7 @@ export class FunctorScatter {
         var dat = buffer_B.get(j);
         timestamps_B[j] = Math.round(dat[0] / 1000);
         times_B[j] =  moment.unix(Math.round(dat[0] / 1000))
-            .tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+            .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
         data_B[j] = dat[1];
 
         if (j > 0) {
