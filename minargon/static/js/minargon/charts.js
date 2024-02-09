@@ -139,9 +139,9 @@ export class TimeSeriesScatter {
     updateData(buffers) {
       for (var i = 0; i < buffers.length; i++) {
         var buffer = buffers[i];
-        // this.data[i].length = 0;
-        // this.times[i].length = 0;
-        // this.timestamps[i].length = 0;
+        this.data[i].length = 0;
+        this.times[i].length = 0;
+        this.timestamps[i].length = 0;
         for (var j = 0; j < buffer.size; j++) {
           var dat = buffer.get(j);
 

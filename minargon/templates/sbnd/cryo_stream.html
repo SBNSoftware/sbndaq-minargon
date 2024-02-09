@@ -70,7 +70,7 @@
 <script defer type="module">
     import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
     import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
-    {{ run_stream(database, pv, configs, "Magnitude", 450, 550)}} 
+    {{ run_stream(database, pv, configs, "Temperature [K]", 0, 500)}} 
 </script>
 {% endblock %}
 {# ---------------------------------- End ----------------------------------- #}

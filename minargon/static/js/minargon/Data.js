@@ -188,8 +188,9 @@ export class D3DataPoll {
       var timeout = setTimeout(function() { throw_alert(alertText, alertID, true);}, 3000);
       this.data.get_data_promise(start, stop)
         .then(function(value) {
-          throw_alert("INFO -- Executed query: " + String(value.query), "query-info", false);
-          console.log(value);
+          // throw_alert("INFO -- Executed query: " + String(value.query), "query-info", false);
+          // throw_alert(value.values, false);
+          // console.log(value);
           for (var i = 0; i < self.listeners.length; i++) {
             var func = self.listeners[i];
             func(value, false);

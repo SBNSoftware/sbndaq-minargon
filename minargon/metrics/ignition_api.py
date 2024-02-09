@@ -228,9 +228,9 @@ def cryo_ps_series(connection, month, pv):
     args = stream_args(request.args)
     start_t = args['start']    # Start time
     if start_t is None:
-        # return abort(404, "Must specify a start time to a Ignition request") 
-        start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
-        start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
+        return abort(404, "Must specify a start time to a Ignition request") 
+        # start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
+        # start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
     stop_t  = args['stop']     # Stop time
     if (stop_t is None): 
         now = datetime.now(timezone('UTC')) # Get the time now in UTC
@@ -251,8 +251,8 @@ def cryo_ps_series(connection, month, pv):
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp DESC 
-    LIMIT {}""".format(month, pv, start, stop, n_data)
+    ORDER BY d.t_stamp""".format(month, pv, start, stop)
+    # LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
@@ -316,6 +316,7 @@ def cryo_ps_step(connection, month, pv):
     if (step_size is None):
         step_size = 1e3
 
+    step_size = 1e3
     return jsonify(step=float(step_size))
 
 
