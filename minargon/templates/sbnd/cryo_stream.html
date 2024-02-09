@@ -1,78 +1,76 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}Stream: {{ var }}{% endblock %}
+{% block title %}Cryo Stream{% endblock %}
+
+{# Define macro to setup plot #}
+{% macro plot_row() %}
+<!-- Plot and Options -->
+    <div class="row">
+        <!-- Plot -->
+        <div class="col-md-8">
+            <!-- plotly div -->
+            <div style="padding:0" id="plotly-controller"></div>
+        </div>
+        <!-- Options -->
+        <div class="col-md-4 vcenter">
+            <div class="card hcenter">
+                <div class="card-header">Display Options</div>
+                <div class="card-body">
+                    <form class="form" role="form">
+                        {{ stream_options.time_range("start", "end", "toggle") }}
+                        {{ stream_options.download("download") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
 
 {# ------------------------------ Html Body --------------------------------- #}
 {% block body %}
 {{ super() }}
 <!-- Variable Header -->
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
-<h1 style="color:rgb(34, 153, 84  );"><center>{{ var }}</center></h1>
-<hr>
 <div class="container">
-    
-    <!--  Loop over IDs -->
-    {% for ID in IDs %}
-        <!-- Plot and Options -->
-        <div class="row">
-            <!-- Plot -->
-            <div class="col-md-8">
-                <!-- plotly div -->
-                <div style="padding:0" id="plotly-controller-{{ ID }}"></div>
-            </div>
-            
-            <!-- Options -->
-            <div class="col-md-4 vcenter">
-                <div class="card hcenter">
-                    <div class="card-header">Display Options</div>
-                    <div class="card-body">
-                        <form class="form" role="form">
-                            {# {{ stream_options.height_option([25, 40, 60, 80, 100], 25, "form-height") }} #}
-                            {# {{ stream_options.threshold_option("form-range-lo", "form-range-hi") }} #}
-                            {{ stream_options.time_range(starts[loop.index0], ends[loop.index0], toggles[loop.index0]) }}
-                            {{ stream_options.download(downloads[loop.index0]) }}
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Horizontal Break -->
-        <hr>
-    {% endfor %}
-
+   <h1>Cryo Stream</h1>
+   {{ plot_row() }} 
 </div>
 {% endblock %}
 
-{# ------------------------------ Javascript -------------------------------- #}
+{# Define a macro to startup the javascript #}
+{% macro run_stream(database, pv, config, ytitle, lo, hi) %}
+{
+    // Build the link
+    var link = new module.Data.D3DataLink(new module.DataLink.IgnitionStreamLink($SCRIPT_ROOT, "{{ database }}", "{{ month }}", "{{ pv }}" ));
+    
+    // Create controller and pv names
+    var controller  = "plotly-controller";
+    var start_pv    = "#start";
+    var end_pv      = "#end";
+    var toggle_pv   = "#toggle";
+    var download_pv = "#download";
+
+    var config = {{config | tojson}};
+    
+    // Build plotly controller
+    var plotly_controller = new module.PlotlyController(controller, link, [config["yTitle"]], config)
+	.timeRangeController(start_pv, end_pv, toggle_pv)
+	.downloadDataController(download_pv )
+    plotly_controller.setYTitles(["{{ytitle}}"]);
+    // plotly_controller.setYRanges([[{{lo}}, {{hi}}]]);
+    
+    // Start it
+    plotly_controller.run();
+}
+{% endmacro %}
+
+
 {% block script %}
 <script defer type="module">
+    import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
     import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
-    
-    // Get the elements and convert to JSON
-    var pv_ = {{ pv | tojson }};
-//    var configs_ = {{ configs | tojson }};
-
-      // Build the link
-      var link = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, pv_ ));
-
-      // Create controller and id names
-//      var controller  = "plotly-controller-"+IDs_[i];
-//      var start_id    = "#start-"+IDs_[i];
-//      var end_id      = "#end-"+IDs_[i];
-//      var toggle_id   = "#toggle-"+IDs_[i];
-//      var download_id = "#download-"+IDs_[i];
-
-      // Build plotly controller
-//      var plotly_controller = new module.PlotlyController(controller, link, [configs_[i].yTitle], configs_[i])
-//          .timeRangeController(start_id, end_id, toggle_id)
-//          .downloadDataController(download_id )
-
-      // Start it
-      plotly_controller.run();
-    }
-
+    {{ run_stream(database, pv, configs, "Temperature [K]", 0, 500)}} 
 </script>
 {% endblock %}
 {# ---------------------------------- End ----------------------------------- #}

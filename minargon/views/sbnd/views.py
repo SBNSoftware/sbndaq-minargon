@@ -493,9 +493,10 @@ def ping_ignition():
         pong = True
     return jsonify(str(pong))
 
+# @app.route('/cryo_stream')
+# def cryo_stream():
 @app.route('/cryo_stream/<pv>')
 def cryo_stream(pv):
-    
     # Get the list of IDs for the var name
 #    IDs = postgres_api.pv_internal(database, ret_id=var, front_end_abort=True)
 #
@@ -509,8 +510,10 @@ def cryo_stream(pv):
 #        downloads.append("download-"+str(ID))
 #
 #    # print config
-    render_args = {
-      "pv": pv, 
+    database = "sbnd_ignition"
+    month = "02"
+    # render_args = {
+    #   "pv": pv, 
 #      "IDs": IDs,
 #      "configs": configs,
 #      "starts" : starts,
@@ -518,5 +521,15 @@ def cryo_stream(pv):
 #      "toggles" : toggles,
 #      "downloads" : downloads,
 #      "database": database
+    # }
+    # return render_template('common/cryo_stream.html', **render_args)
+    configs = ignition_api.cryo_pv_meta_internal("sbnd_ignition", pv)
+    print(configs)
+
+    render_args = {
+      "configs": configs,
+      "database": database,
+      "month": month,
+      "pv": pv
     }
-    return render_template('common/cryo_stream.html', **render_args)
+    return render_template('sbnd/cryo_stream.html', **render_args)
