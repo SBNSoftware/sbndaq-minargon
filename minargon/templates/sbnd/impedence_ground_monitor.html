@@ -95,8 +95,8 @@
 
 {% block script %}
 <script defer type="module">
-    import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
-    import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
+    import * as functor from "{{ url_for('static', filename='js/minargon/epicsfunctor.js') }}";
+    import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries.js') }}";
     
     {{ run_stream(database, 1, configs[1], "Impedance", "Impedance [ohm]", 400, 550) }}
     {{ run_stream(database, 3, configs[3], "Magnitude", "Magnitude", 450, 550)}} 
