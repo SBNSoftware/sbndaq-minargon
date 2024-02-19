@@ -132,6 +132,13 @@ def timeseries_view(args, instance_name, view_ident="", link_function="undefined
     
     # get the config for this group from redis
     config = online_metrics.get_group_config(db, instance_name, front_end_abort=True)
+    if (instance_name == "SPECTDC_Streams_Timing"):
+        config['instances'] = [b'0']
+        config['metric_list'] = ['oneETRIG']
+        config['metric_config'] = {'oneETRIG': {'name': 'oneETRIG'}}
+        config['streams'] = ['archiving']
+        config['stream_links'] = ['online']
+
 
     if initial_datum is None:
         if len(config["metric_list"]) > 0:
