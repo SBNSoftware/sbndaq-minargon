@@ -367,6 +367,10 @@ def MSUM_snapshot():
     }
     return render_template("sbnd/msum_snapshot.html", **template_args)
 
+@app.route('/Timing')
+def Timing():
+    return timeseries_view(request.args, "SPECTDC_Streams_Timing")
+
 
 @app.route('/purity')
 def purity():
