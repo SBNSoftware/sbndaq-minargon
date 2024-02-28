@@ -467,7 +467,7 @@ def cryo_monitor():
             this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
             try:
                 formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
-                formatted_time = time.strftime("%Y-%m-%d %H:%M")
+                formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
             except:
                 formatted_time = this_dbrow[0][2]
             timestamp_diff = current_timestamp*1000 - this_dbrow[0][2]
