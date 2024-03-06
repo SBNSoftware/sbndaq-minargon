@@ -45,12 +45,12 @@ def TPC_rms_per_plane():
     #titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
 
     tpc_planes = ["West-U", "West-V", "West-Y", "East-U", "East-V", "East-Y"]
-    channels = [range(5632, 7616),
-                range(7616, 9600),
-                range(9600, 11264),
-                range(0, 1984),
-                range(1984, 3968),
-                range(3968, 5632)]
+    channels = [list(range(5632, 7616)),
+                list(range(7616, 9600)),
+                list(range(9600, 11264)),
+                list(range(0, 1984)),
+                list(range(1984, 3968)),
+                list(range(3968, 5632))]
     titles = ["West U", "West V", "West Y", "East U", "East V", "East Y"]
 
     render_args = {
