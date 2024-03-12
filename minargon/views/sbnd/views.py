@@ -60,9 +60,37 @@ def TPC_status():
       "crts": crts,
       "eventmeta_key": False, # TODO
     }
-
     return render_template('sbnd/tpc_status.html', **render_args) 
 
+@app.route('/TPC_rms_per_plane')
+def TPC_rms_per_plane():
+    group_name = "tpc_channel"
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+
+    #tpc_planes = [hardwaredb.HWSelector("tpc_plane", ["tpc", "plane"], p) for p in tpc_planes]
+    #channels = [hardwaredb.select(tpc_plane) for tpc_plane in tpc_planes]
+    #tpc_plane_flanges = [hardwaredb.HWSelector("tpc_plane_flanges", ["tpc", "plane"], p.values) for p in tpc_planes]
+    #flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
+    #titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
+
+    tpc_planes = ["West-U", "West-V", "West-Y", "East-U", "East-V", "East-Y"]
+    channels = [list(range(5632, 7616)),
+                list(range(7616, 9600)),
+                list(range(9600, 11264)),
+                list(range(0, 1984)),
+                list(range(1984, 3968)),
+                list(range(3968, 5632))]
+    titles = ["West U", "West V", "West Y", "East U", "East V", "East Y"]
+
+    render_args = {
+      "config": config,
+      "channels": channels,
+      "metric": "rms",
+      "titles": titles,
+      "tpc_planes": tpc_planes,
+      "eventmeta_key": "eventmetaTPC",
+    }
+    return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
 
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')
@@ -513,7 +541,7 @@ def cryo_monitor():
             this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
             try:
                 formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
-                formatted_time = time.strftime("%Y-%m-%d %H:%M")
+                formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
             except:
                 formatted_time = this_dbrow[0][2]
             timestamp_diff = current_timestamp*1000 - this_dbrow[0][2]

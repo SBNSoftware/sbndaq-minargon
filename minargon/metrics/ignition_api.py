@@ -241,17 +241,18 @@ def cryo_ps_series(connection, month, pv):
     print("Start: ", start)
     print("stop_t: ", stop_t)
     print("Stop: ", stop)
+    current_month = datetime.now().month
     n_data = args['n_data']    # Number of data points
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2024_{:02d} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp""".format(month, pv, start, stop)
+    ORDER BY d.t_stamp""".format(current_month, pv, start, stop)
     # LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
