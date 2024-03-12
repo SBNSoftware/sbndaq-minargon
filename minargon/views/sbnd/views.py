@@ -20,9 +20,38 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
+#Alarm limits
+CRT_BASELINE_ALARM_MIN = 20
+CRT_BASELINE_ALARM_MAX = 330
+
 @app.route('/introduction')
 def introduction():
-    return render_template('sbnd/introduction.html')
+    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+    #crts = config['instances'] #crt board list from fcl file
+
+    crt_maps = {
+        "flat east": [82, 86, 90, 91, 99, 100],
+        "flat north":  [93, 94, 95, 87, 97, 98, 77, 78],
+        "flat southwest": [83, 84, 104, 103, 102, 101],
+        "east wall northtop": [160, 222, 220, 81, 85, 143, 162, 133, 132],
+        "east wall southbottom": [44, 147, 146, 131, 79, 206, 204, 200, 18],
+        "north wall east":  [88, 152, 156, 153, 159, 134, 135, 238, 155],
+        "north wall west": [151, 150, 136, 157, 158, 182, 149, 73, 181]
+    }
+
+    crts = crt_maps.keys() #crt refers to a WALL
+    channels = [crt_maps[k] for k in crts]
+
+    render_args = {
+      "config": config,
+      "channels": channels, #channels mean BOARD here
+      "crts": crts,
+      "baseline_min": CRT_BASELINE_ALARM_MIN,
+      "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "eventmeta_key": False, #Art Event metadata
+    }
+
+    return render_template('sbnd/introduction.html', **render_args)
 
 @app.route('/TPC_status')
 def TPC_status():
@@ -144,11 +173,29 @@ def wireplane_view_dab():
 # CRT
 @app.route('/CRT_status')
 def CRT_status():
-    crts = [79,80]
+    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+    #crts = config['instances'] #crt board list from fcl file
+
+    crt_maps = {
+        "flat east": [82, 86, 90, 91, 99, 100],
+        "flat north":  [93, 94, 95, 87, 97, 98, 77, 78],
+        "flat southwest": [83, 84, 104, 103, 102, 101],
+        "east wall northtop": [160, 222, 220, 81, 85, 143, 162, 133, 132],
+        "east wall southbottom": [44, 147, 146, 131, 79, 206, 204, 200, 18],
+        "north wall east":  [88, 152, 156, 153, 159, 134, 135, 238, 155],
+        "north wall west": [151, 150, 136, 157, 158, 182, 149, 73, 181]
+    }
+
+    crts = crt_maps.keys() #crt refers to a WALL
+    channels = [crt_maps[k] for k in crts]
 
     render_args = {
+      "config": config,
+      "channels": channels, #channels mean BOARD here
       "crts": crts,
-      "eventmeta_key": False, # TODO
+      "baseline_min": CRT_BASELINE_ALARM_MIN,
+      "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "eventmeta_key": False, #Art Event metadata
     }
 
     return render_template('sbnd/crt_status.html', **render_args) 
