@@ -224,8 +224,8 @@ export class FunctorController {
 //    }
 //    else {
 //      // set it ourselves
-    this.scatter.x_range = [moment(this.start).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"), 
-                                moment(this.start).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss")];
+    this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
+                                moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
  //   }
   }
   // ---------------------------------------------------------------------------

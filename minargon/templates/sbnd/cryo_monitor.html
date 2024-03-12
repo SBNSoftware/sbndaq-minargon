@@ -9,7 +9,9 @@ SBND Cryo Monitor
 </h2>
 <br>
 <h5 class="hcenter">
-"DB update" will flash red when the latest timestamp of a PV is older than 3 minutes
+If "DB update" flashes red/yellow, the latest update of the PV is older than 3 minutes 
+<br>
+If "DB update" flashes yellow, it's likely an website issue -- please contact DQM expert
 </h5>
 
 <P>
@@ -158,13 +160,21 @@ $(document).ready(function() {
   var alarm_time = {{row[3]}};
   var pv_dbupdate = {{row[4]}};
   var item_dbupdate = document.getElementById("{{row[0]}}"+"/db_update");
-  if (pv_dbupdate > alarm_time)
+  if (pv_dbupdate < alarm_time)
   {
-    <!-- item_dbupdate.innerHTML = "{{row[4]}}"; -->
-    item_dbupdate.className = "led-red";
+    item_dbupdate.className = "led-green";
   }
   else
-  item_dbupdate.className = "led-green";
+  {
+    if (pv_dbupdate > 86400)
+    {
+      item_dbupdate.className = "led-yellow";
+    }
+    else
+    {
+    item_dbupdate.className = "led-red";
+    }
+  }
 }
 {%endfor%}
 });
