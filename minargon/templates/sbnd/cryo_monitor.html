@@ -8,11 +8,15 @@
 SBND Cryo Monitor
 </h2>
 <br>
-<h5 class="hcenter">
-If "DB update" flashes red/yellow, the latest update of the PV is older than 3 minutes 
+<h6 class="hcenter">
+Cryo DB connection: <span id="ignition-ping"></span>
+</h6>
 <br>
-If "DB update" flashes yellow, it's likely an website issue -- please contact DQM expert
-</h5>
+<h6 class="hcenter">
+If "DB update" flashes red, the latest update of the PV is older than 3 minutes 
+<br>
+If "DB update" flashes yellow, the lastest update of the PV is older than 24 hours (likely a website issue)
+</h6>
 
 <P>
 
@@ -145,8 +149,29 @@ If "DB update" flashes yellow, it's likely an website issue -- please contact DQ
 <script src="{{ url_for('static', filename='js/lights.js') }}"></script>
  
 <!-- Populate above table -->
-<script type="text/javascript">
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+import {throw_database_error} from "{{ url_for('static', filename='js/minargon/error.js') }}";
 $(document).ready(function() {
+
+var poll_ignition_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_ignition");
+poll_ignition_ping.add_callback(function(data) {
+    var spanid = "#ignition-ping";
+    if (data == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("ON");
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("OFF");
+    }
+
+});
+poll_ignition_ping.run();
+
 {%for row in rows%}
 {
   var item_value = document.getElementById("{{row[0]}}"+"/value");
