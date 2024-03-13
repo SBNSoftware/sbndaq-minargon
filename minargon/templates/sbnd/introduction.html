@@ -162,8 +162,7 @@ poll_redis_mem_frac.add_callback(function(data) {
     $(spanid).text((data.val * 100).toFixed(2));
 
     spanid = "#redis-mem";
-    if (data.val > 0.85) {
-      $(spanid).css({"color": "red"});
+    if (data.val > 0.85) {     $(spanid).css({"color": "red"});
     }
     else {
       $(spanid).css({"color": "green"});
@@ -199,6 +198,7 @@ $("#Trigger-Status").css({"color": "orange"});
 
 //CRTs
 
+var baseline_sum = 0;
 var BAD_CRTS = new Set();
 var crt_config = {{config|tojson|safe}};
 
@@ -220,6 +220,7 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
 
       if (baseline_data[i].size > 0) {
         var baseline = baseline_data[i].get_last()[1];
+        baseline_sum += baseline;
       }
 
 
@@ -231,8 +232,11 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
 
     }
 
-
-    if (BAD_CRTS.size > 0) {
+    if (baseline_sum == 0){
+      $("#CRT-Status").text("CRT DAQ disconnected from DQM");
+      $("#CRT-Status").css({"color": "orange"});
+    }
+    else if (BAD_CRTS.size > 0) {
       let bad_crts_str = "NOT OK. Bad channels: " + Array.from(BAD_CRTS).join(" ");
       $("#CRT-Status").html(bad_crts_str);
       $("#CRT-Status").css({"color": "red"});
