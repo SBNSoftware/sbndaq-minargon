@@ -359,9 +359,7 @@ export class PlotlyController {
   setTimeAxes() {
     if (this.is_live) {
       // let plotly set the x-range
-      // this.scatter.x_range = undefined;
-      this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
-                                moment(this.end).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
+      this.scatter.x_range = undefined;
     }
     else {
       // set it ourselves
