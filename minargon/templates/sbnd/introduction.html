@@ -52,6 +52,10 @@ E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
     <th><span id="TPC-Status"> </span></th>
   </tr>
   <tr>
+    <th><a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status:</a></th>
+    <th><span id="DriftHV-Status"> </span></th>
+  </tr>
+  <tr>
     <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
     <th><span id="PMT-Status"> </span></th>
   </tr>
@@ -195,6 +199,11 @@ $("#PMT-Status").css({"color": "orange"});
 
 $("#Trigger-Status").text("need alarm limits");
 $("#Trigger-Status").css({"color": "orange"});
+
+// Drift HV
+$("#DriftHV-Status").text("OK");
+$("#DriftHV-Status").css({"color": "Green"});
+
 
 //CRTs
 

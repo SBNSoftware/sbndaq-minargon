@@ -42,7 +42,7 @@
 {% macro run_stream(database, pv, config, ytitle, lo, hi) %}
 {
     // Build the link
-    var link = new module.Data.D3DataLink(new module.DataLink.IgnitionStreamLink($SCRIPT_ROOT, "{{ database }}", "{{ month }}", "{{ pv }}" ));
+    var link = new module.Data.D3DataLink(new module.DataLink.CryoStreamLink($SCRIPT_ROOT, "{{ database }}", "{{ month }}", "{{ pv }}" ));
     
     // Create controller and pv names
     var controller  = "plotly-controller";

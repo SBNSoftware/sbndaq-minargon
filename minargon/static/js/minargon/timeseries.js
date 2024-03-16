@@ -1,6 +1,6 @@
 import * as Data from "./Data.js";
 import * as DataLink from "./DataLink.js";
-import * as Chart from "./epicscharts.js";
+import * as Chart from "./charts.js";
 import {ScatterYAxis} from "./chart_proto.js";
 
 // re-export DataLink
