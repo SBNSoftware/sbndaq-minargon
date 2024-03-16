@@ -33,18 +33,16 @@
 <!-- Variable Header -->
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
 <div class="container">
-   <h1>Gizmo</h1>
-   {{ plot_row("1") }} 
-   {{ plot_row("3") }} 
-   {{ plot_row("atan-5-4") }}
+   <h1>Drift HV</h1>
+   {{ plot_row("0") }} 
 </div>
 {% endblock %}
 
 {# Define a macro to startup the javascript #}
-{% macro run_stream(database, id, config, title, ytitle, lo, hi) %}
+{% macro run_stream(database, id, pv, config, title, ytitle, lo, hi) %}
 {
     // Build the link
-    var link = new module.Data.D3DataLink(new module.DataLink.DriftHVStreamLink($SCRIPT_ROOT, "{{ database }}", {{id}} ));
+    var link = new module.Data.D3DataLink(new module.DataLink.DriftHVStreamLink($SCRIPT_ROOT, "{{ database }}", "{{pv}}" ));
     
     // Create controller and id names
     var controller  = "plotly-controller-"+{{id}};
@@ -66,13 +64,13 @@
     // Start it
     plotly_controller.run();
 }
+{% endmacro %}
 
 {% block script %}
 <script defer type="module">
-    import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
     import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
     
-    {{ run_stream(database, "scheme", configs[0], "Scheme", "Scheme", 400, 550) }}
+    {{ run_stream(database, 0, "scheme", configs["Scheme"], "scheme", "scheme", 400, 550) }}
 
 </script>
 {% endblock %}

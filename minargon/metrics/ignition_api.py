@@ -177,7 +177,6 @@ def ignition_querymaker(pv, start_t, stop_t, n_data, month):
 def ignition_query(pv, start_t, stop_t, n_data, connection, month):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
-    print("database: ", database)
     query = ignition_querymaker(pv, start_t, stop_t, n_data, month)
     # execute the query, rollback connection if it fails
     try:
@@ -237,9 +236,6 @@ def cryo_ps_series(connection, month, pv):
         stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
     start = str(int(start_t))
     stop = str(int(stop_t))
-    print("start_t: ", start_t)
-    print("Start: ", start)
-    print("stop_t: ", stop_t)
     print("Stop: ", stop)
     current_month = datetime.now().month
     n_data = args['n_data']    # Number of data points
@@ -305,7 +301,6 @@ def cryo_ps_step(connection, month, pv):
 
     # Predeclare variable otherwise it will complain the variable doesnt exist 
     step_size = None
-    print("Data: ", data[len(data)-2])
 
     # Get the sample size from last two values in query
     try:
@@ -333,9 +328,9 @@ def cryo_pv_meta_internal(connection, pv):
     ret["title"] = str(pv)
     return ret
  
-@app.route("/<connection>/drifthv_ps_series/<month>/<pv>")
+@app.route("/<connection>/drifthv_ps_series/<pv>")
 @ignition_route
-def drifthv_ps_series(connection, month, pv):
+def drifthv_ps_series(connection, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
@@ -351,10 +346,6 @@ def drifthv_ps_series(connection, month, pv):
         stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
     start = str(int(start_t))
     stop = str(int(stop_t))
-    print("start_t: ", start_t)
-    print("Start: ", start)
-    print("stop_t: ", stop_t)
-    print("Stop: ", stop)
     current_month = datetime.now().month
     n_data = args['n_data']    # Number of data points
     n_data = 1000
@@ -367,7 +358,7 @@ def drifthv_ps_series(connection, month, pv):
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp""".format(current_month, pv, start, stop)
+    ORDER BY d.t_stamp DESC""".format(current_month, pv, start, stop)
     # LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
@@ -383,9 +374,10 @@ def drifthv_ps_series(connection, month, pv):
     return jsonify(values=ret, query=query)
 
 # Gets the sample step size in unix miliseconds
-@app.route("/<connection>/drifthv_ps_step/<month>/<pv>")
+@app.route("/<connection>/drifthv_ps_step/<pv>")
 @ignition_route
-def drifthv_ps_step(connection, month, pv):
+def drifthv_ps_step(connection, pv):
+    current_month = datetime.now().month
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
@@ -405,7 +397,7 @@ def drifthv_ps_step(connection, month, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2024_{:02d} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
@@ -413,7 +405,9 @@ def drifthv_ps_step(connection, month, pv):
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
     ORDER BY d.t_stamp DESC 
-    LIMIT {}""".format(month, pv, start, stop, n_data)
+    LIMIT {}""".format(current_month, pv, start, stop, n_data)
+
+    print("QUERY", query)
 
     cursor.execute(query)
     data = cursor.fetchall()
@@ -421,8 +415,6 @@ def drifthv_ps_step(connection, month, pv):
 
     # Predeclare variable otherwise it will complain the variable doesnt exist 
     step_size = None
-    print("Data: ", data[len(data)-2])
-
     # Get the sample size from last two values in query
     try:
         step_size = data[len(data) - 2][2] - data[len(data) - 1][2] 

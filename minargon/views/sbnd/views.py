@@ -469,7 +469,7 @@ def Impedence_Ground_Monitor():
       "configs": configs,
       "database": database
     }
-    print(render_args)
+    print("render_args", render_args)
     return render_template('sbnd/impedence_ground_monitor.html', **render_args)
 
 @app.route('/Impedence_Ground_Monitor_CSU')
@@ -615,17 +615,15 @@ def cryo_stream(pv):
 @app.route('/DriftHV_Heinzinger')
 def DriftHV_Heinzinger():
     database = "sbnd_ignition"
-    month = "02"
     pv_lists = ["Scheme", "VSP", "VMon", "ISP", "IMon"] 
     configs = {}
     for pv in pv_lists:
-      configs[pv] = ignition_api.cryo_pv_meta_internal(database, pv)
-
+      configs[pv] = {'unit': '', 'yTitle':'', 'title':''}
     render_args = {
       "configs": configs,
       "database": database,
-      "month": month,
       "pv": pv_lists
     }
+    print("render_args", render_args)
     return render_template('sbnd/drifthv_heinzinger.html', **render_args)
 
