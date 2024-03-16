@@ -34,7 +34,7 @@ export class EpicsStreamLink {
 
 }
 
-export class IgnitionStreamLink {
+export class CryoStreamLink {
   constructor(root, database, month, pv) {
     this.root = root;
     this.database = database;
@@ -54,6 +54,37 @@ export class IgnitionStreamLink {
 
   config_link() {
     return this.root + "/" + this.database + "/cryo_pv_meta/" + this.pv;
+  }
+
+  accessors() {
+    return [[this.pv]];
+  }
+
+  name() {
+    return this.pv;
+  }
+
+}
+
+export class DriftHVStreamLink {
+  constructor(root, database, pv) {
+    this.root = root;
+    this.database = database;
+//    this.pv = String(pv);
+//    this.month = String(month);
+    this.pv = pv;
+  }
+
+  step_link() {
+    return this.root + "/" + this.database + "/drifthv_ps_step/" + this.pv;
+  }
+
+  data_link(start, stop, n_data) {
+    return this.root + "/" + this.database + "/drifthv_ps_series/" + this.pv + '?' + $.param(timeArgs(start, stop, n_data));
+  }
+
+  config_link() {
+    return this.root + "/" + this.database + "/drifthv_pv_meta/" + this.pv;
   }
 
   accessors() {
