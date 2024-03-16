@@ -333,3 +333,119 @@ def cryo_pv_meta_internal(connection, pv):
     ret["title"] = str(pv)
     return ret
  
+@app.route("/<connection>/drifthv_ps_series/<month>/<pv>")
+@ignition_route
+def drifthv_ps_series(connection, month, pv):
+    cursor = connection[0].cursor()
+    database = connection[1]["name"]
+
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        return abort(404, "Must specify a start time to a Ignition request") 
+        # start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
+        # start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
+    stop_t  = args['stop']     # Stop time
+    if (stop_t is None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+    start = str(int(start_t))
+    stop = str(int(stop_t))
+    print("start_t: ", start_t)
+    print("Start: ", start)
+    print("stop_t: ", stop_t)
+    print("Stop: ", stop)
+    current_month = datetime.now().month
+    n_data = args['n_data']    # Number of data points
+    n_data = 1000
+
+    query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
+    FROM cryo_prd.sqlt_data_1_2024_{:02d} d, cryo_prd.sqlth_te s
+    WHERE d.tagid=s.id
+    AND s.tagpath LIKE '%sbnd%'
+    AND s.tagpath LIKE '%drifthv%'
+    AND s.tagpath LIKE '%{}%'
+    AND s.tagpath LIKE '%value%'
+    AND d.t_stamp BETWEEN {} AND {}
+    ORDER BY d.t_stamp""".format(current_month, pv, start, stop)
+    # LIMIT {}""".format(month, pv, start, stop, n_data)
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall()
+    cursor.close()
+    formatted = []
+    for row in dbrows:
+        # formatted.append((row[0], row[1], row[2]))
+        formatted.append((float(row[2]), float(row[1])))
+    ret = {
+        pv: formatted
+    }
+    return jsonify(values=ret, query=query)
+
+# Gets the sample step size in unix miliseconds
+@app.route("/<connection>/drifthv_ps_step/<month>/<pv>")
+@ignition_route
+def drifthv_ps_step(connection, month, pv):
+    cursor = connection[0].cursor()
+    database = connection[1]["name"]
+
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        # return abort(404, "Must specify a start time to a Ignition request") 
+        start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
+        start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
+    stop_t  = args['stop']     # Stop time
+    if (stop_t is None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+    start = str(int(start_t))
+    stop = str(int(stop_t))
+    n_data = args['n_data']    # Number of data points
+    n_data = 1000
+
+    query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
+    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    WHERE d.tagid=s.id
+    AND s.tagpath LIKE '%sbnd%'
+    AND s.tagpath LIKE '%drifthv%'
+    AND s.tagpath LIKE '%{}%'
+    AND s.tagpath LIKE '%value%'
+    AND d.t_stamp BETWEEN {} AND {}
+    ORDER BY d.t_stamp DESC 
+    LIMIT {}""".format(month, pv, start, stop, n_data)
+
+    cursor.execute(query)
+    data = cursor.fetchall()
+    cursor.close()
+
+    # Predeclare variable otherwise it will complain the variable doesnt exist 
+    step_size = None
+    print("Data: ", data[len(data)-2])
+
+    # Get the sample size from last two values in query
+    try:
+        step_size = data[len(data) - 2][2] - data[len(data) - 1][2] 
+    except:
+        print("Error in step size")
+
+    # Catch for if no step size exists
+    if (step_size is None):
+        step_size = 1e3
+
+    step_size = 1e3
+    return jsonify(step=float(step_size))
+
+
+@app.route("/<connection>/drifthv_pv_meta/<pv>")
+def drifthv_pv_meta(connection, pv):
+    return jsonify(metadata=drifthv_pv_meta_internal(connection, pv))
+
+@ignition_route
+def drifthv_pv_meta_internal(connection, pv):
+    ret = {}
+    ret["unit"] = "K"
+    ret["yTitle"] = "Temperature"
+    ret["title"] = str(pv)
+    return ret
+ 

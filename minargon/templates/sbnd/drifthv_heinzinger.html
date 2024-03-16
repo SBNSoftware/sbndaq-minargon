@@ -1,16 +1,16 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}Cryo Stream{% endblock %}
+{% block title %}Drift HV Heinzinger{% endblock %}
 
 {# Define macro to setup plot #}
-{% macro plot_row() %}
-<!-- Plot and Options -->
+{% macro plot_row(id) %}
+    <!-- Plot and Options -->
     <div class="row">
         <!-- Plot -->
         <div class="col-md-8">
             <!-- plotly div -->
-            <div style="padding:0" id="plotly-controller"></div>
+            <div style="padding:0" id="plotly-controller-{{ id }}"></div>
         </div>
         <!-- Options -->
         <div class="col-md-4 vcenter">
@@ -18,8 +18,8 @@
                 <div class="card-header">Display Options</div>
                 <div class="card-body">
                     <form class="form" role="form">
-                        {{ stream_options.time_range("start", "end", "toggle") }}
-                        {{ stream_options.download("download") }}
+                        {{ stream_options.time_range("start-"+ id, "end-"+id, "toggle-"+id) }}
+                        {{ stream_options.download("download-"+id) }}
                     </form>
                 </div>
             </div>
@@ -33,44 +33,47 @@
 <!-- Variable Header -->
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
 <div class="container">
-   <h1>Cryo Stream</h1>
-   {{ plot_row() }} 
+   <h1>Gizmo</h1>
+   {{ plot_row("1") }} 
+   {{ plot_row("3") }} 
+   {{ plot_row("atan-5-4") }}
 </div>
 {% endblock %}
 
 {# Define a macro to startup the javascript #}
-{% macro run_stream(database, pv, config, ytitle, lo, hi) %}
+{% macro run_stream(database, id, config, title, ytitle, lo, hi) %}
 {
     // Build the link
-    var link = new module.Data.D3DataLink(new module.DataLink.CryoStreamLink($SCRIPT_ROOT, "{{ database }}", "{{ month }}", "{{ pv }}" ));
+    var link = new module.Data.D3DataLink(new module.DataLink.DriftHVStreamLink($SCRIPT_ROOT, "{{ database }}", {{id}} ));
     
-    // Create controller and pv names
-    var controller  = "plotly-controller";
-    var start_pv    = "#start";
-    var end_pv      = "#end";
-    var toggle_pv   = "#toggle";
-    var download_pv = "#download";
+    // Create controller and id names
+    var controller  = "plotly-controller-"+{{id}};
+    var start_id    = "#start-"+{{id}};
+    var end_id      = "#end-"+{{id}};
+    var toggle_id   = "#toggle-"+{{id}};
+    var download_id = "#download-"+{{id}};
 
     var config = {{config | tojson}};
     
     // Build plotly controller
     var plotly_controller = new module.PlotlyController(controller, link, [config["yTitle"]], config)
-	.timeRangeController(start_pv, end_pv, toggle_pv)
-	.downloadDataController(download_pv )
+	.timeRangeController(start_id, end_id, toggle_id)
+	.downloadDataController(download_id )
     plotly_controller.setYTitles(["{{ytitle}}"]);
+    plotly_controller.setPlotTitle("{{title}}");
     // plotly_controller.setYRanges([[{{lo}}, {{hi}}]]);
     
     // Start it
     plotly_controller.run();
 }
-{% endmacro %}
-
 
 {% block script %}
 <script defer type="module">
     import * as functor from "{{ url_for('static', filename='js/minargon/functor.js') }}";
     import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
-    {{ run_stream(database, pv, configs, "Temperature [K]", 0, 500)}} 
+    
+    {{ run_stream(database, "scheme", configs[0], "Scheme", "Scheme", 400, 550) }}
+
 </script>
 {% endblock %}
 {# ---------------------------------- End ----------------------------------- #}
