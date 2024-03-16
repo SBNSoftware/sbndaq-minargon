@@ -292,7 +292,7 @@ def cryo_ps_step(connection, month, pv):
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp DESC 
+    ORDER BY d.t_stamp 
     LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
@@ -358,7 +358,7 @@ def drifthv_ps_series(connection, pv):
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp DESC""".format(current_month, pv, start, stop)
+    ORDER BY d.t_stamp""".format(current_month, pv, start, stop)
     # LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
@@ -404,7 +404,7 @@ def drifthv_ps_step(connection, pv):
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp DESC 
+    ORDER BY d.t_stamp 
     LIMIT {}""".format(current_month, pv, start, stop, n_data)
 
     print("QUERY", query)

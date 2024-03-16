@@ -21,11 +21,30 @@ from minargon.metrics import online_metrics
 from six.moves import range
 
 #Alarm limits
+DRIFTHV_ALARM_LIMITS = {"scheme": [-0.5, 1.5], 
+                "vsp": [-0.5, 1.5], 
+                "vmon": [0., 0.3], 
+                "isp": [0.1, 1.5], 
+                "imon": [0.1, 0.5]}
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
 @app.route('/introduction')
 def introduction():
+    # drift hv
+    database = "sbnd_ignition"
+    pv_lists = ["scheme", "vsp", "vmon", "isp", "imon"] 
+    current_time = datetime.now()
+    this_month = current_time.month
+    month_2digit = str(this_month).zfill(2)
+    drifthv_status = []
+    for pv in pv_lists:
+        this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
+        status = 0
+        if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
+            status = 1
+        drifthv_status.append(status)
+
     config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
     #crts = config['instances'] #crt board list from fcl file
 
@@ -49,6 +68,7 @@ def introduction():
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "eventmeta_key": False, #Art Event metadata
+      "drifthv_status": drifthv_status
     }
 
     return render_template('sbnd/introduction.html', **render_args)
@@ -615,14 +635,37 @@ def cryo_stream(pv):
 @app.route('/DriftHV_Heinzinger')
 def DriftHV_Heinzinger():
     database = "sbnd_ignition"
-    pv_lists = ["Scheme", "VSP", "VMon", "ISP", "IMon"] 
+    pv_lists = ["scheme", "vsp", "vmon", "isp", "imon"] 
     configs = {}
     for pv in pv_lists:
-      configs[pv] = {'unit': '', 'yTitle':'', 'title':''}
+        configs[pv] = {'unit': '', 'yTitle':'', 'title':'', 'warningRange': DRIFTHV_ALARM_LIMITS[pv]}
+
+    dbrows = []
+    current_time = datetime.now()
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+    for pv in pv_lists:
+        this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
+        try:
+            formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
+            formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
+        except:
+            formatted_time = this_dbrow[0][2]
+        timestamp_diff = current_timestamp*1000 - this_dbrow[0][2]
+        alarm_time = 180
+        status = 0
+        if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
+            status = 1
+        this_dbrow = [(pv, this_dbrow[0][1], formatted_time, status, alarm_time, timestamp_diff/1000)]
+        dbrows = dbrows + this_dbrow
+
     render_args = {
+      "rows": dbrows,
       "configs": configs,
       "database": database,
-      "pv": pv_lists
+      "pv": pv_lists,
+      "alarm_limits": DRIFTHV_ALARM_LIMITS
     }
     print("render_args", render_args)
     return render_template('sbnd/drifthv_heinzinger.html', **render_args)

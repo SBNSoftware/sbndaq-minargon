@@ -66,7 +66,7 @@ export class CryoStreamLink {
 
 }
 
-export class HStreamLink {
+export class DriftHVStreamLink {
   constructor(root, database, pv) {
     this.root = root;
     this.database = database;
