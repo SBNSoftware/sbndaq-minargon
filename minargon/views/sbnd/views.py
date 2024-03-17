@@ -21,11 +21,11 @@ from minargon.metrics import online_metrics
 from six.moves import range
 
 #Alarm limits
-DRIFTHV_ALARM_LIMITS = {"scheme": [-0.5, 1.5], 
-                "vsp": [-0.5, 1.5], 
-                "vmon": [0., 0.3], 
-                "isp": [0.1, 1.5], 
-                "imon": [0.1, 0.5]}
+DRIFTHV_ALARM_LIMITS = {"scheme": [-1, 2], 
+                "vsp": [-0.05, 25.05], 
+                "vmon": [0., 25.25], 
+                "isp": [0, 25], 
+                "imon": [0, 25]}
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
@@ -37,13 +37,12 @@ def introduction():
     current_time = datetime.now()
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
-    drifthv_status = []
-    for pv in pv_lists:
+    bad_drifthv_pvs = []
+    for idx_pv, pv in enumerate(pv_lists):
         this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
-        status = 0
         if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
-            status = 1
-        drifthv_status.append(status)
+            continue
+        bad_drifthv_pvs.append(pv)
 
     config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
     #crts = config['instances'] #crt board list from fcl file
@@ -68,7 +67,7 @@ def introduction():
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "eventmeta_key": False, #Art Event metadata
-      "drifthv_status": drifthv_status
+      "bad_drifthv_pvs": bad_drifthv_pvs
     }
 
     return render_template('sbnd/introduction.html', **render_args)

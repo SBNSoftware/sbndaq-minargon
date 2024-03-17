@@ -1,10 +1,7 @@
 {% import "stream_options_macro.html" | common as stream_options %}
-
 {% extends "layout.html" | front_ended %}
 {% block title %}Drift HV Heinzinger{% endblock %}
 
-
-{# Define macro to setup scatter plots #}
 {% macro plot_row(id) %}
     <!-- Plot and Options -->
     <div class="row">
@@ -31,53 +28,49 @@
 {# ------------------------------ Html Body --------------------------------- #}
 {% block body %}
 {{ super() }}
-
-<h1 class="hcenter">Drift HV</h1>
 <br>
-
 <div class="row">
-<div class="hcenter col-lg-8 col-md-4" style="padding:0">
+<div class="hcenter col-lg-8 col-md-3" style="padding:0">
 <h4 class="hcenter">Status</h4>
 <TABLE>
 <TR><TH>PV</TH>
-<TH><a>Scheme</a></TH>
-<TH><a>VSP</a></TH>
 <TH><a>VMon</a></TH>
-<TH><a>ISP</a></TH>
 <TH><a>IMon</a></TH>
+<TH><a>VSP</a></TH>
+<TH><a>ISP</a></TH>
+<TH><a>Scheme</a></TH>
 <TR align="center"><TD>value</TD>
-<TD style="text-align:center"><a id="scheme/value"></a></TD>
-<TD style="text-align:center"><a id="vsp/value"></a></TD>
 <TD style="text-align:center"><a id="vmon/value"></a></TD>
-<TD style="text-align:center"><a id="isp/value"></a></TD>
 <TD style="text-align:center"><a id="imon/value"></a></TD>
+<TD style="text-align:center"><a id="vsp/value"></a></TD>
+<TD style="text-align:center"><a id="isp/value"></a></TD>
+<TD style="text-align:center"><a id="scheme/value"></a></TD>
 <TR align="center"><TD>timestamp</TD>
-<TD style="text-align:center"><a id="scheme/last_read_time"></a></TD>
-<TD style="text-align:center"><a id="vsp/last_read_time"></a></TD>
 <TD style="text-align:center"><a id="vmon/last_read_time"></a></TD>
-<TD style="text-align:center"><a id="isp/last_read_time"></a></TD>
 <TD style="text-align:center"><a id="imon/last_read_time"></a></TD>
+<TD style="text-align:center"><a id="vsp/last_read_time"></a></TD>
+<TD style="text-align:center"><a id="isp/last_read_time"></a></TD>
+<TD style="text-align:center"><a id="scheme/last_read_time"></a></TD>
 <TR align="center"><TD>status</TD>
-<TD style="text-align:center"><a id="scheme/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
-<TD style="text-align:center"><a id="vsp/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 <TD style="text-align:center"><a id="vmon/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
-<TD style="text-align:center"><a id="isp/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 <TD style="text-align:center"><a id="imon/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="vsp/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="isp/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="scheme/status">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
 </TABLE>
 </div>
 </div>
-
 <br>
 <br>
 
 <!-- Variable Header -->
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
 <div class="container">
-   {{ plot_row("0") }} 
-   {{ plot_row("1") }} 
    {{ plot_row("2") }} 
-   {{ plot_row("3") }} 
    {{ plot_row("4") }} 
+   {{ plot_row("1") }} 
+   {{ plot_row("3") }} 
+   {{ plot_row("0") }} 
 </div>
 {% endblock %}
 
@@ -142,7 +135,39 @@ import {throw_database_error} from "{{ url_for('static', filename='js/minargon/e
 import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
 
 
-    $(document).ready(function() {
+$(document).ready(function() {
+    var vmon_value = document.getElementById("vmon/value");
+    vmon_value.innerHTML = {{rows[2][1]}}+" [kV]";
+    var vmon_tstamp = document.getElementById("vmon/last_read_time");
+    vmon_tstamp.innerHTML = "{{rows[2][2]}}";
+    var vmon_status = document.getElementById("vmon/status");
+    if ({{rows[2][3]}} == 1) { vmon_status.className = "led-green"; }
+    else { vmon_status.className = "led-red"; }
+    
+    var imon_value = document.getElementById("imon/value");
+    imon_value.innerHTML = {{rows[4][1]}} +" [uA]";
+    var imon_tstamp = document.getElementById("imon/last_read_time");
+    imon_tstamp.innerHTML = "{{rows[4][2]}}";
+    var imon_status = document.getElementById("imon/status");
+    if ({{rows[4][3]}} == 1) { imon_status.className = "led-green"; }
+    else { imon_status.className = "led-red"; }
+
+    var vsp_value = document.getElementById("vsp/value");
+    vsp_value.innerHTML = {{rows[1][1]}} +" [kV]";
+    var vsp_tstamp = document.getElementById("vsp/last_read_time");
+    vsp_tstamp.innerHTML = "{{rows[1][2]}}";
+    var vsp_status = document.getElementById("vsp/status");
+    if ({{rows[1][3]}} == 1) { vsp_status.className = "led-green"; }
+    else { vsp_status.className = "led-red"; }
+
+    var isp_value = document.getElementById("isp/value");
+    isp_value.innerHTML = {{rows[3][1]}} +" [uA]";
+    var isp_tstamp = document.getElementById("isp/last_read_time");
+    isp_tstamp.innerHTML = "{{rows[3][2]}}";
+    var isp_status = document.getElementById("isp/status");
+    if ({{rows[3][3]}} == 1) { isp_status.className = "led-green"; }
+    else { isp_status.className = "led-red"; }
+    
     var item_value = document.getElementById("scheme/value");
     item_value.innerHTML = {{rows[0][1]}};
     var item_tstamp = document.getElementById("scheme/last_read_time");
@@ -152,45 +177,22 @@ import * as module from "{{ url_for('static', filename='js/minargon/timeseries.j
     if ({{rows[0][3]}} == 1) { item_status.className = "led-green"; }
     else { item_status.className = "led-red"; }
 
-    var vsp_value = document.getElementById("vsp/value");
-    vsp_value.innerHTML = {{rows[1][1]}};
-    var vsp_tstamp = document.getElementById("vsp/last_read_time");
-    vsp_tstamp.innerHTML = "{{rows[1][2]}}";
-    var vsp_status = document.getElementById("vsp/status");
-    if ({{rows[1][3]}} == 1) { vsp_status.className = "led-green"; }
-    else { vsp_status.className = "led-red"; }
-
-    var vmon_value = document.getElementById("vmon/value");
-    vmon_value.innerHTML = {{rows[2][1]}};
-    var vmon_tstamp = document.getElementById("vmon/last_read_time");
-    vmon_tstamp.innerHTML = "{{rows[2][2]}}";
-    var vmon_status = document.getElementById("vmon/status");
-    if ({{rows[2][3]}} == 1) { vmon_status.className = "led-green"; }
-    else { vmon_status.className = "led-red"; }
-    
-    var isp_value = document.getElementById("isp/value");
-    isp_value.innerHTML = {{rows[3][1]}};
-    var isp_tstamp = document.getElementById("isp/last_read_time");
-    isp_tstamp.innerHTML = "{{rows[3][2]}}";
-    var isp_status = document.getElementById("isp/status");
-    if ({{rows[3][3]}} == 1) { isp_status.className = "led-green"; }
-    else { isp_status.className = "led-red"; }
-    
-    var imon_value = document.getElementById("imon/value");
-    imon_value.innerHTML = {{rows[4][1]}};
-    var imon_tstamp = document.getElementById("imon/last_read_time");
-    imon_tstamp.innerHTML = "{{rows[4][2]}}";
-    var imon_status = document.getElementById("imon/status");
-    if ({{rows[4][3]}} == 1) { imon_status.className = "led-green"; }
-    else { imon_status.className = "led-red"; }
-    });
-
+    {{ run_stream(database, 2, "vmon", configs["vmon"], "VMon", "VMon [kV]", 0, 100) }}
+    {{ run_stream(database, 4, "imon", configs["imon"], "IMon", "IMon [uA]", 0, 100) }}
+    {{ run_stream(database, 1, "vsp", configs["vsp"], "VSP", "VSP [kV]", 0, 100) }}
+    {{ run_stream(database, 3, "isp", configs["isp"], "ISP", "ISP [uA]", 0, 100) }}
     {{ run_stream(database, 0, "scheme", configs["scheme"], "Scheme", "Scheme", 0, 100) }}
-    {{ run_stream(database, 1, "vsp", configs["vsp"], "VSP", "VSP", 0, 100) }}
-    {{ run_stream(database, 2, "vmon", configs["vmon"], "VMon", "VMon", 0, 100) }}
-    {{ run_stream(database, 3, "isp", configs["isp"], "ISP", "ISP", 0, 100) }}
-    {{ run_stream(database, 4, "imon", configs["imon"], "IMon", "IMon", 0, 100) }}
+});
 
+document.addEventListener("DOMContentLoaded", function(event) { 
+    var scrollpos = localStorage.getItem('scrollpos');
+    if (scrollpos) window.scrollTo(0, scrollpos);
+});
+
+window.onbeforeunload = function(e) {
+    localStorage.setItem('scrollpos', window.scrollY);
+};
 </script>
+<meta http-equiv="refresh" content="30">
 {% endblock %}
 {# ---------------------------------- End ----------------------------------- #}
