@@ -201,9 +201,20 @@ $("#Trigger-Status").text("need alarm limits");
 $("#Trigger-Status").css({"color": "orange"});
 
 // Drift HV
-$("#DriftHV-Status").text("OK");
-$("#DriftHV-Status").css({"color": "Green"});
-
+var BAD_DRIFTHVS = new Set();
+var bad_drifthv_pvs = {{bad_drifthv_pvs|tojson|safe}};
+{% for pv in bad_drifthv_pvs %}
+{ BAD_DRIFTHVS.add("{{pv}}"); }
+{% endfor %}
+if (BAD_DRIFTHVS.size > 0) {
+  let bad_drifthvs_str = "NOT OK. Bad PVs: " + Array.from(BAD_DRIFTHVS).join(" ");
+  $("#DriftHV-Status").html(bad_drifthvs_str);
+  $("#DriftHV-Status").css({"color": "red"});
+}
+else {
+  $("#DriftHV-Status").text("OK");
+  $("#DriftHV-Status").css({"color": "green"});
+}
 
 //CRTs
 
@@ -257,10 +268,8 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
   }
 ]);
 crt_buffer.start();
-
 }
 {% endfor %}
-
-
 </script> 
+<meta http-equiv="refresh" content="30">
 {%endblock%}
