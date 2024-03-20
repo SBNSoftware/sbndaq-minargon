@@ -186,10 +186,10 @@
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>DCS (expert)<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('pvTree', 'EPICS PV Browser', connection='sbnd_epics') }}
-                  {{ nav_link('epics_last_value', 'DAQ Rack Status', connection='sbnd_epics', group='daq') }}
-                  {{ nav_link('epics_last_value', 'TPC Readout Crates', connection='sbnd_epics', group='slowcontrols') }}
-                  {{ nav_link('epics_last_value', 'TPC Readout Power', connection='sbnd_epics', group='tpc_readout_power') }}
-				  {{ nav_link('epics_last_value', 'Arapuca Power', connection='sbnd_epics', group='arapuca_hv') }}
+                  {{ nav_link('epics_last_value', 'DAQ Rack Status', connection='sbnd_epics', groups='daq') }}
+                  {{ nav_link('epics_last_value', 'Electronics Racks', connection='sbnd_epics', groups='slowcontrols-daq') }}
+                  {{ nav_link('epics_last_value', 'TPC Readout Power', connection='sbnd_epics', groups='tpc_readout_power') }}
+                  {{ nav_link('epics_last_value', 'Arapuca Power', connection='sbnd_epics', groups='arapuca_hv') }}
                   {{ nav_link('es_alarms', 'Slow Control Alarms')}}
                 </ul>
               </li>

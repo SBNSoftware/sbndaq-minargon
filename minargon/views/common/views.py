@@ -64,12 +64,14 @@ def icarus_pmthv(connection, side):
     dbrows = postgres_api.get_icarus_pmthv(connection, side, front_end_abort=True)
     return render_template('icarus/pmthv.html', rows=dbrows, connection=connection, side=side)
 
-@app.route('/<connection>/epics_last_value/<group>')
-def epics_last_value(connection,group):
-    dbrows = postgres_api.get_epics_last_value(connection,group)     
+@app.route('/<connection>/epics_last_value/<groups>')
+def epics_last_value(connection,groups):
+    dbrows = []
+    for group in groups.split("-"):
+        dbrows += postgres_api.get_epics_last_value(connection,group)     
 
     try:
-        return render_template('common/'+group+'.html',rows=dbrows)
+        return render_template('common/'+groups+'.html',rows=dbrows)
     except jinja2.exceptions.TemplateNotFound:
         abort(404)
 
