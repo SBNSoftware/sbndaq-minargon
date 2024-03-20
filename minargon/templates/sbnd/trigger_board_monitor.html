@@ -1,0 +1,243 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}Trigger Board Monitor{% endblock %}
+
+{# Define macro to setup plot #}
+{% macro plot_row(id) %}
+    <!-- Plot and Options -->
+    <div class="row">
+        <!-- Plot -->
+        <div class="col-md-8">
+            <!-- plotly div -->
+            <div style="padding:0" id="plotly-controller-{{ id }}"></div>
+        </div>
+        <!-- Options -->
+        <div class="col-md-4 vcenter">
+            <div class="card hcenter">
+                <div class="card-header">Display Options</div>
+                <div class="card-body">
+                    <form class="form" role="form">
+                        {{ stream_options.time_range("start-"+ id, "end-"+id, "toggle-"+id) }}
+                        {{ stream_options.download("download-"+id) }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{# ------------------------------ Html Body --------------------------------- #}
+{% block body %}
+{{ super() }}
+<br>
+<div class="row">
+<div class="hcenter col-lg-8 col-md-3" style="padding:0">
+<h1>Trigger Board Monitor</h1>
+<br>
+<h4 class="hcenter">Current Status (reload page to keep fresh!)</h4>
+<br>
+<TABLE>
+<TR><TH></TH><TH>RPS Status</TH><TH>Interlock</TH><TH>Temperature &deg;C</TH><TH>Fan Speed 0</TH><TH>Fan Speed 1</TH><TH>Fan Speed 2</TH><TH>PDU Current</TH><TH>PDU Temp. &deg;C</TH></TR>
+
+<TR><TD>MTCA</TD>
+    <TD style="text-align:center", rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7327') }}" id="sbnd_pds_readout_rack1/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9116') }}" id="sbnd_pds_readout_rack1_mtca/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9115') }}" id="sbnd_pds_readout_rack1_mtca/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9104') }}" id="sbnd_pds_readout_rack1/pdu_current"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9105') }}" id="sbnd_pds_readout_rack1/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>PTB</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9118') }}" id="sbnd_pds_readout_rack1_ptb/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9117') }}" id="sbnd_pds_readout_rack1_ptb/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>VME01</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9120') }}" id="sbnd_pds_readout_rack1_vme01/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7331') }}" id="sbnd_pds_readout_rack1_vme01/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7328') }}" id="sbnd_pds_readout_rack1_vme01/fan_speed0"></a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7329') }}" id="sbnd_pds_readout_rack1_vme01/fan_speed1"></a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7330') }}" id="sbnd_pds_readout_rack1_vme01/fan_speed2"></a></td>
+</TR>
+
+</TABLE>
+</div>
+</div>
+<br>
+<br>
+
+<!-- Variable Header -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
+<div class="container">
+  <h4 class="hcenter">History</h4>
+   {{ plot_row("7327") }} 
+   {{ plot_row("9104") }} 
+   {{ plot_row("9105") }} 
+   {{ plot_row("9115") }} 
+   {{ plot_row("9116") }} 
+   {{ plot_row("9117") }} 
+   {{ plot_row("9118") }} 
+   {{ plot_row("7331") }} 
+   {{ plot_row("9120") }} 
+   {{ plot_row("7328") }} 
+   {{ plot_row("7329") }} 
+   {{ plot_row("7330") }} 
+</div>
+{% endblock %}
+
+{# Define a macro to startup the javascript #}
+{% macro run_stream(database, id, config, title, ytitle, lo, hi) %}
+{
+    // Build the link
+    var link = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, "{{ database }}", {{id}} ));
+    
+    // Create controller and id names
+    var controller  = "plotly-controller-"+{{id}};
+    var start_id    = "#start-"+{{id}};
+    var end_id      = "#end-"+{{id}};
+    var toggle_id   = "#toggle-"+{{id}};
+    var download_id = "#download-"+{{id}};
+
+    var config = {{config | tojson}};
+    
+    // Build plotly controller
+    var plotly_controller = new module.PlotlyController(controller, link, [config["yTitle"]], config)
+	.timeRangeController(start_id, end_id, toggle_id)
+	.downloadDataController(download_id )
+    plotly_controller.setYTitles(["{{ytitle}}"]);
+    plotly_controller.setPlotTitle("{{title}}");
+    // plotly_controller.setYRanges([[{{lo}}, {{hi}}]]);
+    
+    // Start it
+    plotly_controller.run();
+}
+{% endmacro %}
+
+{% macro run_atan(database, IDA, IDB, configA, configB, title, ytitle, plotid, lo, hi) %}
+{
+  var linkA = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{database}}', "{{IDA}}"));
+  var configA = {{configA|tojson}};
+  var nameA = "{{configA['yTitle']}}";
+
+  var linkB = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, '{{database}}', "{{IDB}}"));
+  var configB = {{configB|tojson}};
+  var nameB = "{{configB['yTitle']}}";
+
+  // build the plot controller
+  var plot_controller = new functor.FunctorController("plotly-controller-{{plotid}}", linkA, nameA, linkB, nameB, 
+    functor.available_functions[4], functor.available_function_names[4])
+    .timeRangeController("#start-{{plotid}}", "#end-{{plotid}}", "#toggle-{{plotid}}")
+    .downloadDataController("#download-{{plotid}}");
+
+  plot_controller.setYTitle("{{ytitle}}");
+  plot_controller.setPlotTitle("{{title}}");
+  // plot_controller.setYRange({{lo}}, {{hi}});
+   
+  // start it
+  plot_controller.run();
+}
+{% endmacro %}
+
+{% block style %}
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
+{% endblock %}
+
+<!---->
+{% block script %}
+
+<script defer type="module">
+    import * as functor from "{{ url_for('static', filename='js/minargon/epicsfunctor.js') }}";
+    import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries.js') }}";
+    
+    // lo and hi are not working, y axis alawys fits to min/max(data, alarm limits)
+    {{ run_stream(database, 7327, configs[7327], "RPS Status", "Status", -1, 2) }}
+    {{ run_stream(database, 9104, configs[9104], "PDU Current", "Current A", -5, 40) }}
+    {{ run_stream(database, 9105, configs[9105], "PDU Temperature", "Temp degC", 0, 40) }}
+    {{ run_stream(database, 9115, configs[9115], "MTCA Temperature", "Temp degC", 0, 40) }}
+    {{ run_stream(database, 9116, configs[9116], "MTCA Interlock", "Status", -1, 2) }}
+    {{ run_stream(database, 9117, configs[9117], "PTB Temperature", "Temp degC", 0, 40) }}
+    {{ run_stream(database, 9118, configs[9118], "PTB Interlock", "Status", -1, 2) }}
+    {{ run_stream(database, 7331, configs[7331], "VME01 Temperature", "Temp degC", 0, 40) }}
+    {{ run_stream(database, 9120, configs[9120], "VME01 Interlock", "Status", -1, 2) }}
+    {{ run_stream(database, 7328, configs[7328], "VME01 Fan Speed 0", "RPM", 2000, 5000) }}
+    {{ run_stream(database, 7329, configs[7329], "VME01 Fan Speed 1", "RPM", 2000, 5000) }}
+    {{ run_stream(database, 7330, configs[7330], "VME01 Fan Speed 2", "RPM", 2000, 5000) }}
+
+</script>
+
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+ 
+<!-- Populate above table -->
+<script type="text/javascript">
+$(document).ready(function() {
+var dt_format_options = options = {
+  year: 'numeric', month: 'numeric', day: 'numeric',
+  hour: 'numeric', minute: 'numeric', second: 'numeric',
+  hour12: false,
+};
+
+{%for row in rows%}
+{
+  var item = document.getElementById("{{row[0]}}");
+  var pvName = "{{row[0]}}";
+
+  if (item) 
+  {
+    if ( pvName.endsWith("interlock") || pvName.endsWith("rps_status"))
+    {
+      var pvValue = "{{row[3]}}";
+      if ( pvValue =="1.000" || pvValue == "1" )
+      {
+         item.className = "led-green";
+      }
+      else
+      {
+         item.className = "led-red";
+      }
+    }
+    else if ( pvName.endsWith("timestamp"))
+    {
+      var format = Intl.DateTimeFormat("en-US", dt_format_options);
+      var zeit = new Date("{{row[3]}}"*1000);
+      item.innerHTML = format.format(zeit);
+    }
+    else
+    {
+      item.innerHTML = "{{row[3]}}";
+    }
+  }
+}
+{%endfor%}		
+});
+</script>
+
+<!-- <meta http-equiv="refresh" content="30"> -->
+<!-- </html> -->
+{%endblock%}
+
+{# ---------------------------------- End ----------------------------------- #}
