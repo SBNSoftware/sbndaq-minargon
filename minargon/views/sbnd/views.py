@@ -21,11 +21,13 @@ from minargon.metrics import online_metrics
 from six.moves import range
 
 #Alarm limits
-DRIFTHV_ALARM_LIMITS = {"scheme": [-1, 2], 
-                "vsp": [-0.05, 25.05], 
-                "vmon": [0., 25.25], 
-                "isp": [0, 25], 
-                "imon": [0, 25]}
+DRIFTHV_ALARM_LIMITS = {
+                "vmon": [-0.05, 0.05], 
+                "imon": [-0.05, 0.5],
+                "vsp": [-0.05, 0.05], 
+                "isp": [-0.05, 0.55], 
+                "scheme": [-1, 2]
+                }
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
@@ -107,7 +109,7 @@ def TPC_rms_per_plane():
       "metric": "rms",
       "titles": titles,
       "tpc_planes": tpc_planes,
-      "eventmeta_key": "eventmetaTPC",
+      "eventmeta_key": "eventmeta",
     }
     return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
 
