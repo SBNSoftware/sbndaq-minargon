@@ -18,6 +18,8 @@
 </div>
 {% endif %}
 
+<br>
+
 {% for tpc_plane in tpc_planes %}
 <div class="row">
 <h3>
@@ -35,19 +37,18 @@
 {% endfor %}
 
 <div class="row">
-<div class="col-lg-4 col-md-8 col-sm-12 vcenter hcenter">
-        <div class="card">
-            <div class="card-header">Display Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.metric_option(config["metric_config"], metric, "form-metric") }}
-                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
-                    {{ stream_options.threshold_option("form-range-lo", "form-range-hi") }}
-                    {{ stream_options.warning_option("form-warning-range-lo", "form-warning-range-hi") }}
-                </form>
-            </div>  
-         </div>    
+<div class="col-lg-8 col-md-8 col-sm-12 vcenter hcenter">
+    <div class="card">
+        <div class="card-header">Display Options</div>
+        <div class="card-body">
+            <form class="form" role="form">
+                {{ stream_options.metric_option(config["metric_config"], metric, "form-metric") }}
+                {{ stream_options.scatter_threshold_option("form-scatter-range-lo", "form-scatter-range-hi") }}
+            </form>
+        </div>  
+     </div>    
 </div>
+
 
 {%endblock%}
 {% block script %}
@@ -70,13 +71,12 @@ var config_controller = new Config.GroupConfigController(config, undefined, ["{{
 
 // add the scatter plot
 var scatter = config_controller.addGroupDataScatterController("scatter-{{tpc_plane | join('-') | replace(' ', '_')}}", "{{title}}")
-  .rangeController("#form-range-lo", "#form-range-hi", false)
-  .warningrangeController("#form-warning-range-lo", "#form-warning-range-hi")
+  .rangeController("#form-scatter-range-lo", "#form-scatter-range-hi", false)
   .set();
 
 // and histogram
 var histo = config_controller.addGroupDataHistoController("histogram-{{tpc_plane | join('-') | replace(' ', '_')}}", "{{title}}")
-  .rangeController("#form-range-lo", "#form-range-hi", false)
+//  .rangeController("#form-hist-range-lo", "#form-hist-range-hi", false)
   .set();
 
 // start the controllers
