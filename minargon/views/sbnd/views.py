@@ -107,7 +107,7 @@ def TPC_rms_per_plane():
       "metric": "rms",
       "titles": titles,
       "tpc_planes": tpc_planes,
-      "eventmeta_key": "eventmetaTPC",
+      "eventmeta_key": "eventmeta",
     }
     return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
 
