@@ -363,8 +363,8 @@ export class PlotlyController {
     }
     else {
       // set it ourselves
-      this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
-                                moment(this.end).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
+      this.scatter.x_range = [moment(this.start).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"), 
+                                moment(this.end).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss")];
     }
   }
   // ---------------------------------------------------------------------------
@@ -716,10 +716,10 @@ function create_cubism_context(target, step) {
 	.ticks(12)
 	.orient(d)
         .focusFormat(function(date) { 
-          return moment(date).tz("America/Chicago").format('HH:mm:ss') + " CST/GMT-6"; 
+          return moment(date).tz("Greenwich").format('HH:mm:ss') + " CST/GMT-6"; 
         })
         .tickFormat(function(date) {
-          return context.scale.tickFormat()(new Date(date.toLocaleString("en-US", {timeZone: "America/Chicago"})));
+          return context.scale.tickFormat()(new Date(date.toLocaleString("en-US", {timeZone: "Greenwich"})));
         });
      d3.select(this).call(axis);
   });
@@ -738,8 +738,8 @@ function create_cubism_context(target, step) {
 function build_data_link(ind, buffer) {
   return function(start, stop, step, callback) {
     // setup timestamps
-    var tz_start = moment.tz(start, "America/Chicago");
-    var tz_stop = moment.tz(stop, "America/Chicago");  
+    var tz_start = moment.tz(start, "Greenwich");
+    var tz_stop = moment.tz(stop, "Greenwich");  
     var ts_start = tz_start.unix() * 1000;
     var ts_stop = tz_stop.unix() * 1000;
     var n_data = (ts_stop - ts_start) / step;

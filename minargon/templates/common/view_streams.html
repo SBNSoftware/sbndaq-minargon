@@ -112,7 +112,7 @@
 {%endblock%}
 {% block script %}
 <script defer type="module">
-import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
+import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries.js') }}";
 import {available_functions, available_function_names} from "{{ url_for('static', filename='js/minargon/functor.js') }}";
 
 // Add the options to the select
