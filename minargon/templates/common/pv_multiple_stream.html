@@ -48,7 +48,7 @@
 {# ------------------------------ Javascript -------------------------------- #}
 {% block script %}
 <script defer type="module">
-    import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
+    import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries.js') }}";
     
     // Get the elements and convert to JSON
     var IDs_ = {{ IDs | tojson }};
