@@ -671,3 +671,29 @@ def DriftHV_Heinzinger():
     print("render_args", render_args)
     return render_template('sbnd/drifthv_heinzinger.html', **render_args)
 
+@app.route('/Trigger_Board_Monitor')
+def Trigger_Board_Monitor():
+    # 7327      - sbnd_pds_readout_rack1/rps_status
+    # 73[28-30] - sbnd_pds_readout_rack1_vme01/fan_speed[0-2]
+    # 7331      - sbnd_pds_readout_rack1_vme01/temperature
+    # 910[4,5]  - sbnd_pds_readout_rack1/pdu_[current,temperature]
+    # 911[5,6]  - sbnd_pds_readout_rack1_mtca/[temperature,interlock]
+    # 911[7.8]  - sbnd_pds_readout_rack1_ptb/[temperature,interlock]
+    # 9120      - sbnd_pds_readout_rack1_vme01/interlock
+    database = "sbnd_epics"
+    connection = "sbnd_epics"
+    IDs = [7327, 7328, 7329, 7330, 7331, 9104, 9105, 9115, 9116, 9117, 9118, 9120]
+
+    configs = {}
+    rows = []
+    for i in IDs:
+      configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+      rows += postgres_api.get_epics_last_value_pv(connection, i)
+
+    render_args = {
+      "configs": configs,
+      "database": database,
+      "rows": rows
+    }
+    return render_template('sbnd/trigger_board_monitor.html', **render_args)
+
