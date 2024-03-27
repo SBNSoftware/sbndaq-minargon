@@ -19,6 +19,9 @@ import six
 from six.moves import range
 from six.moves import zip
 
+import io
+from PIL import Image
+
 # error class for connecting to redis
 class RedisConnectionError:
     def __init__(self, front_end_abort):
@@ -907,3 +910,24 @@ def get_group_config_internal(rconnect, rname, group_name):
         config["stream_links"].append("metric_archiving")
 
     return config
+
+@app.route('/<rconnect>/eventdisplay')
+@redis_route
+def eventdisplay(rconnect):
+    keys_list = rconnect.keys("*evd*")  # "*" means all keys, you can use pattern matching here
+    keys_list.sort()
+    print("Sorted list of keys:")
+    bad_keys = []
+    for key in keys_list:
+        print(key)
+        image_data = rconnect.get(key)
+        image = Image.open(io.BytesIO(image_data))
+        key_string = key.decode("utf-8")
+        try:
+            image.save('minargon/static/images/event_displays/{}.png'.format(key_string))
+        except:
+            bad_keys.append(key)
+    if len(bad_keys) > 0:
+        print("Bad keys:")
+        return jsonify(success=False, bad_keys=bad_keys)
+    return jsonify(success=True)
