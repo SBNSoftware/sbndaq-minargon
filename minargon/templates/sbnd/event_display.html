@@ -1,0 +1,112 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}Introduction to Minargon{% endblock %}
+{% block body %}
+{{ super() }}
+<!-- <div class="col-md-8 hcenter"> -->
+<div class="container">
+
+<div class="row">
+<h1>Event Display <span id="redis-ping"></span> </h1> 
+</div>
+<br>
+
+<div class="row">
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+<img src="{{ url_for('static', filename='images/event_displays/tpc0:plane0:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane0:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+<img src="{{ url_for('static', filename='images/event_displays/tpc0:plane1:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane1:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane2:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane2:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+</div>
+
+{%endblock%}
+
+
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+import {throw_database_error} from "{{ url_for('static', filename='js/minargon/error.js') }}";
+
+// monitor DAQConsumer
+var timeout = 5 * 1000; // ms
+
+function time_delta(earlier) {
+  var now = moment(new Date).tz("America/Chicago").unix() * 1000. /* s -> ms */;
+  return Math.max(0, now - earlier);
+}
+
+function is_recent(time, time_is_ok) {
+  return time_delta(time) < time_is_ok;
+}
+
+
+function update_is_recent(data_link, spanid, time_is_ok) {
+  data_link.get_data(function(err, data) {
+    if (err) {
+      throw_database_error(err, "update_heartbeat: " + data_link.accessors()[0][0]);
+      return;
+    }
+
+    var datalist = data.values[data_link.accessors()[0][0]];
+    var recent;
+    var delta_str = "";
+    
+    if (datalist.length == 0) {
+      recent = false;
+    }
+    else {
+      recent = is_recent(datalist[datalist.length-1][0], time_is_ok);
+      var delta = (time_delta(datalist[datalist.length-1][0]) / 1000.).toFixed(0);
+      delta_str = " (" + String(delta) + "s)";
+    }
+    if (recent) {
+      $(spanid).text("ON" + delta_str);
+      $(spanid).css({"color": "green"});
+    }
+    else {
+      $(spanid).text("OFF" + delta_str);
+      $(spanid).css({"color": "red"});
+    }
+    setTimeout(function() {update_is_recent(data_link, spanid, time_is_ok);}, timeout);
+  });
+
+}
+
+var poll_redis_ping = new Poll.Poll($SCRIPT_ROOT + "/online/ping_redis");
+poll_redis_ping.add_callback(function(data) {
+    var spanid = "#redis-ping";
+    if (data == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("ON");
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("OFF");
+    }
+});
+poll_redis_ping.run();
+
+// ping for new images
+var poll_redis_img_ping = new Poll.Poll($SCRIPT_ROOT + "/online/eventdisplay");
+poll_redis_img_ping.add_callback(function(data) {
+});
+poll_redis_img_ping.run();
+
+</script> 
+<meta http-equiv="refresh" content="100">
+{%endblock%}
