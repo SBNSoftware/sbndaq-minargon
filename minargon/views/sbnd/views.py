@@ -113,6 +113,19 @@ def TPC_rms_per_plane():
     }
     return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
 
+@app.route('/event_display')
+def event_display():
+    render_args = {
+      "keys": ["tpc1:plane0:evd:image",
+               "tpc0:plane1:evd:image",
+               "tpc_plane:test:evd:image",
+               "tpc1:plane1:evd:image",
+               "tpc1:plane2:evd:image",
+               "tpc0:plane2:evd:image",
+               "tpc0:plane0:evd:image"]
+    }
+    return render_template('sbnd/event_display.html', **render_args) 
+
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')
 def noise_snapshot():
