@@ -11,23 +11,38 @@
 <br>
 
 <div class="row">
-<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-<img src="{{ url_for('static', filename='images/event_displays/tpc0:plane0:evd:image.png') }}" width="400" height="250" alt="">
+<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[0] }}">
 </div>
-<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane0:evd:image.png') }}" width="400" height="250" alt="">
 </div>
-<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-<img src="{{ url_for('static', filename='images/event_displays/tpc0:plane1:evd:image.png') }}" width="400" height="250" alt="">
+
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[1] }}">
 </div>
-<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane1:evd:image.png') }}" width="400" height="250" alt="">
 </div>
-<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane2:evd:image.png') }}" width="400" height="250" alt="">
+
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[2] }}">
 </div>
-<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-<img src="{{ url_for('static', filename='images/event_displays/tpc1:plane2:evd:image.png') }}" width="400" height="250" alt="">
+</div>
+
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[3] }}">
+</div>
+</div>
+
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[4] }}">
+</div>
+</div>
+
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[5] }}">
 </div>
 </div>
 
@@ -102,10 +117,6 @@ poll_redis_ping.add_callback(function(data) {
 poll_redis_ping.run();
 
 // ping for new images
-var poll_redis_img_ping = new Poll.Poll($SCRIPT_ROOT + "/online/eventdisplay");
-poll_redis_img_ping.add_callback(function(data) {
-});
-poll_redis_img_ping.run();
 
 </script> 
 <meta http-equiv="refresh" content="100">

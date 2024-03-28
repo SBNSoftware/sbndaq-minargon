@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from minargon import app
-from flask import jsonify, Response, request, abort
+from flask import jsonify, Response, request, abort, render_template
 from redis import Redis
 import redis.exceptions
 import simplejson as json
@@ -9,6 +9,7 @@ from functools import wraps
 from datetime import datetime, timedelta # needed for testing only
 import calendar
 from pytz import timezone
+from pdf2image import convert_from_bytes
 
 from . import redis_api
 from . import postgres_api
@@ -21,6 +22,7 @@ from six.moves import zip
 
 import io
 from PIL import Image
+import base64
 
 # error class for connecting to redis
 class RedisConnectionError:
@@ -911,23 +913,12 @@ def get_group_config_internal(rconnect, rname, group_name):
 
     return config
 
-@app.route('/<rconnect>/eventdisplay')
+@app.route('/<rconnect>/eventdisplay/<key>')
 @redis_route
-def eventdisplay(rconnect):
-    keys_list = rconnect.keys("*evd*")  # "*" means all keys, you can use pattern matching here
-    keys_list.sort()
-    print("Sorted list of keys:")
-    bad_keys = []
-    for key in keys_list:
-        print(key)
-        image_data = rconnect.get(key)
-        image = Image.open(io.BytesIO(image_data))
-        key_string = key.decode("utf-8")
-        try:
-            image.save('minargon/static/images/event_displays/{}.png'.format(key_string))
-        except:
-            bad_keys.append(key)
-    if len(bad_keys) > 0:
-        print("Bad keys:")
-        return jsonify(success=False, bad_keys=bad_keys)
-    return jsonify(success=True)
+def eventdisplay(rconnect, key):
+    image_data = rconnect.get(key)
+    image = Image.open(io.BytesIO(image_data))
+    temp_data = io.BytesIO()
+    image.save(temp_data, "JPEG")
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    return encoded_img_data.decode('utf-8')
