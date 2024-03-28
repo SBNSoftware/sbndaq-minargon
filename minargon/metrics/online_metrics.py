@@ -9,7 +9,6 @@ from functools import wraps
 from datetime import datetime, timedelta # needed for testing only
 import calendar
 from pytz import timezone
-from pdf2image import convert_from_bytes
 
 from . import redis_api
 from . import postgres_api
