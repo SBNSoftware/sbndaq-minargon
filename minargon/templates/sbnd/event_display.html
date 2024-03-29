@@ -11,38 +11,40 @@
 <br>
 
 <div class="row">
-<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
-<img id="picture" src="data:image/jpeg;base64,{{ imgs[0] }}">
+    <h6>current time: {{current_time}} </h6> 
+</div>
+<div class="row">
+    <h6>current time in UTC: {{current_time_in_utc}} </h6> 
+</div>
+<br>
+
+<div class="row">
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[0] }}" width="500" height="300">
+</div>
+
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[1] }}" width="500" height="300">
 </div>
 </div>
 
 <div class="row">
-<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
-<img id="picture" src="data:image/jpeg;base64,{{ imgs[1] }}">
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[2] }}" width="500" height="300">
+</div>
+
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[3] }}" width="500" height="300">
 </div>
 </div>
 
 <div class="row">
-<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
-<img id="picture" src="data:image/jpeg;base64,{{ imgs[2] }}">
-</div>
-</div>
-
-<div class="row">
-<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
-<img id="picture" src="data:image/jpeg;base64,{{ imgs[3] }}">
-</div>
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[4] }}" width="500" height="300">
 </div>
 
-<div class="row">
-<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
-<img id="picture" src="data:image/jpeg;base64,{{ imgs[4] }}">
-</div>
-</div>
-
-<div class="row">
-<div class="col-lg-3 col-md-3 col-sm-6" style="padding:0">
-<img id="picture" src="data:image/jpeg;base64,{{ imgs[5] }}">
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[5] }}" width="500" height="300">
 </div>
 </div>
 
@@ -119,5 +121,5 @@ poll_redis_ping.run();
 // ping for new images
 
 </script> 
-<meta http-equiv="refresh" content="100">
+<meta http-equiv="refresh" content="10">
 {%endblock%}
