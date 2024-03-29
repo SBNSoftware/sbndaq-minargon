@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from minargon import app
-from flask import jsonify, Response, request, abort
+from flask import jsonify, Response, request, abort, render_template
 from redis import Redis
 import redis.exceptions
 import simplejson as json
@@ -18,6 +18,10 @@ from minargon.hardwaredb import select
 import six
 from six.moves import range
 from six.moves import zip
+
+import io
+from PIL import Image
+import base64
 
 # error class for connecting to redis
 class RedisConnectionError:
@@ -907,3 +911,13 @@ def get_group_config_internal(rconnect, rname, group_name):
         config["stream_links"].append("metric_archiving")
 
     return config
+
+@app.route('/<rconnect>/eventdisplay/<key>')
+@redis_route
+def eventdisplay(rconnect, key):
+    image_data = rconnect.get(key)
+    image = Image.open(io.BytesIO(image_data))
+    temp_data = io.BytesIO()
+    image.save(temp_data, "JPEG")
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    return encoded_img_data.decode('utf-8')

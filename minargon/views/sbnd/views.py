@@ -3,6 +3,7 @@ from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
 import time
 from datetime import datetime
+import pytz
 from os.path import join
 import simplejson as json
 import os
@@ -112,6 +113,31 @@ def TPC_rms_per_plane():
       "eventmeta_key": "eventmeta",
     }
     return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
+
+@app.route('/event_display')
+def event_display():
+    keys = ["tpc0:plane0:evd:image",
+             "tpc1:plane0:evd:image",
+             "tpc0:plane1:evd:image",
+             "tpc1:plane1:evd:image",
+             "tpc0:plane2:evd:image",
+             "tpc1:plane2:evd:image",]
+    images = []
+    for k in keys:
+        image = online_metrics.eventdisplay("online", k)
+        images.append(image)
+
+    current_time = datetime.now()
+    current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    current_time_in_utc = datetime.now(pytz.utc)
+    current_time_in_utc = current_time_in_utc.strftime("%Y-%m-%d %H:%M:%S")
+
+    args = {
+        "imgs": images,
+        "current_time": current_time,
+        "current_time_in_utc": current_time_in_utc
+    }
+    return render_template('sbnd/event_display.html', **args)
 
 # snapshot of noise (currently just correlation matrix)
 @app.route('/noise_snapshot')
