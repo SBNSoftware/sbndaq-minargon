@@ -191,14 +191,11 @@ poll_ignition_ping.add_callback(function(data) {
 poll_ignition_ping.run();
 
 // Placeholders for detector status until we have a real status criteria
-$("#TPC-Status").text("need alarm limits");
-$("#TPC-Status").css({"color": "orange"});
-
 $("#PMT-Status").text("need alarm limits");
-$("#PMT-Status").css({"color": "orange"});
+$("#PMT-Status").css({"color": "black"});
 
 $("#Trigger-Status").text("need alarm limits");
-$("#Trigger-Status").css({"color": "orange"});
+$("#Trigger-Status").css({"color": "black"});
 
 // Drift HV
 var BAD_DRIFTHVS = new Set();
@@ -214,6 +211,66 @@ if (BAD_DRIFTHVS.size > 0) {
 else {
   $("#DriftHV-Status").text("OK");
   $("#DriftHV-Status").css({"color": "green"});
+}
+
+// TPCs
+var disconnected_daq = true;
+var BAD_PLANES = new Set();
+
+var tpc_config = {{tpc_config|tojson|safe}};
+
+{% for tpc_plane in tpc_planes %}
+  {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
+  {% set tpc_title = tpc_titles[loop.index0] %}
+{
+
+var tpc_config_controller = new Config.GroupConfigController(tpc_config, undefined, "rms", {{tpc_channels}}, 0, 25, "", undefined, undefined);
+
+var tpc_data_link = tpc_config_controller.data_link(0, ["rms"], undefined, 1);
+var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60*1000 /* 1 minute */);
+var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
+function(data) {
+      var rms_data = data;
+      var plane_has_bad_rms = false;
+
+      for (var i = 0; i < rms_data.length; i++) {
+        var rms = rms_data[i].get_last()[1];
+        
+        if (rms > 0) {
+          disconnected_daq = false; // If any channel has an RMS over 0, set disconnected_daq to false
+        }
+        
+        // Skip the max rms requirement for noisy wires on west induction planes
+        var skipRequirement = false;
+        if (('{{ tpc_plane }}' === "West-U" && i === 1531) || ('{{ tpc_plane }}' === "West-V" && i === 756)) {
+            skipRequirement = true;
+        }
+
+        if (!skipRequirement && rms > {{ tpc_rms_max }}) {
+            plane_has_bad_rms = true;
+            BAD_PLANES.add(String(tpc_planes[loop.index])); // Add the plane to the set of bad planes
+            break; // Exit the loop early since we found a bad RMS value
+        }
+      }
+
+}
+]);
+tpc_buffer.start();
+}
+{% endfor %}
+
+if (disconnected_daq) {
+  $("#TPC-Status").text("TPC DAQ disconnected from DQM");
+  $("#TPC-Status").css({"color": "orange"});
+
+} else if (BAD_PLANES.size > 0) {
+  let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_rms_per_plane')}}>Bad Planes: " + Array.from(BAD_PLANES).join(" ");
+  $("#TPC-Status").html(bad_planes_str);
+  $("#TPC-Status").css({"color": "red"});
+
+} else {
+  $("#TPC-Status").text("OK");
+  $("#TPC-Status").css({"color": "green"});
 }
 
 //CRTs

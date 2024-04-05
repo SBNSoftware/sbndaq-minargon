@@ -32,6 +32,8 @@ DRIFTHV_ALARM_LIMITS = {
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
+TPC_RMS_ALARM_MAX = 10
+
 @app.route('/introduction')
 def introduction():
     # drift hv
@@ -63,12 +65,29 @@ def introduction():
     crts = crt_maps.keys() #crt refers to a WALL
     channels = [crt_maps[k] for k in crts]
 
+    # tpcs
+    group_name = "tpc_channel"
+    tpc_config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+    tpc_channels = [list(range(5632, 7616)),
+                list(range(7616, 9600)),
+                list(range(9600, 11264)),
+                list(range(0, 1984)),
+                list(range(1984, 3968)),
+                list(range(3968, 5632))]
+    tpc_planes = ["West-U", "West-V", "West-Y", "East-U", "East-V", "East-Y"]
+    tpc_titles = ["West U", "West V", "West Y", "East U", "East V", "East Y"]
+
     render_args = {
       "config": config,
       "channels": channels, #channels mean BOARD here
       "crts": crts,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "tpc_config": tpc_config,
+      "tpc_channels": tpc_channels,
+      "tpc_titles": tpc_titles,
+      "tpc_planes": tpc_planes,
+      "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": False, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs
     }
