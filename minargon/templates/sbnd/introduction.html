@@ -48,23 +48,23 @@ E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
   <h3 class="hcenter">Detector Status</h3>
   <table class="table table-striped">
   <tr>
-    <th><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
     <th><span id="TPC-Status"> </span></th>
   </tr>
   <tr>
-    <th><a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status:</a></th>
+    <th style="width: 31%;"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status:</a></th>
     <th><span id="DriftHV-Status"> </span></th>
   </tr>
   <tr>
-    <th><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
     <th><span id="PMT-Status"> </span></th>
   </tr>
   <tr>
-    <th><a href="{{url_for('CRT_status')}}">CRT Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('CRT_status')}}">CRT Status:</a></th>
     <th><span id="CRT-Status"> </span></th>
   </tr>
   <tr>
-    <th><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
     <th><span id="Trigger-Status"> </span></th>
   </tr>
   </table>
@@ -214,64 +214,76 @@ else {
 }
 
 // TPCs
-var disconnected_daq = true;
+var DISCONNECTED_PLANE = new Set();
 var BAD_PLANES = new Set();
 
-var tpc_config = {{tpc_config|tojson|safe}};
-
 {% for tpc_plane in tpc_planes %}
-  {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
-  {% set tpc_title = tpc_titles[loop.index0] %}
+{% set tpc_channels = tpc_channels[loop.index0]|tojson %}
+{% set tpc_title = tpc_titles[loop.index0] %}
 {
-
-var tpc_config_controller = new Config.GroupConfigController(tpc_config, undefined, "rms", {{tpc_channels}}, 0, 25, "", undefined, undefined);
-
+  
+var tpc_config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{tpc_channels}}, 0, 25, "", undefined, "");
 var tpc_data_link = tpc_config_controller.data_link(0, ["rms"], undefined, 1);
-var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60*1000 /* 1 minute */);
+var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60000);
 var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
-function(data) {
-      var rms_data = data;
-      var plane_has_bad_rms = false;
+  function(data) {
+    var rms_data = data;
 
-      for (var i = 0; i < rms_data.length; i++) {
-        var rms = rms_data[i].get_last()[1];
-        
-        if (rms > 0) {
-          disconnected_daq = false; // If any channel has an RMS over 0, set disconnected_daq to false
-        }
-        
-        // Skip the max rms requirement for noisy wires on west induction planes
-        var skipRequirement = false;
-        if (('{{ tpc_plane }}' === "West-U" && i === 1531) || ('{{ tpc_plane }}' === "West-V" && i === 756)) {
-            skipRequirement = true;
-        }
+    var plane_has_data = false;
+    var plane_has_bad_rms = false;
 
-        if (!skipRequirement && rms > {{ tpc_rms_max }}) {
-            plane_has_bad_rms = true;
-            BAD_PLANES.add(String(tpc_planes[loop.index])); // Add the plane to the set of bad planes
-            break; // Exit the loop early since we found a bad RMS value
-        }
+    for (var i = 0; i < rms_data.length; i++) {
+      var rms = rms_data[i].get_last()[1];
+      
+      if (rms > 0) {
+        plane_has_data = true; // Count channels with no data
+      }
+      
+      // Skip the max rms requirement for noisy wires on west induction planes
+      var skip = false;
+      if (('{{ tpc_plane }}' === 'West-U' && i === 1531) || ('{{ tpc_plane }}' === 'West-V' && i === 756)) {
+          skip = true;
       }
 
-}
+      if (!skip && rms > {{ tpc_rms_max }}) {
+          plane_has_bad_rms = true;
+          break; // Exit the loop early since we found a bad RMS value
+      }
+    }
+
+    if (!plane_has_data) {
+      DISCONNECTED_PLANE.add('{{ tpc_title }}');
+    }
+    else {
+      DISCONNECTED_PLANE.delete('{{ tpc_title }}');
+    }
+
+    if (plane_has_bad_rms) {
+      BAD_PLANES.add('{{ tpc_title }}');
+    }
+    else {
+      BAD_PLANES.delete('{{ tpc_title }}');
+    }
+
+    if (DISCONNECTED_PLANE.size == 6) {
+    $("#TPC-Status").text("TPC DAQ disconnected from DQM");
+    $("#TPC-Status").css({"color": "orange"});
+
+  } else if (BAD_PLANES.size > 0) {
+    let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_rms_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
+    $("#TPC-Status").html(bad_planes_str);
+    $("#TPC-Status").css({"color": "red"});
+
+  } else {
+    $("#TPC-Status").text("OK");
+    $("#TPC-Status").css({"color": "green"});
+  }  
+  }
 ]);
 tpc_buffer.start();
 }
 {% endfor %}
 
-if (disconnected_daq) {
-  $("#TPC-Status").text("TPC DAQ disconnected from DQM");
-  $("#TPC-Status").css({"color": "orange"});
-
-} else if (BAD_PLANES.size > 0) {
-  let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_rms_per_plane')}}>Bad Planes: " + Array.from(BAD_PLANES).join(" ");
-  $("#TPC-Status").html(bad_planes_str);
-  $("#TPC-Status").css({"color": "red"});
-
-} else {
-  $("#TPC-Status").text("OK");
-  $("#TPC-Status").css({"color": "green"});
-}
 
 //CRTs
 
