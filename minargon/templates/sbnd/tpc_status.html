@@ -112,7 +112,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         for (var i = 0; i < rms_data.length; i++) {
             var rms = rms_data[i].get_last()[1];
             if (rms > {{ tpc_rms_max }}) {
-                var color = rms < 100. ? "yellow" : "red";
+                var color = rms < 150. ? "yellow" : "red";
                 table.innerHTML += `
                     <tr>
                         <td>${ch[i]}</td>
