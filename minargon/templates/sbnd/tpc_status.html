@@ -1,3 +1,4 @@
+{% import "stream_options_macro.html" | common as stream_options %}
 {% extends "layout.html" | front_ended %}
 {% block title %}TPC Status{% endblock %}
 {% block body %}
@@ -9,34 +10,135 @@
 </h1>
 </div>
 
+{% if eventmeta_key %}
 <div class="row">
 <table class="hcenter" style="width: 50%; text-align: center;">
   <tr>
-    <th>Run: ? </th>
-    <th>Subrun: ? </th>
-    <th>Event: ? </th>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+    <th>Timestamp: <span id="timestamp"></span></th>
   </tr>
 </table>
 </div>
+{% endif %}
 
 <div class="row">
-<h4 class="hcenter">
-Limits on [?] are between [?] and [?]
+<h4 class="hcenter" style="color:red; margin-top: 20px;">
+Upper limit on RMS set at {{ tpc_rms_max }}
 </h4>
 </div>
 <br>
 <br>
 
-<div class="row">
-  <div class="col-lg-4 col-md-4" style="padding:0">
-    <table class="table table-striped">
-      <thead>
-      <tr>
-        <th> Channel </th>
-        <th> Baseline </th>
-      </tr>
-      </thead>
-    </table>
-  </div>
+{% set num_planes = tpc_planes|length %}
+{% set first_half = tpc_planes[:num_planes // 2] %}
+{% set second_half = tpc_planes[num_planes // 2:] %}
 
-{%endblock%}
+<div class="container">
+  <div class="row">
+      {% for tpc_plane in first_half %}
+      <div class="col-lg-4">
+          <div class="container">
+              <div class="row">
+                  <h3>{{ tpc_titles[loop.index0] }}</h3>
+              </div>
+              <div class="row">
+                  <table id="{{ tpc_titles[loop.index0]|replace(' ', '_') }}" class="table table-striped">
+                      <thead>
+                          <tr>
+                              <th>Channel</th>
+                              <th>RMS</th>
+                          </tr>
+                      </thead>
+                      <tbody id="{{ 'table_' ~ loop.index0 }}">
+                          <!-- Channels will be dynamically added here -->
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+      {% for tpc_plane in second_half %}
+      <div class="col-lg-4">
+          <div class="container">
+              <div class="row">
+                  <h3>{{ tpc_titles[first_half|length + loop.index0] }}</h3>
+              </div>
+              <div class="row">
+                  <table id="{{ tpc_titles[first_half|length + loop.index0]|replace(' ', '_') }}" class="table table-striped">
+                      <thead>
+                          <tr>
+                              <th>Channel</th>
+                              <th>RMS</th>
+                          </tr>
+                      </thead>
+                      <tbody id="{{ 'table_' ~ (first_half|length + loop.index0) }}">
+                          <!-- Channels will be dynamically added here -->
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</div>
+
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+{% for tpc_plane in tpc_planes %}
+{% set channels = channels[loop.index0] %}
+{% set table_id = 'table_' ~ loop.index0 %}
+{
+    
+var config_controller = new Config.GroupConfigController({{config|tojson|safe}}, undefined, ["rms"], {{channels|tojson|safe}}, 0, 25, "", undefined, "");
+var data_link = config_controller.data_link(0, ["rms"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60000); // 1 minute
+var buffer = new Data.D3DataBuffer(poll, 1, [
+    function(data) { 
+        var ch = {{channels|tojson|safe}}
+        var table = document.getElementById("{{ table_id }}");
+        table.innerHTML = ""; // Clear table content
+        var rms_data = data;
+        for (var i = 0; i < rms_data.length; i++) {
+            var rms = rms_data[i].get_last()[1];
+            if (rms > {{ tpc_rms_max }}) {
+                var color = rms < 100. ? "yellow" : "red";
+                table.innerHTML += `
+                    <tr>
+                        <td>${ch[i]}</td>
+                        <td style="background-color: ${color}">${rms.toFixed(2)}</td>
+                    </tr>`;
+            }
+        }
+}
+]);
+buffer.start();
+}
+{% endfor %}
+
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+});
+poll.run();
+{% endif %}
+
+</script>
+
+</div>
+{% endblock %}
