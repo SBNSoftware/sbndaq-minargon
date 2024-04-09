@@ -32,7 +32,7 @@ DRIFTHV_ALARM_LIMITS = {
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
-TPC_RMS_ALARM_MAX = 10.
+TPC_RMS_ALARM_MAX = 15
 
 @app.route('/introduction')
 def introduction():
