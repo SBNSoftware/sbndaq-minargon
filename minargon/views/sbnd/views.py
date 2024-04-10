@@ -32,6 +32,8 @@ DRIFTHV_ALARM_LIMITS = {
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
+TPC_RMS_ALARM_MAX = 15
+
 @app.route('/introduction')
 def introduction():
     # drift hv
@@ -63,12 +65,29 @@ def introduction():
     crts = crt_maps.keys() #crt refers to a WALL
     channels = [crt_maps[k] for k in crts]
 
+    # tpcs
+    group_name = "tpc_channel"
+    tpc_config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+    tpc_channels = [list(range(0, 1984)),
+                list(range(1984, 3968)),
+                list(range(3968, 5632)),
+                list(range(5632, 7616)),
+                list(range(7616, 9600)),
+                list(range(9600, 11264))]
+    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
+    tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
+
     render_args = {
       "config": config,
       "channels": channels, #channels mean BOARD here
       "crts": crts,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "tpc_config": tpc_config,
+      "tpc_channels": tpc_channels,
+      "tpc_titles": tpc_titles,
+      "tpc_planes": tpc_planes,
+      "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": False, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs
     }
@@ -77,10 +96,24 @@ def introduction():
 
 @app.route('/TPC_status')
 def TPC_status():
-    crts = [79,80]
+    group_name = "tpc_channel"
+    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+    channels = [list(range(0, 1984)),
+                list(range(1984, 3968)),
+                list(range(3968, 5632)),
+                list(range(5632, 7616)),
+                list(range(7616, 9600)),
+                list(range(9600, 11264))]
+    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
+    tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
+
     render_args = {
-      "crts": crts,
-      "eventmeta_key": False, # TODO
+      "config": config,
+      "channels": channels,
+      "tpc_titles": tpc_titles,
+      "tpc_planes": tpc_planes,
+      "tpc_rms_max": TPC_RMS_ALARM_MAX,
+      "eventmeta_key": "eventmeta"
     }
     return render_template('sbnd/tpc_status.html', **render_args) 
 
@@ -95,14 +128,14 @@ def TPC_rms_per_plane():
     #flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
     #titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
 
-    tpc_planes = ["West-U", "West-V", "West-Y", "East-U", "East-V", "East-Y"]
-    channels = [list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264)),
-                list(range(0, 1984)),
+    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
+    channels = [list(range(0, 1984)),
                 list(range(1984, 3968)),
-                list(range(3968, 5632))]
-    titles = ["West U", "West V", "West Y", "East U", "East V", "East Y"]
+                list(range(3968, 5632)),
+                list(range(5632, 7616)),
+                list(range(7616, 9600)),
+                list(range(9600, 11264))]
+    titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
 
     render_args = {
       "config": config,
@@ -110,7 +143,7 @@ def TPC_rms_per_plane():
       "metric": "rms",
       "titles": titles,
       "tpc_planes": tpc_planes,
-      "eventmeta_key": "eventmeta",
+      "eventmeta_key": "eventmeta"
     }
     return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
 

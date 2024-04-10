@@ -37,13 +37,13 @@
 {% endfor %}
 
 <div class="row">
-<div class="col-lg-8 col-md-8 col-sm-12 vcenter hcenter">
+<div class="col-lg-3 col-md-3 col-sm-6 mx-auto">
     <div class="card">
         <div class="card-header">Display Options</div>
         <div class="card-body">
             <form class="form" role="form">
                 {{ stream_options.metric_option(config["metric_config"], metric, "form-metric") }}
-                {{ stream_options.scatter_threshold_option("form-scatter-range-lo", "form-scatter-range-hi") }}
+                <!-- {{ stream_options.scatter_threshold_option("form-scatter-range-lo", "form-scatter-range-hi") }} -->
             </form>
         </div>  
      </div>    
@@ -71,7 +71,7 @@ var config_controller = new Config.GroupConfigController(config, undefined, ["{{
 
 // add the scatter plot
 var scatter = config_controller.addGroupDataScatterController("scatter-{{tpc_plane | join('-') | replace(' ', '_')}}", "{{title}}")
-  .rangeController("#form-scatter-range-lo", "#form-scatter-range-hi", false)
+//  .rangeController("#form-scatter-range-lo", "#form-scatter-range-hi", false)
   .set();
 
 // and histogram
