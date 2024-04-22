@@ -292,7 +292,7 @@ var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
     $("#TPC-Status").css({"color": "orange"});
 
   } else if (BAD_PLANES.size > 0) {
-    let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_rms_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
+    let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
     $("#TPC-Status").html(bad_planes_str);
     $("#TPC-Status").css({"color": "red"});
 
