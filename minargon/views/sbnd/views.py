@@ -117,8 +117,8 @@ def TPC_status():
     }
     return render_template('sbnd/tpc_status.html', **render_args) 
 
-@app.route('/TPC_rms_per_plane')
-def TPC_rms_per_plane():
+@app.route('/TPC_metrics_per_plane')
+def TPC_metrics_per_plane():
     group_name = "tpc_channel"
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
 
@@ -145,7 +145,29 @@ def TPC_rms_per_plane():
       "tpc_planes": tpc_planes,
       "eventmeta_key": "eventmeta"
     }
-    return render_template('sbnd/tpc_rms_per_plane.html', **render_args)
+    return render_template('sbnd/tpc_metrics_per_plane.html', **render_args)
+
+@app.route('/TPC_rms_by_board_view')
+def TPC_rms_by_board_view():
+    keys = ["tpc:wibs:evd:image",
+             "tpc:fems:evd:image",]
+    images = []
+    for k in keys:
+        image = online_metrics.eventdisplay("online", k)
+        images.append(image)
+
+    current_time = datetime.now()
+    current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    current_time_in_utc = datetime.now(pytz.utc)
+    current_time_in_utc = current_time_in_utc.strftime("%Y-%m-%d %H:%M:%S")
+
+    args = {
+        "imgs": images,
+        "current_time": current_time,
+        "current_time_in_utc": current_time_in_utc
+    }
+    return render_template('sbnd/tpc_electronics_display.html', **args)
+
 
 @app.route('/event_display')
 def event_display():
