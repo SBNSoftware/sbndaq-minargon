@@ -2,6 +2,15 @@
 {% block title %}Introduction to Minargon{% endblock %}
 {% block body %}
 {{ super() }}
+
+<style>
+  tb. {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  tb. th, tb td {text-align: left;}
+</style>
+
 <!-- <div class="col-md-8 hcenter"> -->
 <div class="container">
 
@@ -9,16 +18,29 @@
 <h1>SBND Online Monitoring</h1>
 </div>
 <br>
-<h3> External Links </h3>
-<p>
-shifter feedback: <a href="https://docs.google.com/forms/d/e/1FAIpQLSeacwY7BIyRl7Z3bWRUjkXlYVJtcIg07pnkq0Rh1QshmJmGtg/viewform?usp=sf_link" target="_blank">click here</a>
-<br>
-operations wiki: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki" target="_blank">click here</a>
-<br>
-BNB Status: <a href="https://dbweb8.fnal.gov:8443/ifbeam/bmon/bnbmon/Display" target="_blank">click here</a>
-<br>
-E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
-</p>
+
+<table class="tb">
+  <tr>
+    <th colspan="1" style="width:50%">External Links</th>
+    <th colspan="1" style="width:50%">Wikis for Online Monitoring</th>
+  </tr>
+  <tr>
+    <td>Shifter Feedback: <a href="https://docs.google.com/forms/d/e/1FAIpQLSeacwY7BIyRl7Z3bWRUjkXlYVJtcIg07pnkq0Rh1QshmJmGtg/viewform?usp=sf_link" target="_blank">click here</a></td>
+    <td>Public SBN Wiki: <a href="https://sbnsoftware.github.io/sbn_online_wiki/sbndqm_Wiki" target ="_blank">click here</a></td>
+  </tr>
+  <tr>
+    <td>Operations Wiki: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki" target="_blank">click here</a></td>
+    <td>Wiki for Regular Shifters: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki/OnMonForShifter" target="_blank">click here</a></td>
+  </tr>
+  <tr>
+    <td>BNB Status: <a href="https://dbweb8.fnal.gov:8443/ifbeam/bmon/bnbmon/Display" target="_blank">click here</a></td>
+    <td>Wiki for Expert Shifters: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki/OnMonExpert" target="_blank">click here</a></td>
+  </tr>
+  <tr>
+    <td>E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a></td>
+    <td>Wiki for DQM Web Development Experts: <a href = "https://cdcvs.fnal.gov/redmine/projects/sbnd/wiki/Dqmexpert" target="_blank">click here</a></td>
+  </tr>
+</table>
 <br>
 
 <div class="row">
