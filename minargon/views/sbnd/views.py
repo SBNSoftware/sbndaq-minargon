@@ -23,10 +23,14 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [-0.05, 0.05], 
-                "imon": [-0.05, 0.5],
-                "vsp": [-0.05, 0.05], 
-                "isp": [-0.05, 0.55], 
+                #"vmon": [-0.05, 0.05],
+                "vmon": [14.4, 14.6],
+                #"imon": [-0.05, 0.5],
+                "imon": [12, 14],
+                #"vsp": [-0.05, 0.05],
+                "vsp": [14.95, 15.05], 
+                #"isp": [-0.05, 0.55],
+                "isp": [13.95, 14.05],
                 "scheme": [-1, 2]
                 }
 CRT_BASELINE_ALARM_MIN = 20
