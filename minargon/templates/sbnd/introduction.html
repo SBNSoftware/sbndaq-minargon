@@ -19,28 +19,85 @@
 </div>
 <br>
 
-<table class="tb">
-  <tr>
-    <th colspan="1" style="width:50%">External Links</th>
-    <th colspan="1" style="width:50%">Wikis for Online Monitoring</th>
-  </tr>
-  <tr>
-    <td>Shifter Feedback: <a href="https://docs.google.com/forms/d/e/1FAIpQLSeacwY7BIyRl7Z3bWRUjkXlYVJtcIg07pnkq0Rh1QshmJmGtg/viewform?usp=sf_link" target="_blank">click here</a></td>
-    <td>Public SBN Wiki: <a href="https://sbnsoftware.github.io/sbn_online_wiki/sbndqm_Wiki" target ="_blank">click here</a></td>
-  </tr>
-  <tr>
-    <td>Operations Wiki: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki" target="_blank">click here</a></td>
-    <td>Wiki for Regular Shifters: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki/OnMonForShifter" target="_blank">click here</a></td>
-  </tr>
-  <tr>
-    <td>BNB Status: <a href="https://dbweb8.fnal.gov:8443/ifbeam/bmon/bnbmon/Display" target="_blank">click here</a></td>
-    <td>Wiki for Expert Shifters: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki/OnMonExpert" target="_blank">click here</a></td>
-  </tr>
-  <tr>
-    <td>E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a></td>
-    <td>Wiki for DQM Web Development Experts: <a href = "https://cdcvs.fnal.gov/redmine/projects/sbnd/wiki/Dqmexpert" target="_blank">click here</a></td>
-  </tr>
-</table>
+<div class="row">
+
+<div class="col-lg-3 col-md-3 col-sm-8" style="padding:0">
+    <h5>External Links</h5>
+    Shifter Feedback: <a href="https://docs.google.com/forms/d/e/1FAIpQLSeacwY7BIyRl7Z3bWRUjkXlYVJtcIg07pnkq0Rh1QshmJmGtg/viewform?usp=sf_link" target="_blank">click here</a>
+    <br>
+    Operations Wiki: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki" target="_blank">click here</a>
+    <br>
+    BNB Status: <a href="https://dbweb8.fnal.gov:8443/ifbeam/bmon/bnbmon/Display" target="_blank">click here</a>
+    <br>
+    E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
+    <br>
+</div>
+
+<div class="col-lg-3 col-md-3 col-sm-8" style="padding:0">
+    <h5>Online Monitoring Wikis</h5>
+    Public SBN Wiki: <a href="https://sbnsoftware.github.io/sbn_online_wiki/sbndqm_Wiki" target ="_blank">click here</a>
+    <br>
+    Regular Shifters: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki/OnMonForShifter" target="_blank">click here</a>
+    <br>
+    Expert Shifters: <a href="https://cdcvs.fnal.gov/redmine/projects/sbnd-operations/wiki/OnMonExpert" target="_blank">click here</a>
+    <br>
+    DQM Experts: <a href = "https://cdcvs.fnal.gov/redmine/projects/sbnd/wiki/Dqmexpert" target="_blank">click here</a>
+    <br>
+</div>
+
+<div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
+  <h3 class="hcenter"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status</a></h3>
+  <table class="table table-striped">
+    <tr>
+      <th style="width: 31%;"> Current Status:</a></th>
+      <th><span id="DriftHV-Status"> </span></th>
+    </tr>
+    <tr>
+      <th style="width: 41%;"> VMon 2-hr alarm log:</a></th>
+      <th> # of samples: <span id="VMon-Nsamples"> </span>
+      <table>
+      <tbody style="font-size: 12px";>
+        <tr>
+          <td style="width: 31%;"> HI: </a></td>
+          <th><span id="VMon-HI"> </span></th>
+          <td style="width: 31%;"> HIHI: </a></td>
+          <th><span id="VMon-HIHI"> </span></th>
+        </tr>
+        <tr>
+          <th style="width: 31%;"> LO:</a></th>
+          <th><span id="VMon-LO"> </span></th>
+          <th style="width: 31%;"> LOLO:</a></th>
+          <th><span id="VMon-LOLO"> </span></th>
+        </tr>
+      </table>
+      </th>
+    </tr>
+    <tr>
+      <th style="width: 41%;"> IMon 2-hr alarm log:</a></th>
+      <th> # of samples: <span id="IMon-Nsamples"> </span>
+      <table>
+      <tbody style="font-size: 12px";>
+        <tr>
+          <td style="width: 31%;"> HI: </a></td>
+          <th><span id="IMon-HI"> </span></th>
+          <td style="width: 31%;"> HIHI: </a></td>
+          <th><span id="IMon-HIHI"> </span></th>
+        </tr>
+        <tr>
+          <th style="width: 31%;"> LO:</a></th>
+          <th><span id="IMon-LO"> </span></th>
+          <th style="width: 31%;"> LOLO:</a></th>
+          <th><span id="IMon-LOLO"> </span></th>
+        </tr>
+      </table>
+      </th>
+    </tr>
+  </table>
+</div>
+
+</div>
+
+<br>
 <br>
 
 <div class="row">
@@ -74,10 +131,6 @@
     <th><span id="TPC-Status"> </span></th>
   </tr>
   <tr>
-    <th style="width: 31%;"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status:</a></th>
-    <th><span id="DriftHV-Status"> </span></th>
-  </tr>
-  <tr>
     <th style="width: 31%;"><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
     <th><span id="PMT-Status"> </span></th>
   </tr>
@@ -91,7 +144,6 @@
   </tr>
   </table>
 </div>
-
 </div>
 
 {%endblock%}
@@ -220,13 +272,14 @@ $("#Trigger-Status").text("need alarm limits");
 $("#Trigger-Status").css({"color": "black"});
 
 // Drift HV
+// current status
 var BAD_DRIFTHVS = new Set();
 var bad_drifthv_pvs = {{bad_drifthv_pvs|tojson|safe}};
 {% for pv in bad_drifthv_pvs %}
 { BAD_DRIFTHVS.add("{{pv}}"); }
 {% endfor %}
 if (BAD_DRIFTHVS.size > 0) {
-  let bad_drifthvs_str = "NOT OK. Bad PVs: " + Array.from(BAD_DRIFTHVS).join(" ");
+  let bad_drifthvs_str = "NOT OK. Bad: " + Array.from(BAD_DRIFTHVS).join(" ");
   $("#DriftHV-Status").html(bad_drifthvs_str);
   $("#DriftHV-Status").css({"color": "red"});
 }
@@ -234,6 +287,84 @@ else {
   $("#DriftHV-Status").text("OK");
   $("#DriftHV-Status").css({"color": "green"});
 }
+//vmon log
+$("#VMon-Nsamples").html({{vmon_nsamples}});
+
+let vmon_hi_str = "{{vmon_hi}}";
+$("#VMon-HI").html(vmon_hi_str);
+if ( {{vmon_hi}} > 0) {
+$("#VMon-HI").css({"color": "red"});
+}
+if ( {{vmon_hi}} == 0) {
+  $("#VMon-HI").css({"color": "green"});
+}
+
+let vmon_hihi_str = "{{vmon_hihi}}";
+$("#VMon-HIHI").html(vmon_hihi_str);
+if ( {{vmon_hihi}} > 0) {
+  $("#VMon-HIHI").css({"color": "red"});
+}
+if ( {{vmon_hihi}} == 0) {
+  $("#VMon-HIHI").css({"color": "green"});
+}
+
+let vmon_lo_str = "{{vmon_lo}}";
+$("#VMon-LO").html(vmon_lo_str);
+if ( {{vmon_lo}} > 0) {
+  $("#VMon-LO").css({"color": "red"});
+}
+if ( {{vmon_lo}} == 0) {
+  $("#VMon-LO").css({"color": "green"});
+}
+
+let vmon_lolo_str = "{{vmon_lolo}}";
+$("#VMon-LOLO").html(vmon_lolo_str);
+if ( {{vmon_lolo}} > 0) {
+  $("#VMon-LOLO").css({"color": "red"});
+}
+if ( {{vmon_lolo}} == 0) {
+  $("#VMon-LOLO").css({"color": "green"});
+}
+
+//imon log
+$("#IMon-Nsamples").html({{imon_nsamples}});
+
+let imon_hi_str = "{{imon_hi}}";
+$("#IMon-HI").html(imon_hi_str);
+if ( {{imon_hi}} > 0) {
+$("#IMon-HI").css({"color": "red"});
+}
+if ( {{imon_hi}} == 0) {
+  $("#IMon-HI").css({"color": "green"});
+}
+
+let imon_hihi_str = "{{imon_hihi}}";
+$("#IMon-HIHI").html(imon_hihi_str);
+if ( {{imon_hihi}} > 0) {
+  $("#IMon-HIHI").css({"color": "red"});
+}
+if ( {{imon_hihi}} == 0) {
+  $("#IMon-HIHI").css({"color": "green"});
+}
+
+let imon_lo_str = "{{imon_lo}}";
+$("#IMon-LO").html(imon_lo_str);
+if ( {{imon_lo}} > 0) {
+  $("#IMon-LO").css({"color": "red"});
+}
+if ( {{imon_lo}} == 0) {
+  $("#IMon-LO").css({"color": "green"});
+}
+
+let imon_lolo_str = "{{imon_lolo}}";
+$("#IMon-LOLO").html(imon_lolo_str);
+if ( {{imon_lolo}} > 0) {
+  $("#IMon-LOLO").css({"color": "red"});
+}
+if ( {{imon_lolo}} == 0) {
+  $("#IMon-LOLO").css({"color": "green"});
+}
+
 
 // TPCs
 var DISCONNECTED_PLANE = new Set();

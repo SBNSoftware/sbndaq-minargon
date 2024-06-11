@@ -33,6 +33,15 @@ DRIFTHV_ALARM_LIMITS = {
                 "isp": [18.45, 18.55],
                 "scheme": [-1, 2]
                 }
+VMon_HI = 20
+VMon_HIHI = 21
+VMon_LO = 0
+VMon_LOLO = -1
+IMon_HI = 17
+IMon_HIHI = 18
+IMon_LO = 0
+IMon_LOLO = -1
+
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
@@ -52,6 +61,45 @@ def introduction():
         if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
             continue
         bad_drifthv_pvs.append(pv)
+    
+    # alarms in the past 2 hours
+    # vmon
+    vmon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, month_2digit, "drifthv", "vmon")
+    vmon_nsamples = len(vmon_dbrows)
+    vmon_n_hi = 0
+    vmon_n_hihi = 0
+    vmon_n_lo = 0
+    vmon_n_lolo = 0
+    for vr in vmon_dbrows:
+        if (float(vr[1]) < IMon_LOLO):
+            vmon_n_lolo += 1
+        elif (float(vr[1]) < IMon_LO):
+            vmon_n_lo += 1
+        elif (float(vr[1]) > IMon_HIHI):
+            vmon_n_hihi += 1
+        elif (float(vr[1]) > IMon_HI):
+            vmon_n_hi += 1
+        else:
+            continue
+
+    # imon
+    imon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, month_2digit, "drifthv", "imon")
+    imon_nsamples = len(imon_dbrows)
+    imon_n_hi = 0
+    imon_n_hihi = 0
+    imon_n_lo = 0
+    imon_n_lolo = 0
+    for vr in vmon_dbrows:
+        if (float(vr[1]) < IMon_LOLO):
+            imon_n_lolo += 1
+        elif (float(vr[1]) < IMon_LO):
+            imon_n_lo += 1
+        elif (float(vr[1]) > IMon_HIHI):
+            imon_n_hihi += 1
+        elif (float(vr[1]) > IMon_HI):
+            imon_n_hi += 1
+        else:
+            continue
 
     config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
     #crts = config['instances'] #crt board list from fcl file
@@ -93,7 +141,17 @@ def introduction():
       "tpc_planes": tpc_planes,
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": False, #Art Event metadata
-      "bad_drifthv_pvs": bad_drifthv_pvs
+      "bad_drifthv_pvs": bad_drifthv_pvs,
+      "vmon_nsamples": vmon_nsamples,
+      "vmon_hi": vmon_n_hi,
+      "vmon_hihi": vmon_n_hihi,
+      "vmon_lo": vmon_n_lo,
+      "vmon_lolo": vmon_n_lolo,
+      "imon_nsamples": imon_nsamples,
+      "imon_hi": imon_n_hi,
+      "imon_hihi": imon_n_hihi,
+      "imon_lo": imon_n_lo,
+      "imon_lolo": imon_n_lolo
     }
 
     return render_template('sbnd/introduction.html', **render_args)
