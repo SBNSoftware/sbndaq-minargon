@@ -216,6 +216,41 @@ def get_ignition_last_value_pv(connection, month, group, pv):
         formatted.append((row[0], row[1], row[2]))
     return formatted
 
+@ignition_route
+def get_ignition_2hr_value_pv(connection, month, group, pv):
+    cursor = connection[0].cursor()
+    database = connection[1]["name"]
+
+    now = datetime.now(timezone('UTC')) # Get the time now in UTC
+    stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+
+    start = str(int(stop_t)-7200000)
+    stop = str(int(stop_t))
+    #print("start", start)
+    #print("stop", stop)
+
+    query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
+    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    WHERE d.tagid=s.id
+    AND s.tagpath LIKE '%sbnd%'
+    AND s.tagpath LIKE '%{}%'
+    AND s.tagpath LIKE '%{}%'
+    AND d.t_stamp BETWEEN {} AND {}
+    ORDER BY d.t_stamp""".format(month, group, pv, start, stop)
+
+    cursor.execute(query)
+    dbrows = cursor.fetchall()
+    cursor.close()
+    formatted = []
+    for row in dbrows:
+#        try:
+#            time = datetime.fromtimestamp(row[2]/1000) # ms since epoch
+#            time = time.strftime("%Y-%m-%d %H:%M")
+#        except:
+#            time = row[2]
+        formatted.append((row[0], row[1], row[2]))
+    return formatted
+
 
 
 @app.route("/<connection>/cryo_ps_series/<month>/<pv>")
@@ -236,7 +271,6 @@ def cryo_ps_series(connection, month, pv):
         stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
     start = str(int(start_t))
     stop = str(int(stop_t))
-    print("Stop: ", stop)
     current_month = datetime.now().month
     n_data = args['n_data']    # Number of data points
     n_data = 1000
