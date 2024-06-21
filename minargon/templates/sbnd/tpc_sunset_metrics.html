@@ -71,18 +71,23 @@ var config_controller_nspikes = new Config.GroupConfigController(config, {{link_
     .streamController("#form-stream-nspikes"); 
 
 // build plotly controller
-var plotly = config_controller_nspikes.addPlotlyController("time-scatter-nspikes")
+var plotly_nspikes = config_controller_nspikes.addPlotlyController("time-scatter-nspikes")
    .timeRangeController("#start-nspikes", "#end-nspikes", "#toggle-nspikes")
    .downloadDataController("#download-nspikes");
+plotly_nspikes.setPlotTitle("# of Spiked Channels");
+plotly_nspikes.setYTitles("# of channels");
 
 var config_controller_ndigi = new Config.GroupConfigController(config, {{link_function}}, ["ndigi"], channels, 0, 50, {{hw_select}}, {{channel_map}})
     .metricController("#form-metric-ndigi")
     .streamController("#form-stream-ndigi"); 
 
 // build plotly controller
-var plotly = config_controller_ndigi.addPlotlyController("time-scatter-ndigi")
+var plotly_ndigi = config_controller_ndigi.addPlotlyController("time-scatter-ndigi")
    .timeRangeController("#start-ndigi", "#end-ndigi", "#toggle-ndigi")
    .downloadDataController("#download-ndigi");
+plotly_ndigi.setPlotTitle("# of Digital Noise + Sunset Channels");
+plotly_ndigi.setYTitles("# of channels");
+plotly_ndigi.setYRanges([[0, 200]]);
 
 // start the controllers
 if ((channels && channels.length > 0) || (config.instances && config.instances.length > 0)) {
