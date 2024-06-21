@@ -33,7 +33,7 @@ DRIFTHV_ALARM_LIMITS = {
                 #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
-VMon_HI = 20
+VMon_HI = 0.025
 VMon_HIHI = 21
 VMon_LO = 0
 VMon_LOLO = -1
@@ -71,13 +71,13 @@ def introduction():
     vmon_n_lo = 0
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
-        if (float(vr[1]) < IMon_LOLO):
+        if (float(vr[1]) < VMon_LOLO):
             vmon_n_lolo += 1
-        elif (float(vr[1]) < IMon_LO):
+        elif (float(vr[1]) < VMon_LO):
             vmon_n_lo += 1
-        elif (float(vr[1]) > IMon_HIHI):
+        elif (float(vr[1]) > VMon_HIHI):
             vmon_n_hihi += 1
-        elif (float(vr[1]) > IMon_HI):
+        elif (float(vr[1]) > VMon_HI):
             vmon_n_hi += 1
         else:
             continue
