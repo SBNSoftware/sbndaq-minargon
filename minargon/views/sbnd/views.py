@@ -23,17 +23,17 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                #"vmon": [-0.05, 0.05],
-                "vmon": [19.25, 19.35],
-                #"imon": [-0.05, 0.5],
-                "imon": [17, 18.35],
-                #"vsp": [-0.05, 0.05],
-                "vsp": [19.95, 20.05], 
-                #"isp": [-0.05, 0.55],
-                "isp": [18.45, 18.55],
+                "vmon": [-0.05, 0.05],
+                #"vmon": [5.2, 5.4],
+                "imon": [-0.05, 0.5],
+                #"imon": [4.5, 5.25],
+                "vsp": [-0.05, 0.05],
+                #"vsp": [5.45, 5.55], 
+                "isp": [-0.05, 0.55],
+                #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
-VMon_HI = 20
+VMon_HI = 0.025
 VMon_HIHI = 21
 VMon_LO = 0
 VMon_LOLO = -1
@@ -71,13 +71,13 @@ def introduction():
     vmon_n_lo = 0
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
-        if (float(vr[1]) < IMon_LOLO):
+        if (float(vr[1]) < VMon_LOLO):
             vmon_n_lolo += 1
-        elif (float(vr[1]) < IMon_LO):
+        elif (float(vr[1]) < VMon_LO):
             vmon_n_lo += 1
-        elif (float(vr[1]) > IMon_HIHI):
+        elif (float(vr[1]) > VMon_HIHI):
             vmon_n_hihi += 1
-        elif (float(vr[1]) > IMon_HI):
+        elif (float(vr[1]) > VMon_HI):
             vmon_n_hi += 1
         else:
             continue
@@ -327,6 +327,29 @@ def channel_snapshot_dab():
 def wireplane_view():
     instance_name = "tpc_channel" 
     return timeseries_view(request.args, instance_name, "wire", "wireLink", "eventmeta")
+
+@app.route('/tpc_sunset_metrics')
+def tpc_sunset_metrics():
+    link_function = "undefined"
+    config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
+    config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
+    config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
+    config['metric_config']['ndigi']['display_range'] = [0,200]
+    metric = "nspikes"
+    channels = "undefined"
+    render_args = {
+        'title': "Sunset",
+        'link_function': link_function,
+        'view_ident': "",
+        'config': config,
+        'metric': metric,
+        'eventmeta_key': "None",
+        'channels': channels,
+        'hw_select': "undefined",
+        'channel_map': "undefined",
+        'dbname': "online"
+    }
+    return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
 
 # view of a number of wires on a wireplane
 @app.route('/wireplane_view_dab')
