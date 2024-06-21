@@ -330,17 +330,11 @@ def wireplane_view():
 
 @app.route('/tpc_sunset_metrics')
 def tpc_sunset_metrics():
-    config_nspikes = {'metric_config': {'nspikes': {'name': 'nspikes'}}} 
-    config_ndigi = {'metric_config': {'ndigi': {'name': 'ndigi'}}} 
-    render_args = {
-        'config_nspikes': config_nspikes,
-        'config_ndigi': config_ndigi
-    }
     link_function = "undefined"
     config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
-    print("config", config)
     config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
     config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
+    config['metric_config']['ndigi']['display_range'] = [0,200]
     metric = "nspikes"
     channels = "undefined"
     render_args = {
