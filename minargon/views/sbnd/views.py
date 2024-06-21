@@ -328,6 +328,35 @@ def wireplane_view():
     instance_name = "tpc_channel" 
     return timeseries_view(request.args, instance_name, "wire", "wireLink", "eventmeta")
 
+@app.route('/tpc_sunset_metrics')
+def tpc_sunset_metrics():
+    config_nspikes = {'metric_config': {'nspikes': {'name': 'nspikes'}}} 
+    config_ndigi = {'metric_config': {'ndigi': {'name': 'ndigi'}}} 
+    render_args = {
+        'config_nspikes': config_nspikes,
+        'config_ndigi': config_ndigi
+    }
+    link_function = "undefined"
+    config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
+    print("config", config)
+    config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
+    config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
+    metric = "nspikes"
+    channels = "undefined"
+    render_args = {
+        'title': "Sunset",
+        'link_function': link_function,
+        'view_ident': "",
+        'config': config,
+        'metric': metric,
+        'eventmeta_key': "None",
+        'channels': channels,
+        'hw_select': "undefined",
+        'channel_map': "undefined",
+        'dbname': "online"
+    }
+    return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
+
 # view of a number of wires on a wireplane
 @app.route('/wireplane_view_dab')
 def wireplane_view_dab():
