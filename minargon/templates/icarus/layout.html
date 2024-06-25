@@ -120,13 +120,21 @@
                   {{ nav_link('channel_snapshot', 'Waveforms') }}
 	          {{ nav_link('TPC_group_select', 'Group Select') }}
             	  {{ nav_link('NoiseCorr', 'Noise Correlation') }}
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Wire Bias<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('WireBias_E_Monitor', 'Cryo E') }}
+                      {{ nav_link('WireBias_W_Monitor', 'Cryo W') }}
+                    </ul>
+                  </li>
                 </ul>
               </li>
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('PMT_status', 'Status') }}
-                  <li class="dropdown-submenu bg-maroon nav-item">
+		  {{ nav_link('online_group', 'Beam Timing', group_name='BeamTiming') }}
+		  <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT Locations<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
                       {% for PMT, _  in PMTLOCs %}

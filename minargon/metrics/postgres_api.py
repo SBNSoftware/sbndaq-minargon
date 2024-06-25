@@ -50,7 +50,9 @@ class PostgresConnectionError:
     def register_postgres_error(self, err, name):
         self.err = err
         self.name = name
-        self.msg = str(err) + ("\nError occured while executing query:\n\n%s" % err.cursor.query)
+        self.msg = str(err)
+        if isinstance(err, psycopg2.Error):
+            self.msg += "\nError occured while executing query:\n\n%s" % err.cursor.query
         return self
 
     def register_fileopen_error(self, err, name):
@@ -135,8 +137,11 @@ def postgres_route(func):
                     return func((connection,config), *args, **kwargs)
                 except (psycopg2.Error, PostgresURLException) as err:
                     error = PostgresConnectionError().register_postgres_error(err, connection_name).with_front_end(front_end_abort)
-                    err.cursor.execute("ROLLBACK")
-                    err.cursor.connection.commit()
+
+                    if isinstance(err, psycopg2.Error):
+                        err.cursor.execute("ROLLBACK")
+                        err.cursor.connection.commit()
+
                     return abort(503, error)
             else:
                 error = connection.with_front_end(front_end_abort)
