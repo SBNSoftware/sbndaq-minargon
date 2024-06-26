@@ -75,7 +75,7 @@ var plotly_nspikes = config_controller_nspikes.addPlotlyController("time-scatter
    .timeRangeController("#start-nspikes", "#end-nspikes", "#toggle-nspikes")
    .downloadDataController("#download-nspikes");
 plotly_nspikes.setPlotTitle("# of Spiked Channels");
-plotly_nspikes.setYTitles("# of channels");
+plotly_nspikes.setYTitles(["# of channels"]);
 
 var config_controller_ndigi = new Config.GroupConfigController(config, {{link_function}}, ["ndigi"], channels, 0, 50, {{hw_select}}, {{channel_map}})
     .metricController("#form-metric-ndigi")
@@ -86,7 +86,7 @@ var plotly_ndigi = config_controller_ndigi.addPlotlyController("time-scatter-ndi
    .timeRangeController("#start-ndigi", "#end-ndigi", "#toggle-ndigi")
    .downloadDataController("#download-ndigi");
 plotly_ndigi.setPlotTitle("# of Digital Noise + Sunset Channels");
-plotly_ndigi.setYTitles("# of channels");
+plotly_ndigi.setYTitles(["# of channels"]);
 plotly_ndigi.setYRanges([[0, 200]]);
 
 // start the controllers

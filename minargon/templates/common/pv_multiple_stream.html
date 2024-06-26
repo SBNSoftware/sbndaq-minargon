@@ -71,6 +71,9 @@
         var plotly_controller = new module.PlotlyController(controller, link, [configs_[i].yTitle], configs_[i])
             .timeRangeController(start_id, end_id, toggle_id)
             .downloadDataController(download_id )
+        if (IDs_[i] == "9367") {
+            plotly_controller.setYRanges([[0, 500]]);
+        }
 
         // Start it
         plotly_controller.run();

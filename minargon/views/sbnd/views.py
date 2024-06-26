@@ -23,13 +23,13 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [-0.05, 0.05],
+                "vmon": [14.4, 14.5],
                 #"vmon": [5.2, 5.4],
-                "imon": [-0.05, 0.5],
+                "imon": [12.75, 13.75],
                 #"imon": [4.5, 5.25],
-                "vsp": [-0.05, 0.05],
+                "vsp": [14.95, 15.05],
                 #"vsp": [5.45, 5.55], 
-                "isp": [-0.05, 0.55],
+                "isp": [13.5, 14.05],
                 #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
