@@ -366,7 +366,7 @@ def tpc_sunset_metrics():
         downloads.append("download-"+str(ID))
 
    # plot_img = postgres_api.ps_series_plot("sbnd_epics",[9367])
-    plot_img = postgres_api.ps_series_plot(database, ID, front_end_abort=True)
+    imgs = postgres_api.ps_series_plot(database, ID, front_end_abort=True)
     # print config
     render_args = {
       "var": var, 
@@ -377,7 +377,7 @@ def tpc_sunset_metrics():
       "toggles" : toggles,
       "downloads" : downloads,
       "database": database,
-      "imgs": plot_img
+      "imgs": imgs
     }
     return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
 
