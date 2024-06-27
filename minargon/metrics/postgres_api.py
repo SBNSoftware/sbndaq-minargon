@@ -27,6 +27,8 @@ import calendar
 import re
 from pytz import timezone
 import numpy as np
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
 # status interpreter functions
@@ -403,11 +405,12 @@ def ps_series(connection, ID):
     # Make a request for time range
     args = stream_args(request.args)
     start_t = args['start']    # Start time
+    now = datetime.now(timezone('UTC')) # Get the time now in UTC
+    # 24 hours ago
+    start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
     if start_t is None:
+        # TODO:
         return abort(404, "Must specify a start time to a PostgreSQL request") 
-
-        start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
-        start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
 
     stop_t  = args['stop']     # Stop time
 
@@ -443,7 +446,10 @@ def ps_series(connection, ID):
                 continue
 
             # Add the data to the list
-        data_list.append( [float(row['sample_time']), value] )
+        ts = float(row['sample_time'])
+        if ID == "9367":
+            ts = ts #+ 5*60*60*1e3
+        data_list.append( [ts, value] )
 
     # Setup the return dictionary
     ret = {
@@ -453,7 +459,8 @@ def ps_series(connection, ID):
 
     return jsonify(values=ret, query=query)
 
-BREAK_TIMESTAMPS = [1719412080000, 1719426720000]
+BREAK_TIMESTAMPS = [1719343380000, 1719412080000, 1719426720000, 1719500460000, 1719514320000]
+VOLTS = [15, 20, 25, 30, 35]
 BREAK_TIMESTAMPS = [big/1000. for big in BREAK_TIMESTAMPS]
 @app.route("/<connection>/ps_series_mean/<ID>")
 @postgres_route
@@ -465,8 +472,8 @@ def ps_series_mean(connection, ID):
     start_t = args['start']    # Start time
     if start_t is None:
         now = datetime.now(timezone('UTC')) # Get the time now in UTC
-        # 12 hours ago
-        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 12*60*60*1e3 # convert to unix ms
+        # 24 hours ago
+        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
 
     stop_t  = args['stop']     # Stop time
 
@@ -504,9 +511,11 @@ def ps_series_mean(connection, ID):
             continue
         if value < 1:
             continue
-        data_list.append( [float(row['sample_time']), value] )
+        query_ts = float(row['sample_time'])
+        query_ts = query_ts + 5*60*60*1e3
+        data_list.append( [query_ts, value] )
         val_list.append( value )
-        t_list.append( float(row['sample_time']) )
+        t_list.append( query_ts )
 
     # make a list of rolling averages
     rolling = []
@@ -527,9 +536,34 @@ def ps_series_mean(connection, ID):
             if (i == break_idx[period+1]):
                  period += 1
 
+    # firm mean, rms
+    firm_mean = []
+    firm_median = []
+    firm_std = []
+    for v_setting in range(len(break_idx)-1):
+        this_vals = val_list[break_idx[v_setting]:break_idx[v_setting+1]]
+        this_mean = np.mean(this_vals)
+        this_median = np.median(this_vals)
+        this_std = np.std(this_vals)
+        firm_mean.append(this_mean)
+        firm_median.append(this_median)
+        firm_std.append(this_std)
+    this_vals = val_list[break_idx[-1]:]
+    this_mean = np.mean(this_vals)
+    this_median = np.median(this_vals)
+    this_std = np.std(this_vals)
+    firm_mean.append(this_mean)
+    firm_median.append(this_median)
+    firm_std.append(this_std)
 
     # Setup the return dictionary
     ret = {
+        "metrics": {
+            "volts": [0]+VOLTS,
+            "mean": firm_mean,
+            "median": firm_median,
+            "std": firm_std,
+        },
         ID: rolling,
         "configs": {
             "warningRange": [0, 1000]
@@ -546,16 +580,16 @@ def ps_series_plot(connection, ID):
     # Make a request for time range
     args = stream_args(request.args)
     start_t = args['start']    # Start time
+    now = datetime.now(timezone('UTC')) # Get the time now in UTC
     if start_t is None:
-        now = datetime.now(timezone('UTC')) # Get the time now in UTC
-        # 24 hours ago
-        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 24*60*60*1e3 # convert to unix ms
+        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
 
     stop_t  = args['stop']     # Stop time
 
     # Catch for if no stop time exists
     if (stop_t == None): 
         now = datetime.now(timezone('UTC')) # Get the time now in UTC
+#        now = now.astimezone(timezone('US/Central'))
         stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
     # remove the timing keys from the dict
@@ -565,7 +599,7 @@ def ps_series_plot(connection, ID):
     table_args.pop('n_data', None)
     table_args.pop('now', None)
 
-    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+    data, query = postgres_query([ID], start_t, stop_t, 5000, *connection, **table_args)
 
     # Format the data from database query
     data_list = []
@@ -587,9 +621,11 @@ def ps_series_plot(connection, ID):
             continue
         if value < 1:
             continue
-        data_list.append( [float(row['sample_time']), value] )
+        query_ts = float(row['sample_time'])
+        query_ts = query_ts + 5*60*60*1e3
+        data_list.append( [query_ts, value] )
         val_list.append( value )
-        t_list.append( float(row['sample_time']) )
+        t_list.append( query_ts )
 
     # make a list of rolling averages
     rolling_avg = []
@@ -617,20 +653,34 @@ def ps_series_plot(connection, ID):
     y_med = np.array(rolling_med)[:,1]
     fig, ax = plt.subplots(figsize=(10,4))
     plt.plot(x, y, "o", markersize=1, alpha=0.6)
+    utc_dt = datetime.utcfromtimestamp(t_list[-1]/1e3)
+    timestamp = calendar.timegm(utc_dt.timetuple())
+    local_dt = datetime.fromtimestamp(timestamp)
+    ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+    last_timestamp_string = local_dt.strftime('%m-%d %H:%M')
     plt.plot(x_mean, y_mean, "--", markersize=1, label="mean", color="red")
     plt.plot(x_med, y_med, "--", markersize=1, label="median", color="purple")
     for i, b in enumerate(BREAK_TIMESTAMPS):
+        utc_dt = datetime.utcfromtimestamp(b)
+        timestamp = calendar.timegm(utc_dt.timetuple())
+        local_dt = datetime.fromtimestamp(timestamp)
+        ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+        timestamp_string = local_dt.strftime('%m-%d %H:%M')
         if (i == 0):
              plt.axvline(b*1e3, color="gray", label="ramp")
         else:
              plt.axvline(b*1e3, color="gray")
+        plt.text(b*1e3, 300, timestamp_string, rotation=90, fontsize=8)
+        volt_string = "V = %i kV" % VOLTS[i]
+        plt.text(b*1e3, 200, volt_string, rotation=90, fontsize=8)
+   
 
     ax.set_xticks([])
     ax.set_xticklabels([])
     ax.set_ylabel("Sunsets/min")
     ax.set_xlabel("Time")
-    ax.set_title("24-hour Summary")
-    ax.legend(loc="lower right")
+    ax.set_title("Ramp-up Summary, last update: %s" % last_timestamp_string)
+    ax.legend(loc="upper left")
     plt.tight_layout()
 
     temp_data = io.BytesIO()
