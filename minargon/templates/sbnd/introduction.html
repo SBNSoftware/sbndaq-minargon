@@ -278,8 +278,9 @@ var bad_drifthv_pvs = {{bad_drifthv_pvs|tojson|safe}};
 {% for pv in bad_drifthv_pvs %}
 { BAD_DRIFTHVS.add("{{pv}}"); }
 {% endfor %}
-if (BAD_DRIFTHVS.size > 0) {
-  let bad_drifthvs_str = "NOT OK. Bad: " + Array.from(BAD_DRIFTHVS).join(" ");
+var HV_status = 0;
+if (HV_status == 1) {
+  let bad_drifthvs_str = "NOT OK. Bad";
   $("#DriftHV-Status").html(bad_drifthvs_str);
   $("#DriftHV-Status").css({"color": "red"});
 }
@@ -292,17 +293,23 @@ $("#VMon-Nsamples").html({{vmon_nsamples}});
 
 let vmon_hi_str = "{{vmon_hi}}";
 $("#VMon-HI").html(vmon_hi_str);
-if ( {{vmon_hi}} > 0) {
-$("#VMon-HI").css({"color": "red"});
+$("#VMon-HI").css({"color": "green"});
+if ( {{vmon_hi}} >  0.005*{{vmon_nsamples}}) {
+  $("#VMon-HI").css({"color": "orange"});
 }
-if ( {{vmon_hi}} == 0) {
-  $("#VMon-HI").css({"color": "green"});
+if ( {{vmon_hi}} >  0.01*{{vmon_nsamples}}) {
+  $("#VMon-HI").css({"color": "red"});
+  HV_status = 1;
 }
 
 let vmon_hihi_str = "{{vmon_hihi}}";
 $("#VMon-HIHI").html(vmon_hihi_str);
-if ( {{vmon_hihi}} > 0) {
+if (( {{vmon_hihi}} > 0) || ( {{vmon_hihi}} < 5)) {
+  $("#VMon-HIHI").css({"color": "orange"});
+}
+if ( {{vmon_hihi}} > 5 ) {
   $("#VMon-HIHI").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{vmon_hihi}} == 0) {
   $("#VMon-HIHI").css({"color": "green"});
@@ -310,17 +317,23 @@ if ( {{vmon_hihi}} == 0) {
 
 let vmon_lo_str = "{{vmon_lo}}";
 $("#VMon-LO").html(vmon_lo_str);
-if ( {{vmon_lo}} > 0) {
-  $("#VMon-LO").css({"color": "red"});
+$("#VMon-LO").css({"color": "green"});
+if ( {{vmon_lo}} >  0.005*{{vmon_nsamples}}) {
+  $("#VMon-LO").css({"color": "orange"});
 }
-if ( {{vmon_lo}} == 0) {
-  $("#VMon-LO").css({"color": "green"});
+if ( {{vmon_lo}} >  0.01*{{vmon_nsamples}}) {
+  $("#VMon-LO").css({"color": "red"});
+  HV_status = 1;
 }
 
 let vmon_lolo_str = "{{vmon_lolo}}";
 $("#VMon-LOLO").html(vmon_lolo_str);
-if ( {{vmon_lolo}} > 0) {
+if (( {{vmon_lolo}} > 0) || ( {{vmon_lolo}} < 5)) {
+  $("#VMon-LOLO").css({"color": "orange"});
+}
+if ( {{vmon_lolo}} > 5 ) {
   $("#VMon-LOLO").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{vmon_lolo}} == 0) {
   $("#VMon-LOLO").css({"color": "green"});
@@ -331,17 +344,23 @@ $("#IMon-Nsamples").html({{imon_nsamples}});
 
 let imon_hi_str = "{{imon_hi}}";
 $("#IMon-HI").html(imon_hi_str);
-if ( {{imon_hi}} > 0) {
-$("#IMon-HI").css({"color": "red"});
+$("#IMon-HI").css({"color": "green"});
+if ( {{imon_hi}} >  0.005*{{imon_nsamples}}) {
+  $("#IMon-HI").css({"color": "orange"});
 }
-if ( {{imon_hi}} == 0) {
-  $("#IMon-HI").css({"color": "green"});
+if ( {{imon_hi}} >  0.01*{{imon_nsamples}}) {
+  $("#IMon-HI").css({"color": "red"});
+  HV_status = 1;
 }
 
 let imon_hihi_str = "{{imon_hihi}}";
 $("#IMon-HIHI").html(imon_hihi_str);
-if ( {{imon_hihi}} > 0) {
+if (( {{imon_hihi}} > 0) || ( {{imon_hihi}} < 5)) {
+  $("#IMon-HIHI").css({"color": "orange"});
+}
+if ( {{imon_hihi}} > 5 ) {
   $("#IMon-HIHI").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{imon_hihi}} == 0) {
   $("#IMon-HIHI").css({"color": "green"});
@@ -349,17 +368,23 @@ if ( {{imon_hihi}} == 0) {
 
 let imon_lo_str = "{{imon_lo}}";
 $("#IMon-LO").html(imon_lo_str);
-if ( {{imon_lo}} > 0) {
-  $("#IMon-LO").css({"color": "red"});
+$("#IMon-LO").css({"color": "green"});
+if ( {{imon_lo}} >  0.025*{{imon_nsamples}}) {
+  $("#IMon-LO").css({"color": "orange"});
 }
-if ( {{imon_lo}} == 0) {
-  $("#IMon-LO").css({"color": "green"});
+if ( {{imon_lo}} >  0.05*{{imon_nsamples}}) {
+  $("#IMon-LO").css({"color": "red"});
+  HV_status = 1;
 }
 
 let imon_lolo_str = "{{imon_lolo}}";
 $("#IMon-LOLO").html(imon_lolo_str);
-if ( {{imon_lolo}} > 0) {
+if (( {{imon_lolo}} > 0) || ( {{imon_lolo}} < 5)) {
+  $("#IMon-LOLO").css({"color": "orange"});
+}
+if ( {{imon_lolo}} > 5 ) {
   $("#IMon-LOLO").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{imon_lolo}} == 0) {
   $("#IMon-LOLO").css({"color": "green"});
