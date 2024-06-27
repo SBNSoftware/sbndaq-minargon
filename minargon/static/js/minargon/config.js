@@ -310,6 +310,7 @@ export class GroupConfigController {
     });
 
     this.updateReferenceData();
+    this.updateMeanData();
   }
 
   // collect default parameters from metric
@@ -417,6 +418,7 @@ export class GroupConfigController {
       this.controllers[i].updateMetricConfig(metric_config);
     }
     this.updateReferenceData();
+    this.updateMeanData();
   } 
 
   updateReferenceData() {
@@ -450,6 +452,36 @@ export class GroupConfigController {
     }
   }
 
+  updateMeanData() {
+    var archived_stream = this.config.streams.indexOf("mean");
+    if (archived_stream >= 0) { // if the archived stream exists
+      var link = this.data_link(archived_stream, this.metrics, this.instances, 1);
+      var accessors = link.accessors();
+      var self = this;
+      d3.json(link.link_builder.ref_link(), function(error, data) {
+        if (!data) {
+          return;
+        }
+
+        var out = [];
+        for (var i = 0; i < accessors.length; i++) {
+          var this_data = data.values;
+          for (var k = 0; k < accessors[i].length; k++) {
+            this_data = this_data[accessors[i][k]];
+            if (this_data == undefined) {
+              break;
+            }
+          }
+          if (this_data && this_data.length > 0) {
+            out.push(this_data[0]);
+          }
+        }
+        for (var i = 0; i < self.controllers.length; i++) {
+          self.controllers[i].updateMeanData(out);
+        }
+      });
+    }
+  }
 
   // Internal function: change the stream name of the time-series
   // plotted in cubism 
