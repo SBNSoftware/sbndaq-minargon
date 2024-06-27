@@ -10,7 +10,14 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
 <h1><center>Sunset Rate</center></h1>
 <hr>
+
+<div class="row">
+<div class="col-md-8 col-sm-6 hcenter" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs }}" width="600" height="300">
+</div>
+
 <div class="container">
+
     
     <!--  Loop over IDs -->
     {% for ID in IDs %}
@@ -40,6 +47,7 @@
             <!-- Plot -->
             <div class="col-md-8">
                 <!-- plotly div -->
+                <h2 class="hcenter">Rolling Mean</h2>
                 <div style="padding:0" id="plotly-controller-mean-{{ ID }}"></div>
             </div>
             
