@@ -472,8 +472,8 @@ def ps_series_mean(connection, ID):
     start_t = args['start']    # Start time
     if start_t is None:
         now = datetime.now(timezone('UTC')) # Get the time now in UTC
-        # 24 hours ago
-        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
+        #start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 60*60*60*1e3 # convert to unix ms
+        start_t = BREAK_TIMESTAMPS[0]*1e3
 
     stop_t  = args['stop']     # Stop time
 
@@ -542,6 +542,8 @@ def ps_series_mean(connection, ID):
     firm_std = []
     for v_setting in range(len(break_idx)-1):
         this_vals = val_list[break_idx[v_setting]:break_idx[v_setting+1]]
+        if (v_setting == 0):
+            print("this_vals", this_vals)
         this_mean = np.mean(this_vals)
         this_median = np.median(this_vals)
         this_std = np.std(this_vals)
@@ -569,6 +571,8 @@ def ps_series_mean(connection, ID):
             "warningRange": [0, 1000]
         }
     }
+    
+    print("sunset metrics", ret["metrics"])
 
     return jsonify(values=ret, query=query)
 
@@ -582,7 +586,8 @@ def ps_series_plot(connection, ID):
     start_t = args['start']    # Start time
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     if start_t is None:
-        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
+        #start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
+        start_t = BREAK_TIMESTAMPS[0]*1e3
 
     stop_t  = args['stop']     # Stop time
 
@@ -645,48 +650,177 @@ def ps_series_plot(connection, ID):
             if (i == break_idx[period+1]):
                  period += 1
 
+    # make a list of window scan averages
+    window_avg = []
+    window_med = []
+    break_idx = [0] + [np.argmin(np.abs(np.array(t_list)/1e3 - b)) for b in BREAK_TIMESTAMPS]
+    period = 0
+    for i in range(len(data_list)-1):
+        this_t = t_list[i]
+        setting_start_t = t_list[break_idx[period]]
+        if (period == (len(break_idx)-1)):
+            setting_end_t = this_t
+            this_setting_vals = val_list[break_idx[period]:]
+            setting_end_idx = i
+        else:
+            setting_end_t = t_list[break_idx[period+1]]
+            this_setting_vals = val_list[break_idx[period]:break_idx[period+1]]
+            setting_end_idx = break_idx[period+1]
+
+        window_len_ts = 20*60*60*1e3
+        window_len = 20
+        if ((this_t - setting_start_t) < window_len) :
+            this_window_vals = val_list[break_idx[period]:(break_idx[period]+window_len)]
+        elif ((setting_end_t - this_t) < window_len) :
+            this_window_vals = val_list[(setting_end_idx-window_len):setting_end_idx]
+        else:
+            this_window_vals = val_list[(i-20):(i+20)]
+        this_window_avg = np.mean(this_window_vals)
+        this_window_med = np.median(this_window_vals)
+
+        window_avg.append([t_list[i], this_window_avg])
+        window_med.append([t_list[i], this_window_med])
+        if (period < len(break_idx)-1):
+            if (i == break_idx[period+1]):
+                 period += 1
+
+    # firm mean, rms
+    firm_mean = []
+    firm_median = []
+    firm_std = []
+    for v_setting in range(len(break_idx)-1):
+        this_vals = val_list[break_idx[v_setting]:break_idx[v_setting+1]]
+        if (v_setting == 0):
+            print("this_vals", this_vals)
+        this_mean = np.mean(this_vals)
+        this_median = np.median(this_vals)
+        this_std = np.std(this_vals)
+        firm_mean.append(this_mean)
+        firm_median.append(this_median)
+        firm_std.append(this_std)
+    this_vals = val_list[break_idx[-1]:]
+    this_mean = np.mean(this_vals)
+    this_median = np.median(this_vals)
+    this_std = np.std(this_vals)
+    firm_mean.append(this_mean)
+    firm_median.append(this_median)
+    firm_std.append(this_std)
+
     x = np.array(data_list)[:,0]
     y = np.array(data_list)[:,1]
     x_mean = np.array(rolling_avg)[:,0]
     y_mean = np.array(rolling_avg)[:,1]
     x_med = np.array(rolling_med)[:,0]
     y_med = np.array(rolling_med)[:,1]
-    fig, ax = plt.subplots(figsize=(10,4))
-    plt.plot(x, y, "o", markersize=1, alpha=0.6)
-    utc_dt = datetime.utcfromtimestamp(t_list[-1]/1e3)
-    timestamp = calendar.timegm(utc_dt.timetuple())
-    local_dt = datetime.fromtimestamp(timestamp)
-    ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
-    last_timestamp_string = local_dt.strftime('%m-%d %H:%M')
-    plt.plot(x_mean, y_mean, "--", markersize=1, label="mean", color="red")
-    plt.plot(x_med, y_med, "--", markersize=1, label="median", color="purple")
+    x_w_mean = np.array(window_avg)[:,0]
+    y_w_mean = np.array(window_avg)[:,1]
+    x_w_med = np.array(window_med)[:,0]
+    y_w_med = np.array(window_med)[:,1]
+
+    # summary plot
+    fig, ax = plt.subplots(figsize=(12,4))
+
     for i, b in enumerate(BREAK_TIMESTAMPS):
         utc_dt = datetime.utcfromtimestamp(b)
         timestamp = calendar.timegm(utc_dt.timetuple())
         local_dt = datetime.fromtimestamp(timestamp)
         ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
         timestamp_string = local_dt.strftime('%m-%d %H:%M')
-        if (i == 0):
-             plt.axvline(b*1e3, color="gray", label="ramp")
+        plt.axvline(b*1e3, color="k", linestyle="--")
+        ax_string = timestamp_string+", V = %i kV" % VOLTS[i]
+        plt.text(b*1e3+1e6, 150, ax_string, rotation=90, fontsize=8)
+        if i < len(BREAK_TIMESTAMPS)-1:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], BREAK_TIMESTAMPS[i+1], 21)
         else:
-             plt.axvline(b*1e3, color="gray")
-        plt.text(b*1e3, 300, timestamp_string, rotation=90, fontsize=8)
-        volt_string = "V = %i kV" % VOLTS[i]
-        plt.text(b*1e3, 200, volt_string, rotation=90, fontsize=8)
+            xs = np.linspace(BREAK_TIMESTAMPS[i], x[-1]/1e3, 21)
+        xs = xs*1e3
+        ys = np.array([firm_mean[i+1]]*len(xs))/60
+        y_devs = np.array([firm_std[i+1]]*len(xs))/60
+        plt.plot(xs, ys, color="skyblue", alpha=0.4)
+        plt.fill_between(list(xs), 
+                         list(ys-y_devs), list(ys+y_devs), step="post", 
+                         color="skyblue", alpha=0.1)
+
+    plt.plot(x, y/60, "o", markersize=1, alpha=0.5, color="navy")
+    plt.plot(x_mean, y_mean/60, "o-", markersize=1, label="mean (cumulative)", color="red")
+    plt.plot(x_med, y_med/60, "o-", markersize=1, label="median (cumulative)", color="orange")
+    plt.plot(x_w_mean, y_w_mean/60, "o-", markersize=1, label="mean (20-point window)", color="green")
+    plt.plot(x_w_med, y_w_med/60, "o-", markersize=1, label="median (20-point window)", color="y")
+
+    for i, b in enumerate(BREAK_TIMESTAMPS):
+        utc_dt = datetime.utcfromtimestamp(b)
+        timestamp = calendar.timegm(utc_dt.timetuple())
+        local_dt = datetime.fromtimestamp(timestamp)
+        ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+        timestamp_string = local_dt.strftime('%m-%d %H:%M')
+        plt.axvline(b*1e3, color="k", linestyle="--")
+        ax_string = timestamp_string+", V = %i kV" % VOLTS[i]
+        plt.text(b*1e3+1e6, 150, ax_string, rotation=90, fontsize=8)
+        if i < len(BREAK_TIMESTAMPS)-1:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], BREAK_TIMESTAMPS[i+1], 21)
+        else:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], x[-1]/1e3, 21)
+        ys = np.array([firm_mean[i+1]]*len(xs))
+        plt.plot(xs*1e3, ys/60, color="blue")
    
+    utc_dt = datetime.utcfromtimestamp(t_list[-1]/1e3)
+    timestamp = calendar.timegm(utc_dt.timetuple())
+    local_dt = datetime.fromtimestamp(timestamp)
+    ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+    last_timestamp_string = local_dt.strftime('%m-%d %H:%M')
 
     ax.set_xticks([])
     ax.set_xticklabels([])
-    ax.set_ylabel("Sunsets/min")
+    ax.set_ylabel("Sunsets Frequency [Hz]")
     ax.set_xlabel("Time")
     ax.set_title("Ramp-up Summary, last update: %s" % last_timestamp_string)
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper left", ncol=2)
     plt.tight_layout()
 
     temp_data = io.BytesIO()
     plt.savefig(temp_data, format="JPEG", dpi=300)
     encoded_img_data = base64.b64encode(temp_data.getvalue())
-    return encoded_img_data.decode('utf-8')
+    summary_img = encoded_img_data.decode('utf-8')
+
+    # trend fit plot
+    fig, ax = plt.subplots(figsize=(6,4))
+    xs = [15,20,25,30,35]
+    ys = np.array(firm_mean[1:])/60
+    yerrs = np.array(firm_std[1:])/60
+    plt.errorbar(xs, ys, yerr=yerrs, capsize=3, color="k")
+    plt.xlim(0, 100)
+    plt.ylim(0, 15)
+    plt.xlabel("Cathode Voltage")
+    plt.ylabel("Sunset Frequency [Hz]")
+    plt.grid()
+    plt.tight_layout()
+
+    temp_data = io.BytesIO()
+    plt.savefig(temp_data, format="JPEG", dpi=300)
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    trend_img = encoded_img_data.decode('utf-8')
+
+    # deadtime fit plot
+    fig, ax = plt.subplots(figsize=(6,4))
+    xs = [15,20,25,30,35]
+    ys = np.array(firm_mean[1:])*4*1e-3/60*100
+    yerrs = np.array(firm_std[1:])*4*1e-3/60*100
+    plt.errorbar(xs, ys, yerr=yerrs, capsize=3, color="k")
+    plt.xlim(0, 100)
+    plt.ylim(0, 15)
+    plt.xlabel("Cathode Voltage")
+    plt.ylabel("Approx. Dead Time [%]")
+    plt.grid()
+    plt.tight_layout()
+
+    temp_data = io.BytesIO()
+    plt.savefig(temp_data, format="JPEG", dpi=300)
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    deadtime_img = encoded_img_data.decode('utf-8')
+
+    imgs = [summary_img, trend_img, deadtime_img]
+    return imgs
+    
 
 
 def get_configs(connection, IDs, **kwargs):
