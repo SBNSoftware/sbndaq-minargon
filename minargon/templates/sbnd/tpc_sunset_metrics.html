@@ -43,28 +43,6 @@
             </div>
         </div>
 
-        <div class="row">
-            <!-- Plot -->
-            <div class="col-md-8">
-                <!-- plotly div -->
-                <h2 class="hcenter">Rolling Mean</h2>
-                <div style="padding:0" id="plotly-controller-mean-{{ ID }}"></div>
-            </div>
-            
-            <!-- Options -->
-            <div class="col-md-4 vcenter">
-                <div class="card hcenter">
-                    <div class="card-header">Display Options</div>
-                    <div class="card-body">
-                        <form class="form" role="form">
-                            {{ stream_options.time_range("start-mean", "end-mean", "toggle-mean") }}
-                            {{ stream_options.download("download-mean") }}
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Horizontal Break -->
         <hr>
     {% endfor %}
@@ -94,12 +72,12 @@
         var toggle_id   = "#toggle";
         var download_id = "#download";
 
-        var link_mean = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLinkMean($SCRIPT_ROOT, "{{ database }}", IDs_[i], configs_[i] ));
-        var controller_mean  = "plotly-controller-mean-"+IDs_[i];
-        var start_id_mean    = "#start-mean";
-        var end_id_mean      = "#end-mean";
-        var toggle_id_mean   = "#toggle-mean";
-        var download_id_mean = "#download-mean";
+//        var link_mean = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLinkMean($SCRIPT_ROOT, "{{ database }}", IDs_[i], configs_[i] ));
+//        var controller_mean  = "plotly-controller-mean-"+IDs_[i];
+//        var start_id_mean    = "#start-mean";
+//        var end_id_mean      = "#end-mean";
+//        var toggle_id_mean   = "#toggle-mean";
+//        var download_id_mean = "#download-mean";
 
         // Build plotly controller
         var plotly_controller = new module.PlotlyController(controller, link, ["Sunsets/min", "mean"], configs_[i])
@@ -109,16 +87,16 @@
         plotly_controller.setYTitles(["Sunsets/min"]);
         plotly_controller.setPlotTitle("");
 
-        var plotly_controller_mean = new module.PlotlyController(controller_mean, link_mean, [""], configs_[i])
-            .timeRangeController(start_id_mean, end_id_mean, toggle_id_mean)
-            .downloadDataController(download_id_mean)
-        plotly_controller_mean.setYRanges([[0, 500]]);
-        plotly_controller_mean.setYTitles(["Sunsets/min"]);
-        plotly_controller_mean.setPlotTitle("");
+//        var plotly_controller_mean = new module.PlotlyController(controller_mean, link_mean, [""], configs_[i])
+//            .timeRangeController(start_id_mean, end_id_mean, toggle_id_mean)
+//            .downloadDataController(download_id_mean)
+//        plotly_controller_mean.setYRanges([[0, 500]]);
+//        plotly_controller_mean.setYTitles(["Sunsets/min"]);
+//        plotly_controller_mean.setPlotTitle("");
 
         // Start it
         plotly_controller.run();
-        plotly_controller_mean.run();
+//        plotly_controller_mean.run();
     }
 
 </script>
