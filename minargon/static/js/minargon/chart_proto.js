@@ -117,6 +117,7 @@ export class DataTrace {
     this.y_axis = y_axis;
     this.data_handle = data_handle;
     this.times_handle = times_handle;
+    this.times_handle = times_handle;
   }
 
   trace() {
@@ -129,6 +130,10 @@ export class DataTrace {
     };
     if (this.y_axis.index > 0) {
       ret.marker = { color: YCOLORS[this.y_axis.index-1] };
+    }
+    if (this.title === "ramp") {
+      ret.marker = { color: 'rgb(0,0,128)' };
+
     }
     return ret;
   }

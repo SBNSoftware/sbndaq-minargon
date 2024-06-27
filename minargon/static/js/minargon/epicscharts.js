@@ -115,6 +115,18 @@ export class TimeSeriesScatter {
 
     draw() {
       var traces = [];
+      var ramptimes = [1719443120000, 1719485921000];
+      for (var r = 0; r < ramptimes.length; r++) {
+        var trace_ramp = {
+          x: [ramptimes[r], ramptimes[r]],
+          y: [0, 1000],
+          mode: 'line',
+          type: 'scatter',
+          name: 'ramp',
+          marker: { color: 'rgb(128,128,128)' }
+        };
+        traces.push(trace_ramp);
+      }
       for (var i = 0; i < this.n_data; i++) {
         traces.push(this.data_traces[i].trace());
       }

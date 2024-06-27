@@ -10,6 +10,7 @@ this.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
 import os
 import subprocess 
 import psycopg2
@@ -25,6 +26,8 @@ import time
 import calendar
 import re
 from pytz import timezone
+import numpy as np
+import matplotlib.pyplot as plt
 
 # status interpreter functions
 from .checkStatus import statusString
@@ -33,6 +36,9 @@ from .checkStatus import transferString
 from .checkStatus import messageString
 import six
 from six.moves import range
+import io
+from PIL import Image
+import base64
 
 
 # error class for connecting to postgres
@@ -441,10 +447,171 @@ def ps_series(connection, ID):
 
     # Setup the return dictionary
     ret = {
-        ID: data_list
+        ID: data_list,
+        "warningRange": []
     }
 
     return jsonify(values=ret, query=query)
+
+BREAK_TIMESTAMPS = [1719412080000, 1719426720000]
+BREAK_TIMESTAMPS = [big/1000. for big in BREAK_TIMESTAMPS]
+@app.route("/<connection>/ps_series_mean/<ID>")
+@postgres_route
+def ps_series_mean(connection, ID):
+    config = connection[1]
+
+    # Make a request for time range
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        # 12 hours ago
+        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 12*60*60*1e3 # convert to unix ms
+
+    stop_t  = args['stop']     # Stop time
+
+    # Catch for if no stop time exists
+    if (stop_t == None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+
+    # remove the timing keys from the dict
+    table_args = request.args.to_dict()
+    table_args.pop('start', None)
+    table_args.pop('stop', None)
+    table_args.pop('n_data', None)
+    table_args.pop('now', None)
+
+    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+
+    # Format the data from database query
+    data_list = []
+    val_list = []
+    t_list = []
+
+    for row in reversed(data):
+        value = None
+        for i in range(len(config["value_names"])):
+            accessor = "val%i" % i
+            if row[accessor] is not None:
+                value = row[accessor]
+                break
+            else: # no good data here, ignore this time value
+                continue
+
+        # Add the data to the list
+        if value is None:
+            continue
+        if value < 1:
+            continue
+        data_list.append( [float(row['sample_time']), value] )
+        val_list.append( value )
+        t_list.append( float(row['sample_time']) )
+
+    # make a list of rolling averages
+    rolling = []
+    break_idx = [0] + [np.argmin(np.abs(np.array(t_list) - b)) for b in BREAK_TIMESTAMPS]
+    period = 0
+    for i in range(len(data_list)-1):
+        this_vals = val_list[break_idx[period]:i+1]
+        if len(this_vals) < 20:
+            this_vals = val_list[break_idx[period]:20]
+        this_avg = float(sum(this_vals)) / float(len(this_vals))
+        this_avg = np.mean(this_vals)
+        this_avg = np.median(this_vals)
+        rolling.append([t_list[i], this_avg])
+        if (i == break_idx[period+1]):
+            period += 1
+
+    # Setup the return dictionary
+    ret = {
+        ID: rolling,
+        "configs": {
+            "warningRange": [0, 1000]
+        }
+    }
+
+    return jsonify(values=ret, query=query)
+
+#@app.route("/<connection>/ps_series_plot/<ID>")
+#@postgres_route
+#def ps_series_plot(connection, ID):
+#    config = connection[1]
+#
+#    # Make a request for time range
+#    args = stream_args(request.args)
+#    start_t = args['start']    # Start time
+#    if start_t is None:
+#        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+#        # 12 hours ago
+#        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 12*60*60*1e3 # convert to unix ms
+#
+#    stop_t  = args['stop']     # Stop time
+#
+#    # Catch for if no stop time exists
+#    if (stop_t == None): 
+#        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+#        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+#
+#    # remove the timing keys from the dict
+#    table_args = request.args.to_dict()
+#    table_args.pop('start', None)
+#    table_args.pop('stop', None)
+#    table_args.pop('n_data', None)
+#    table_args.pop('now', None)
+#
+#    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+#
+#    # Format the data from database query
+#    data_list = []
+#    val_list = []
+#    t_list = []
+#
+#    for row in reversed(data):
+#        value = None
+#        for i in range(len(config["value_names"])):
+#            accessor = "val%i" % i
+#            if row[accessor] is not None:
+#                value = row[accessor]
+#                break
+#            else: # no good data here, ignore this time value
+#                continue
+#
+#        # Add the data to the list
+#        if value is None:
+#            continue
+#        if value < 1:
+#            continue
+#        data_list.append( [float(row['sample_time']), value] )
+#        val_list.append( value )
+#        t_list.append( float(row['sample_time']) )
+#
+#    # make a list of rolling averages
+#    rolling = []
+#    break_idx = [0] + [np.argmin(np.abs(np.array(t_list) - b)) for b in BREAK_TIMESTAMPS]
+#    period = 0
+#    for i in range(len(data_list)-1):
+#        this_vals = val_list[break_idx[period]:i+1]
+#        if len(this_vals) < 20:
+#            this_vals = val_list[break_idx[period]:20]
+#        this_avg = float(sum(this_vals)) / float(len(this_vals))
+#        this_avg = np.mean(this_vals)
+#        this_avg = np.median(this_vals)
+#        rolling.append([t_list[i], this_avg])
+#        if (i == break_idx[period+1]):
+#            period += 1
+#
+#    # return scatter plot
+#    x = np.array(data_list)[:,0][:len(rolling)]
+#    y = rolling
+#    fig, ax = plt.subplots()
+#    plt.plot(x, y)
+#
+#    temp_data = io.BytesIO()
+#    plt.savefig(temp_data, format="JPEG")
+#    encoded_img_data = base64.b64encode(temp_data.getvalue())
+#    return encoded_img_data.decode('utf-8')
+
 
 def get_configs(connection, IDs, **kwargs):
     return pv_list(connection, IDs=tuple(IDs), **kwargs)
