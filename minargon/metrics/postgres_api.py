@@ -510,18 +510,23 @@ def ps_series_mean(connection, ID):
 
     # make a list of rolling averages
     rolling = []
-    break_idx = [0] + [np.argmin(np.abs(np.array(t_list) - b)) for b in BREAK_TIMESTAMPS]
+    break_idx = [0] + [np.argmin(np.abs(np.array(data_list)[:,0]/1e3 - b)) for b in BREAK_TIMESTAMPS]
     period = 0
     for i in range(len(data_list)-1):
         this_vals = val_list[break_idx[period]:i+1]
-        if len(this_vals) < 20:
+        this_len = float(len(this_vals))
+        if this_len < 20:
             this_vals = val_list[break_idx[period]:20]
-        this_avg = float(sum(this_vals)) / float(len(this_vals))
+        this_avg = float(sum(this_vals)) / this_len
+        if len(this_vals) == 0:
+             continue
         this_avg = np.mean(this_vals)
         this_avg = np.median(this_vals)
         rolling.append([t_list[i], this_avg])
-        if (i == break_idx[period+1]):
-            period += 1
+        if (period < len(break_idx)-1):
+            if (i == break_idx[period+1]):
+                 period += 1
+
 
     # Setup the return dictionary
     ret = {
@@ -533,84 +538,104 @@ def ps_series_mean(connection, ID):
 
     return jsonify(values=ret, query=query)
 
-#@app.route("/<connection>/ps_series_plot/<ID>")
-#@postgres_route
-#def ps_series_plot(connection, ID):
-#    config = connection[1]
-#
-#    # Make a request for time range
-#    args = stream_args(request.args)
-#    start_t = args['start']    # Start time
-#    if start_t is None:
-#        now = datetime.now(timezone('UTC')) # Get the time now in UTC
-#        # 12 hours ago
-#        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 12*60*60*1e3 # convert to unix ms
-#
-#    stop_t  = args['stop']     # Stop time
-#
-#    # Catch for if no stop time exists
-#    if (stop_t == None): 
-#        now = datetime.now(timezone('UTC')) # Get the time now in UTC
-#        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
-#
-#    # remove the timing keys from the dict
-#    table_args = request.args.to_dict()
-#    table_args.pop('start', None)
-#    table_args.pop('stop', None)
-#    table_args.pop('n_data', None)
-#    table_args.pop('now', None)
-#
-#    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
-#
-#    # Format the data from database query
-#    data_list = []
-#    val_list = []
-#    t_list = []
-#
-#    for row in reversed(data):
-#        value = None
-#        for i in range(len(config["value_names"])):
-#            accessor = "val%i" % i
-#            if row[accessor] is not None:
-#                value = row[accessor]
-#                break
-#            else: # no good data here, ignore this time value
-#                continue
-#
-#        # Add the data to the list
-#        if value is None:
-#            continue
-#        if value < 1:
-#            continue
-#        data_list.append( [float(row['sample_time']), value] )
-#        val_list.append( value )
-#        t_list.append( float(row['sample_time']) )
-#
-#    # make a list of rolling averages
-#    rolling = []
-#    break_idx = [0] + [np.argmin(np.abs(np.array(t_list) - b)) for b in BREAK_TIMESTAMPS]
-#    period = 0
-#    for i in range(len(data_list)-1):
-#        this_vals = val_list[break_idx[period]:i+1]
-#        if len(this_vals) < 20:
-#            this_vals = val_list[break_idx[period]:20]
-#        this_avg = float(sum(this_vals)) / float(len(this_vals))
-#        this_avg = np.mean(this_vals)
-#        this_avg = np.median(this_vals)
-#        rolling.append([t_list[i], this_avg])
-#        if (i == break_idx[period+1]):
-#            period += 1
-#
-#    # return scatter plot
-#    x = np.array(data_list)[:,0][:len(rolling)]
-#    y = rolling
-#    fig, ax = plt.subplots()
-#    plt.plot(x, y)
-#
-#    temp_data = io.BytesIO()
-#    plt.savefig(temp_data, format="JPEG")
-#    encoded_img_data = base64.b64encode(temp_data.getvalue())
-#    return encoded_img_data.decode('utf-8')
+@app.route("/<connection>/ps_series_plot/<ID>")
+@postgres_route
+def ps_series_plot(connection, ID):
+    config = connection[1]
+
+    # Make a request for time range
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        # 24 hours ago
+        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 24*60*60*1e3 # convert to unix ms
+
+    stop_t  = args['stop']     # Stop time
+
+    # Catch for if no stop time exists
+    if (stop_t == None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+
+    # remove the timing keys from the dict
+    table_args = request.args.to_dict()
+    table_args.pop('start', None)
+    table_args.pop('stop', None)
+    table_args.pop('n_data', None)
+    table_args.pop('now', None)
+
+    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+
+    # Format the data from database query
+    data_list = []
+    val_list = []
+    t_list = []
+
+    for row in reversed(data):
+        value = None
+        for i in range(len(config["value_names"])):
+            accessor = "val%i" % i
+            if row[accessor] is not None:
+                value = row[accessor]
+                break
+            else: # no good data here, ignore this time value
+                continue
+
+        # Add the data to the list
+        if value is None:
+            continue
+        if value < 1:
+            continue
+        data_list.append( [float(row['sample_time']), value] )
+        val_list.append( value )
+        t_list.append( float(row['sample_time']) )
+
+    # make a list of rolling averages
+    rolling_avg = []
+    rolling_med = []
+    break_idx = [0] + [np.argmin(np.abs(np.array(data_list)[:,0]/1e3 - b)) for b in BREAK_TIMESTAMPS]
+    period = 0
+    for i in range(len(data_list)-1):
+        this_vals = val_list[break_idx[period]:i+1]
+        this_len = float(len(this_vals))
+        if this_len < 20.:
+            this_vals = val_list[break_idx[period]:20]
+        this_avg = np.mean(this_vals)
+        rolling_avg.append([t_list[i], this_avg])
+        this_med = np.median(this_vals)
+        rolling_med.append([t_list[i], this_med])
+        if (period < len(break_idx)-1):
+            if (i == break_idx[period+1]):
+                 period += 1
+
+    x = np.array(data_list)[:,0]
+    y = np.array(data_list)[:,1]
+    x_mean = np.array(rolling_avg)[:,0]
+    y_mean = np.array(rolling_avg)[:,1]
+    x_med = np.array(rolling_med)[:,0]
+    y_med = np.array(rolling_med)[:,1]
+    fig, ax = plt.subplots()
+    plt.plot(x, y, "o", markersize=1, alpha=0.6)
+    plt.plot(x_mean, y_mean, "o-", markersize=1, label="mean", color="red", linewidth=1)
+    plt.plot(x_med, y_med, "o-", markersize=1, label="median", color="purple", linewidth=1)
+    for i, b in enumerate(BREAK_TIMESTAMPS):
+        if (i == 0):
+             plt.axvline(b*1e3, color="gray", label="ramp")
+        else:
+             plt.axvline(b*1e3, color="gray")
+
+    ax.set_xticks([])
+    ax.set_xticklabels([])
+    ax.set_ylabel("Sunsets/min")
+    ax.set_xlabel("Time")
+    ax.legend(bbox_to_anchor=(1.1,1))
+    plt.tight_layout()
+
+    temp_data = io.BytesIO()
+    plt.savefig(temp_data, format="JPEG")
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    return encoded_img_data.decode('utf-8')
 
 
 def get_configs(connection, IDs, **kwargs):
