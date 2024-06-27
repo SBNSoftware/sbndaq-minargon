@@ -516,7 +516,7 @@ def ps_series_mean(connection, ID):
         this_vals = val_list[break_idx[period]:i+1]
         this_len = float(len(this_vals))
         if this_len < 20:
-            this_vals = val_list[break_idx[period]:20]
+            this_vals = val_list[break_idx[period]:break_idx[period]+20]
         this_avg = float(sum(this_vals)) / this_len
         if len(this_vals) == 0:
              continue
@@ -594,13 +594,13 @@ def ps_series_plot(connection, ID):
     # make a list of rolling averages
     rolling_avg = []
     rolling_med = []
-    break_idx = [0] + [np.argmin(np.abs(np.array(data_list)[:,0]/1e3 - b)) for b in BREAK_TIMESTAMPS]
+    break_idx = [0] + [np.argmin(np.abs(np.array(t_list)/1e3 - b)) for b in BREAK_TIMESTAMPS]
     period = 0
     for i in range(len(data_list)-1):
         this_vals = val_list[break_idx[period]:i+1]
         this_len = float(len(this_vals))
         if this_len < 20.:
-            this_vals = val_list[break_idx[period]:20]
+            this_vals = val_list[break_idx[period]:break_idx[period]+20]
         this_avg = np.mean(this_vals)
         rolling_avg.append([t_list[i], this_avg])
         this_med = np.median(this_vals)
@@ -615,10 +615,10 @@ def ps_series_plot(connection, ID):
     y_mean = np.array(rolling_avg)[:,1]
     x_med = np.array(rolling_med)[:,0]
     y_med = np.array(rolling_med)[:,1]
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10,4))
     plt.plot(x, y, "o", markersize=1, alpha=0.6)
-    plt.plot(x_mean, y_mean, "o-", markersize=1, label="mean", color="red", linewidth=1)
-    plt.plot(x_med, y_med, "o-", markersize=1, label="median", color="purple", linewidth=1)
+    plt.plot(x_mean, y_mean, "--", markersize=1, label="mean", color="red")
+    plt.plot(x_med, y_med, "--", markersize=1, label="median", color="purple")
     for i, b in enumerate(BREAK_TIMESTAMPS):
         if (i == 0):
              plt.axvline(b*1e3, color="gray", label="ramp")
@@ -629,11 +629,12 @@ def ps_series_plot(connection, ID):
     ax.set_xticklabels([])
     ax.set_ylabel("Sunsets/min")
     ax.set_xlabel("Time")
-    ax.legend(bbox_to_anchor=(1.1,1))
+    ax.set_title("24-hour Summary")
+    ax.legend(loc="lower right")
     plt.tight_layout()
 
     temp_data = io.BytesIO()
-    plt.savefig(temp_data, format="JPEG")
+    plt.savefig(temp_data, format="JPEG", dpi=300)
     encoded_img_data = base64.b64encode(temp_data.getvalue())
     return encoded_img_data.decode('utf-8')
 
