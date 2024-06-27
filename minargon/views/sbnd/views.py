@@ -23,24 +23,24 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [24.085, 24.125],
+                "vmon": [30, 40, 25, 45],
                 #"vmon": [5.2, 5.4],
-                "imon": [21.45, 22.35],
+                "imon": [30, 40, 25, 45],
                 #"imon": [4.5, 5.25],
-                "vsp": [24.95, 25.05],
+                "vsp": [30, 40, 25, 45],
                 #"vsp": [5.45, 5.55], 
-                "isp": [22.3, 23.6],
+                "isp": [30, 40, 25, 45],
                 #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
-VMon_HI = 0.025
-VMon_HIHI = 21
-VMon_LO = 0
-VMon_LOLO = -1
-IMon_HI = 17
-IMon_HIHI = 18
-IMon_LO = 0
-IMon_LOLO = -1
+VMon_LO = DRIFTHV_ALARM_LIMITS["vmon"][0]
+VMon_HI = DRIFTHV_ALARM_LIMITS["vmon"][1]
+VMon_LOLO = DRIFTHV_ALARM_LIMITS["vmon"][2]
+VMon_HIHI = DRIFTHV_ALARM_LIMITS["vmon"][3]
+IMon_LO = DRIFTHV_ALARM_LIMITS["imon"][0]
+IMon_HI = DRIFTHV_ALARM_LIMITS["imon"][1]
+IMon_LOLO = DRIFTHV_ALARM_LIMITS["imon"][2]
+IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
@@ -71,6 +71,7 @@ def introduction():
     vmon_n_lo = 0
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
+        print(vr[0])
         if (float(vr[1]) < VMon_LOLO):
             vmon_n_lolo += 1
         elif (float(vr[1]) < VMon_LO):
@@ -836,6 +837,7 @@ def DriftHV_Heinzinger():
     configs = {}
     for pv in pv_lists:
         configs[pv] = {'unit': '', 'yTitle':'', 'title':'', 'warningRange': DRIFTHV_ALARM_LIMITS[pv]}
+        print(configs[pv])
 
     dbrows = []
     current_time = datetime.now()
@@ -864,7 +866,6 @@ def DriftHV_Heinzinger():
       "pv": pv_lists,
       "alarm_limits": DRIFTHV_ALARM_LIMITS
     }
-    print("render_args", render_args)
     return render_template('sbnd/drifthv_heinzinger.html', **render_args)
 
 @app.route('/Trigger_Board_Monitor')

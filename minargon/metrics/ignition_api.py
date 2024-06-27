@@ -224,10 +224,14 @@ def get_ignition_2hr_value_pv(connection, month, group, pv):
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start = str(int(stop_t)-7200000)
+    start = int(stop_t)-7200000
+    LATEST_RAMP = 1719514320000
+    if (start < LATEST_RAMP):
+        start = LATEST_RAMP
+    start = str(start)
     stop = str(int(stop_t))
-    #print("start", start)
-    #print("stop", stop)
+    print("start", start)
+    print("stop", stop)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
@@ -440,8 +444,6 @@ def drifthv_ps_step(connection, pv):
     AND d.t_stamp BETWEEN {} AND {}
     ORDER BY d.t_stamp 
     LIMIT {}""".format(current_month, pv, start, stop, n_data)
-
-    print("QUERY", query)
 
     cursor.execute(query)
     data = cursor.fetchall()
