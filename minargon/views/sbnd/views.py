@@ -331,23 +331,53 @@ def wireplane_view():
 @app.route('/tpc_sunset_metrics')
 def tpc_sunset_metrics():
     link_function = "undefined"
-    config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
-    config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
-    config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
-    config['metric_config']['ndigi']['display_range'] = [0,200]
-    metric = "nspikes"
-    channels = "undefined"
+    # config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
+    # config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
+    # config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
+    # config['metric_config']['ndigi']['display_range'] = [0,200]
+    # metric = "nspikes"
+    # channels = "undefined"
+    # render_args = {
+    #     'title': "Sunset",
+    #     'link_function': link_function,
+    #     'view_ident': "",
+    #     'config': config,
+    #     'metric': metric,
+    #     'eventmeta_key': "None",
+    #     'channels': channels,
+    #     'hw_select': "undefined",
+    #     'channel_map': "undefined",
+    #     'dbname': "online"
+    # }
+    # return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
+
+    database = "sbnd_epics"
+    var = "sbnd_tpc_mon"
+    # Get the list of IDs for the var name
+    IDs = postgres_api.pv_internal(database, ret_id=var, front_end_abort=True)
+
+    # get the configs for each ID
+    configs, starts, ends, toggles, downloads = [], [], [], [], []
+    for ID in IDs:
+        configs.append(postgres_api.pv_meta_internal(database, ID, front_end_abort=True))
+        starts.append("start-"+str(ID))
+        ends.append("end-"+str(ID))
+        toggles.append("toggle-"+str(ID))
+        downloads.append("download-"+str(ID))
+
+   # plot_img = postgres_api.ps_series_plot("sbnd_epics",[9367])
+    plot_img = postgres_api.ps_series_plot(database, ID, front_end_abort=True)
+    # print config
     render_args = {
-        'title': "Sunset",
-        'link_function': link_function,
-        'view_ident': "",
-        'config': config,
-        'metric': metric,
-        'eventmeta_key': "None",
-        'channels': channels,
-        'hw_select': "undefined",
-        'channel_map': "undefined",
-        'dbname': "online"
+      "var": var, 
+      "IDs": IDs,
+      "configs": configs,
+      "starts" : starts,
+      "ends" : ends,
+      "toggles" : toggles,
+      "downloads" : downloads,
+      "database": database,
+      "imgs": plot_img
     }
     return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
 
