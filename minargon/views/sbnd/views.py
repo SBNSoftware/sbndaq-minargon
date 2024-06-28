@@ -23,13 +23,13 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [30, 40, 25, 45],
+                "vmon": [33.73, 33.76, 33.72, 33.78],
                 #"vmon": [5.2, 5.4],
-                "imon": [30, 40, 25, 45],
+                "imon": [30.25, 31.0, 30.2, 31.30],
                 #"imon": [4.5, 5.25],
-                "vsp": [30, 40, 25, 45],
+                "vsp": [34.95, 35.05],
                 #"vsp": [5.45, 5.55], 
-                "isp": [30, 40, 25, 45],
+                "isp": [31.4, 32.05],
                 #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
@@ -90,14 +90,14 @@ def introduction():
     imon_n_hihi = 0
     imon_n_lo = 0
     imon_n_lolo = 0
-    for vr in vmon_dbrows:
-        if (float(vr[1]) < IMon_LOLO):
+    for ir in imon_dbrows:
+        if (float(ir[1]) < IMon_LOLO):
             imon_n_lolo += 1
-        elif (float(vr[1]) < IMon_LO):
+        elif (float(ir[1]) < IMon_LO):
             imon_n_lo += 1
-        elif (float(vr[1]) > IMon_HIHI):
+        elif (float(ir[1]) > IMon_HIHI):
             imon_n_hihi += 1
-        elif (float(vr[1]) > IMon_HI):
+        elif (float(ir[1]) > IMon_HI):
             imon_n_hi += 1
         else:
             continue

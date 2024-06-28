@@ -279,14 +279,8 @@ var bad_drifthv_pvs = {{bad_drifthv_pvs|tojson|safe}};
 { BAD_DRIFTHVS.add("{{pv}}"); }
 {% endfor %}
 var HV_status = 0;
-if (HV_status == 1) {
-  let bad_drifthvs_str = "NOT OK. Bad";
-  $("#DriftHV-Status").html(bad_drifthvs_str);
-  $("#DriftHV-Status").css({"color": "red"});
-}
-else {
-  $("#DriftHV-Status").text("OK");
-  $("#DriftHV-Status").css({"color": "green"});
+if (BAD_DRIFTHVS.size > 0) {
+  HV_status = 1;
 }
 //vmon log
 $("#VMon-Nsamples").html({{vmon_nsamples}});
@@ -369,10 +363,10 @@ if ( {{imon_hihi}} == 0) {
 let imon_lo_str = "{{imon_lo}}";
 $("#IMon-LO").html(imon_lo_str);
 $("#IMon-LO").css({"color": "green"});
-if ( {{imon_lo}} >  0.025*{{imon_nsamples}}) {
+if ( {{imon_lo}} >  0.1*{{imon_nsamples}}) {
   $("#IMon-LO").css({"color": "orange"});
 }
-if ( {{imon_lo}} >  0.05*{{imon_nsamples}}) {
+if ( {{imon_lo}} >  0.25*{{imon_nsamples}}) {
   $("#IMon-LO").css({"color": "red"});
   HV_status = 1;
 }
@@ -388,6 +382,16 @@ if ( {{imon_lolo}} > 5 ) {
 }
 if ( {{imon_lolo}} == 0) {
   $("#IMon-LOLO").css({"color": "green"});
+}
+
+if (HV_status == 1) {
+  let bad_drifthvs_str = "NOT OK";
+  $("#DriftHV-Status").html(bad_drifthvs_str);
+  $("#DriftHV-Status").css({"color": "red"});
+}
+else {
+  $("#DriftHV-Status").text("OK");
+  $("#DriftHV-Status").css({"color": "green"});
 }
 
 
