@@ -651,6 +651,6 @@ def pmt_beam_view(args, instance_name, view_ident="", link_function="undefined",
         'channel_map': channel_map,
     }
 
-    return render_template('common/pmt_timeseries.html', **render_args)
+    return render_template('icarus/pmt_timeseries.html', **render_args)
 
 
