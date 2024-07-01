@@ -521,6 +521,55 @@ def Impedance_Ground_Monitor():
     }
     return render_template('icarus/impedance_ground_monitor.html', **render_args)
 
+@app.route('/WireBias_E_Monitor')
+def WireBias_E_Monitor():
+    return WireBias_Monitor("E")
+@app.route('/WireBias_W_Monitor')
+def WireBias_W_Monitor():
+    return WireBias_Monitor("W")
+
+def WireBias_Monitor(cryo):
+    database = "epics"
+    IDmap = {
+      "East-Cryostat-I1-Current": 3055,
+      "East-Cryostat-I2-Current": 3057,
+      #"East-Cryostat-C-Current":  3059,
+      "East-Cryostat-C-Current":  3053,
+      "East-Cryostat-I1-Voltage": 3056,
+      "East-Cryostat-I2-Voltage": 3058,
+      #"East-Cryostat-C-Voltage":  3060,
+      "East-Cryostat-C-Voltage":  3054,
+      "West-Cryostat-I1-Current": 3061,
+      "West-Cryostat-I2-Current": 3063,
+      #"West-Cryostat-C-Current":  3065,
+      "West-Cryostat-C-Current":  3059,
+      "West-Cryostat-I1-Voltage": 3062,
+      "West-Cryostat-I2-Voltage": 3064,
+      #"West-Cryostat-C-Voltage":  3066,
+      "West-Cryostat-C-Voltage":  3060,
+    }
+    keys = [
+      "East-Cryostat-I1-Current", "East-Cryostat-I2-Current", "East-Cryostat-C-Current",
+      "East-Cryostat-I1-Voltage", "East-Cryostat-I2-Voltage", "East-Cryostat-C-Voltage",
+      "West-Cryostat-I1-Current", "West-Cryostat-I2-Current", "West-Cryostat-C-Current",
+      "West-Cryostat-I1-Voltage", "West-Cryostat-I2-Voltage", "West-Cryostat-C-Voltage",
+    ]
+
+    IDmap = dict([l for l in IDmap.items() if l[0].startswith(cryo)])
+    keys = [k for k in keys if k.startswith(cryo)]
+    configs = {}
+    for _,i in IDmap.items():
+        configs[i] = postgres_api.pv_meta_internal(database, i, front_end_abort=True)
+
+    render_args = {
+      "configs": configs,
+      "database": database,
+      "IDmap": IDmap,
+      "keys": keys,
+    }
+
+    return render_template('icarus/wirebias_monitor.html', **render_args)
+
 @app.route('/Level_Monitor')
 def Level_Monitor():
     database = "epics"
@@ -549,5 +598,58 @@ def Level_Monitor():
 
     return render_template('icarus/level_monitor.html', **render_args)
 
+@app.route('/PMT_beamtiming/<beam_name>')
+def PMT_beamtiming(beam_name):
+    return pmt_beam_view(request.args, beam_name)
+
+def pmt_beam_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None):
+    # TODO: what to do with this?
+    initial_datum = args.get('data', None)
+    
+    # get the config for this group from redis
+    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+
+    if initial_datum is None:
+        if len(config["metric_list"]) > 0:
+            initial_datum = config["metric_list"][0]
+        else:
+            intial_datum = "rms"
+
+    # process the channels
+    # if the hw_select is present, get it
+    if hw_select is not None:
+        channels = hardwaredb.select(hw_select)
+        # lookup if there is a channel mapping
+        channel_map = hardwaredb.channel_map(hw_select, channels)
+        if channel_map is None:
+            channel_map = "undefined"
+    else:
+        channels = "undefined"
+        channel_map = "undefined"
+
+    # setup the title
+    title = instance_name
+    if hw_select is not None:
+        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
+
+    # setup hw_select
+    if hw_select is None:
+        hw_select = "undefined"
+    else:
+        hw_select = hw_select.to_url()
+
+    render_args = {
+        'title': title,
+        'link_function': link_function,
+        'view_ident': view_ident,
+        'config': config,
+        'metric': initial_datum,
+        'eventmeta_key': eventmeta_key,
+        'channels': channels,
+        'hw_select': hw_select,
+        'channel_map': channel_map,
+    }
+
+    return render_template('common/pmt_timeseries.html', **render_args)
 
 
