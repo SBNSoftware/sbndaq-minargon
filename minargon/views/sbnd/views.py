@@ -23,24 +23,24 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [-0.05, 0.05],
+                "vmon": [67.4, 67.5, 67.3, 67.6],
                 #"vmon": [5.2, 5.4],
-                "imon": [-0.05, 0.5],
+                "imon": [61.9, 62.2, 61.7, 62.4],
                 #"imon": [4.5, 5.25],
-                "vsp": [-0.05, 0.05],
+                "vsp": [69.95, 70.05],
                 #"vsp": [5.45, 5.55], 
-                "isp": [-0.05, 0.55],
+                "isp": [63.5, 66.5],
                 #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
-VMon_HI = 0.025
-VMon_HIHI = 21
-VMon_LO = 0
-VMon_LOLO = -1
-IMon_HI = 17
-IMon_HIHI = 18
-IMon_LO = 0
-IMon_LOLO = -1
+VMon_LO = DRIFTHV_ALARM_LIMITS["vmon"][0]
+VMon_HI = DRIFTHV_ALARM_LIMITS["vmon"][1]
+VMon_LOLO = DRIFTHV_ALARM_LIMITS["vmon"][2]
+VMon_HIHI = DRIFTHV_ALARM_LIMITS["vmon"][3]
+IMon_LO = DRIFTHV_ALARM_LIMITS["imon"][0]
+IMon_HI = DRIFTHV_ALARM_LIMITS["imon"][1]
+IMon_LOLO = DRIFTHV_ALARM_LIMITS["imon"][2]
+IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
@@ -71,13 +71,14 @@ def introduction():
     vmon_n_lo = 0
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
+        print(vr[0])
         if (float(vr[1]) < VMon_LOLO):
             vmon_n_lolo += 1
-        elif (float(vr[1]) < VMon_LO):
+        if (float(vr[1]) < VMon_LO):
             vmon_n_lo += 1
-        elif (float(vr[1]) > VMon_HIHI):
+        if (float(vr[1]) > VMon_HIHI):
             vmon_n_hihi += 1
-        elif (float(vr[1]) > VMon_HI):
+        if (float(vr[1]) > VMon_HI):
             vmon_n_hi += 1
         else:
             continue
@@ -89,14 +90,14 @@ def introduction():
     imon_n_hihi = 0
     imon_n_lo = 0
     imon_n_lolo = 0
-    for vr in vmon_dbrows:
-        if (float(vr[1]) < IMon_LOLO):
+    for ir in imon_dbrows:
+        if (float(ir[1]) < IMon_LOLO):
             imon_n_lolo += 1
-        elif (float(vr[1]) < IMon_LO):
+        if (float(ir[1]) < IMon_LO):
             imon_n_lo += 1
-        elif (float(vr[1]) > IMon_HIHI):
+        if (float(ir[1]) > IMon_HIHI):
             imon_n_hihi += 1
-        elif (float(vr[1]) > IMon_HI):
+        if (float(ir[1]) > IMon_HI):
             imon_n_hi += 1
         else:
             continue
@@ -129,12 +130,21 @@ def introduction():
     tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
     tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
 
+    # event
+    event_group_name = "tpc"
+    event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
+    print("event_config", event_config)
+    print("tpc_config", tpc_config)
+
     render_args = {
       "config": config,
       "channels": channels, #channels mean BOARD here
       "crts": crts,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "events": ["0"],
+      "event_config": event_config,
+      "event_channels": [[0]],
       "tpc_config": tpc_config,
       "tpc_channels": tpc_channels,
       "tpc_titles": tpc_titles,
@@ -331,23 +341,53 @@ def wireplane_view():
 @app.route('/tpc_sunset_metrics')
 def tpc_sunset_metrics():
     link_function = "undefined"
-    config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
-    config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
-    config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
-    config['metric_config']['ndigi']['display_range'] = [0,200]
-    metric = "nspikes"
-    channels = "undefined"
+    # config = online_metrics.get_group_config("online", "Sunset", front_end_abort=True)
+    # config['metric_config']['nspikes']['name'] = "# of a Spiked Ch"
+    # config['metric_config']['ndigi']['name'] = "# of Digital Noise Ch"
+    # config['metric_config']['ndigi']['display_range'] = [0,200]
+    # metric = "nspikes"
+    # channels = "undefined"
+    # render_args = {
+    #     'title': "Sunset",
+    #     'link_function': link_function,
+    #     'view_ident': "",
+    #     'config': config,
+    #     'metric': metric,
+    #     'eventmeta_key': "None",
+    #     'channels': channels,
+    #     'hw_select': "undefined",
+    #     'channel_map': "undefined",
+    #     'dbname': "online"
+    # }
+    # return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
+
+    database = "sbnd_epics"
+    var = "sbnd_tpc_mon"
+    # Get the list of IDs for the var name
+    IDs = postgres_api.pv_internal(database, ret_id=var, front_end_abort=True)
+
+    # get the configs for each ID
+    configs, starts, ends, toggles, downloads = [], [], [], [], []
+    for ID in IDs:
+        configs.append(postgres_api.pv_meta_internal(database, ID, front_end_abort=True))
+        starts.append("start-"+str(ID))
+        ends.append("end-"+str(ID))
+        toggles.append("toggle-"+str(ID))
+        downloads.append("download-"+str(ID))
+
+   # plot_img = postgres_api.ps_series_plot("sbnd_epics",[9367])
+    imgs = postgres_api.ps_series_plot(database, ID, front_end_abort=True)
+    # print config
     render_args = {
-        'title': "Sunset",
-        'link_function': link_function,
-        'view_ident': "",
-        'config': config,
-        'metric': metric,
-        'eventmeta_key': "None",
-        'channels': channels,
-        'hw_select': "undefined",
-        'channel_map': "undefined",
-        'dbname': "online"
+      "var": var, 
+      "IDs": IDs,
+      "configs": configs,
+      "starts" : starts,
+      "ends" : ends,
+      "toggles" : toggles,
+      "downloads" : downloads,
+      "database": database,
+      "imgs": imgs
     }
     return render_template('sbnd/tpc_sunset_metrics.html', **render_args)
 
@@ -806,6 +846,7 @@ def DriftHV_Heinzinger():
     configs = {}
     for pv in pv_lists:
         configs[pv] = {'unit': '', 'yTitle':'', 'title':'', 'warningRange': DRIFTHV_ALARM_LIMITS[pv]}
+        print(configs[pv])
 
     dbrows = []
     current_time = datetime.now()
@@ -834,7 +875,6 @@ def DriftHV_Heinzinger():
       "pv": pv_lists,
       "alarm_limits": DRIFTHV_ALARM_LIMITS
     }
-    print("render_args", render_args)
     return render_template('sbnd/drifthv_heinzinger.html', **render_args)
 
 @app.route('/Trigger_Board_Monitor')

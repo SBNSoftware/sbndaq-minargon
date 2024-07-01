@@ -20,6 +20,10 @@ export class EpicsStreamLink {
     return this.root + "/" + this.database + "/ps_series/" + this.ID + '?' + $.param(timeArgs(start, stop, n_data));
   }
 
+  data_link_mean(start, stop, n_data) {
+    return this.root + "/" + this.database + "/ps_series_mean/" + this.ID + '?' + $.param(timeArgs(start, stop, n_data));
+  }
+
   config_link() {
     return this.root + "/" + this.database + "/pv_meta/" + this.ID;
   }
@@ -31,7 +35,34 @@ export class EpicsStreamLink {
   name() {
     return this.ID;
   }
+}
 
+export class EpicsStreamLinkMean {
+  constructor(root, database, ID) {
+    this.root = root;
+    this.database = database;
+    this.ID = String(ID);
+  }
+
+  step_link() {
+    return this.root + "/" + this.database + "/ps_step/" + this.ID;
+  }
+
+  data_link(start, stop, n_data) {
+    return this.root + "/" + this.database + "/ps_series_mean/" + this.ID + '?' + $.param(timeArgs(start, stop, n_data));
+  }
+
+  config_link() {
+    return this.root + "/" + this.database + "/pv_meta/" + this.ID;
+  }
+
+  accessors() {
+    return [[this.ID]];
+  }
+
+  name() {
+    return this.ID;
+  }
 }
 
 export class CryoStreamLink {
