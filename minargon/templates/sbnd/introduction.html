@@ -127,6 +127,10 @@
   <h3 class="hcenter">Detector Status</h3>
   <table class="table table-striped">
   <tr>
+    <th style="width: 31%;"><a href="{{url_for('event_display')}}">Event Status:</a></th>
+    <th><span id="Event-Status"> </span></th>
+  </tr>
+  <tr>
     <th style="width: 31%;"><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
     <th><span id="TPC-Status"> </span></th>
   </tr>
@@ -283,6 +287,7 @@ if (BAD_DRIFTHVS.size > 0) {
   HV_status = 1;
 }
 //vmon log
+var vmon_status = 0;
 $("#VMon-Nsamples").html({{vmon_nsamples}});
 
 let vmon_hi_str = "{{vmon_hi}}";
@@ -398,12 +403,12 @@ else {
 // TPCs
 var DISCONNECTED_PLANE = new Set();
 var BAD_PLANES = new Set();
+var TPC_ON = 1;
 
 {% for tpc_plane in tpc_planes %}
 {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
 {% set tpc_title = tpc_titles[loop.index0] %}
 {
-  
 var tpc_config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{tpc_channels}}, 0, 25, "", undefined, "");
 var tpc_data_link = tpc_config_controller.data_link(0, ["rms"], undefined, 1);
 var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60000);
@@ -448,21 +453,55 @@ var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
     }
 
     if (DISCONNECTED_PLANE.size == 6) {
-    $("#TPC-Status").text("TPC DAQ disconnected from DQM");
-    $("#TPC-Status").css({"color": "orange"});
-
-  } else if (BAD_PLANES.size > 0) {
-    let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
-    $("#TPC-Status").html(bad_planes_str);
-    $("#TPC-Status").css({"color": "red"});
-
-  } else {
-    $("#TPC-Status").text("OK");
-    $("#TPC-Status").css({"color": "green"});
-  }  
+      TPC_ON = 0;
+      $("#TPC-Status").text("TPC DAQ disconnected from DQM");
+      $("#TPC-Status").css({"color": "orange"});
+    } 
+    else if (BAD_PLANES.size > 0) {
+      let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
+      $("#TPC-Status").html(bad_planes_str);
+      $("#TPC-Status").css({"color": "red"});
+    }
+    else {
+      $("#TPC-Status").text("OK");
+      $("#TPC-Status").css({"color": "green"});
+    }  
   }
 ]);
 tpc_buffer.start();
+}
+{% endfor %}
+
+// Events
+var broken = 0;
+var event_config = {{event_config|tojson|safe}};
+
+{% for event in events %}
+{% set event_channels = event_channels[loop.index0]|tojson %}
+{
+
+var event_config_controller = new Config.GroupConfigController(event_config, undefined, ["broken"], {{event_channels}}, 0, 25, "", undefined, undefined);
+
+var event_data_link = event_config_controller.data_link(0, ["broken"], undefined, 1);
+var event_poll = new Data.D3DataPoll(event_data_link, 60*1000 /* 1 minute */);
+var event_buffer = new Data.D3DataBuffer(event_poll, 1, [
+  function(data) {
+    
+    var event_channels = {{event_channels}};
+    var broken_data = data;
+    var broken = broken_data[0].get_last()[1];
+
+    if (broken == 1){
+      $("#Event-Status").text("Event may be broken -- check event display");
+      $("#Event-Status").css({"color": "red"});
+    }
+    else {
+      $("#Event-Status").text("OK");
+      $("#Event-Status").css({"color": "green"});
+    }
+  }
+]);
+event_buffer.start();
 }
 {% endfor %}
 
