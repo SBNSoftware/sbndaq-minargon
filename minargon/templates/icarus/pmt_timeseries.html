@@ -25,7 +25,7 @@
     </div>
 </div>
 
-<div class="row">
+<!-- <div class="row">
 <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-lg-1 order-md-2 hcenter">
         <div class="card">
             <div class="card-header">Display Options</div>
@@ -41,7 +41,7 @@
        	   </div>    
           </div>
          <div class="col-lg-8 col-md-12 order-lg-2 order-md-1" style="padding:0" id="timeseries"></div>
-         </div>
+         </div> -->
 
 <div class="row">
     <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
@@ -100,10 +100,10 @@ var histo = config_controller.addGroupDataHistoController("histogram", "{{title}
   .set();
 
 // build cubism controller
-var cubism = config_controller.addCubismController("#timeseries", 25)
+/* var cubism = config_controller.addCubismController("#timeseries", 25)
   .heightController("#form-height")
   .rangeController("#form-range-lo", "#form-range-hi")
-  .set();
+  .set(); */
 
 // build plotly controller
 var plotly = config_controller.addPlotlyController("time-scatter")
