@@ -38,7 +38,7 @@ ICARUS Online Monitoring
     <th><span id="Archived-Data"> </span></th>
   </tr>
   <tr>
-    <th>Redis Meomory Usage: </th>
+    <th>Redis Memory Usage: </th>
     <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
   </tr>
   </table>
@@ -217,6 +217,7 @@ poll_redis_mem_frac.add_callback(function(data) {
 poll_redis_mem_frac.run();
 
 var N_FLANGE_BAD_CHANNEL = 16;
+var N_FLANGE_BAD_CHANNEL_EE20T = 20; // bad flange
 var BAD_FLANGES = new Set();
 
 {% for flange in flanges %}
@@ -260,7 +261,13 @@ var buffer = new Data.D3DataBuffer(poll, 5, [
     var flange_str =
       `<a href="{{url_for('TPC', hw_select=flange.trim() )}}">{{flange.values[0]}}</a>`;
 
+    
+    {% if flange.values[0] == "EE20T" %}
+    // HACK: EE20T is acting up, so make its alarm threshold higher
+    if (n_bad_channel >= N_FLANGE_BAD_CHANNEL_EE20T) {
+    {% else %}
     if (n_bad_channel >= N_FLANGE_BAD_CHANNEL) {
+    {% endif %}
       BAD_FLANGES.add(flange_str);
     }
     else {
