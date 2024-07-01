@@ -599,11 +599,11 @@ def Level_Monitor():
     return render_template('icarus/level_monitor.html', **render_args)
 
 #PMT beam timeseries and waveform
-@app.route('/PMT_beamtiming/<beam_name>')
-def PMT_beamtiming(beam_name):
-    return pmt_beam_view(request.args, beam_name)
+@app.route('/PMT_beamtiming/<group_name>')
+def PMT_beamtiming(group_name):
+    return pmt_beam_view(request.args, group_name)
 
-def pmt_beam_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None):
+def pmt_beam_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=True, hw_select=None):
     # TODO: what to do with this?
     initial_datum = args.get('data', None)
     
