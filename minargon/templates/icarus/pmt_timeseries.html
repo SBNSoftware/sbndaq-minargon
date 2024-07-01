@@ -1,0 +1,163 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}{{title}}{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+<div class="row">
+    <div class="col-lg-6 col-md-12 order-1" style="padding:0">
+        <div id="histogram"></div>
+    </div>
+    <div class="col-lg-6 col-md-12 order-2" style="padding:0">
+        <div id="scatter"></div>
+    </div>
+</div>
+
+<div class="row">
+<div class="col-lg-4 col-md-8 col-sm-12 vcenter order-lg-1 order-md-2 hcenter">
+        <div class="card">
+            <div class="card-header">Display Options</div>
+            <div class="card-body">
+                <form class="form" role="form">
+                    {{ stream_options.metric_option(config["metric_config"], metric, "form-metric") }}
+                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
+                    {{ stream_options.height_option([25, 40, 60, 80, 100], 25, "form-height") }}
+                    {{ stream_options.threshold_option("form-range-lo", "form-range-hi") }}
+                    {{ stream_options.warning_option("form-warning-range-lo", "form-warning-range-hi") }}
+                </form>
+            </div>  
+       	   </div>    
+          </div>
+         <div class="col-lg-8 col-md-12 order-lg-2 order-md-1" style="padding:0" id="timeseries"></div>
+         </div>
+
+<div class="row">
+    <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter"></div>
+    </div>
+       <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
+        <div class="card">
+            <div class="card-header">TimeSeries Options</div>
+            <div class="card-body">
+                <form class="form" role="form">
+                    {{ stream_options.time_range("start", "end", "toggle") }}
+                    {{ stream_options.download("download") }}
+	        </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+// get the configuration
+// var config = new timeseries.TimeSeries({{config|tojson|safe}});
+var config = {{config|tojson|safe}};
+
+{% if channels and channels != "undefined" %}
+  {% set channels = channels|tojson %}
+{% endif %}
+
+{% if channel_map and channel_map != "undefined" %}
+  {% set channel_map = channel_map|tojson %}
+{% endif %}
+
+{% if hw_select and hw_select != "undefined" %}
+  {% set hw_select = hw_select|tojson %}
+{% endif %}
+
+var channels = {{channels}};
+
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, ["{{metric}}"], channels, 0, 25, {{hw_select}}, {{channel_map}})
+    .metricController("#form-metric")
+    .streamController("#form-stream"); 
+
+// add the scatter plot
+var scatter = config_controller.addGroupDataScatterController("scatter", "{{title}}")
+  .rangeController("#form-range-lo", "#form-range-hi", false)
+  .warningrangeController("#form-warning-range-lo", "#form-warning-range-hi")
+  .set();
+
+// and histogram
+var histo = config_controller.addGroupDataHistoController("histogram", "{{title}}")
+  .rangeController("#form-range-lo", "#form-range-hi", false)
+  .set();
+
+// build cubism controller
+var cubism = config_controller.addCubismController("#timeseries", 25)
+  .heightController("#form-height")
+  .rangeController("#form-range-lo", "#form-range-hi")
+  .set();
+
+// build plotly controller
+var plotly = config_controller.addPlotlyController("time-scatter")
+   .timeRangeController("#start", "#end", "#toggle")
+   .downloadDataController("#download");
+
+// start the controllers
+if ((channels && channels.length > 0) || (config.instances && config.instances.length > 0)) {
+  config_controller.runAll();
+}
+else {
+  alert("No channels available!");
+}
+
+// function to update href
+function wireLink(group, instance) {
+  return "channel_snapshot?channel=" + instance;
+}
+
+// function to update href
+function wireLinkDAB(group, instance) {
+  return "channel_snapshot_dab?channel=" + instance;
+}
+
+function crateLink(group, instance) {
+  return "crate_view?crate=" + instance;
+}
+
+function femLink(group, instance) {
+  return "fem_view?fem=" + instance;
+}
+
+function channelLink(group, instance) {
+  return "channel_snapshot?channel=" + instance;
+}
+
+function pmtLink(group, instance) {
+  return "PMT_snapshot?PMT=" + instance;
+}
+
+function crtBoardLink(group, instance) {
+  return "CRT_board_snapshot?board_no=" + instance;
+}
+
+// setup polling for event/run/subrun/time
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}
