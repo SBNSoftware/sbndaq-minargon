@@ -28,7 +28,7 @@ export {DataLink, Data};
 // Alternatively, you can also set them up through the
 // GroupConfigController if you want them to handle a group of metrics
 // -----------------------------------------------------------------------------
-export class PlotlyController {
+export class PlotlyControllerMean {
   // target: the div-id (including the '#') where the cubism plots will
   //         be drawn
   // links: the DataLink object which will be used to get data to plot
@@ -396,7 +396,7 @@ export class PlotlyController {
   }
 }
 
-export class PlotlyControllerMean {
+export class PlotlyController {
   // target: the div-id (including the '#') where the cubism plots will
   //         be drawn
   // links: the DataLink object which will be used to get data to plot

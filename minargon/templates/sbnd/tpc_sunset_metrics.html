@@ -1,102 +1,115 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}{{title}}{% endblock %}
+{% block title %}Stream: {{ var }}{% endblock %}
+
+{# ------------------------------ Html Body --------------------------------- #}
 {% block body %}
 {{ super() }}
+<!-- Variable Header -->
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap-only-glyphicons.css') }}" media="screen">
+<h1><center>Sunset Rate</center></h1>
+<hr>
+
+<div class="container">
+<div class="row">
+<div class="col-md-8 col-sm-6 hcenter vcenter" style="padding:0">
+<img class="center" id="p0" src="data:image/jpeg;base64,{{ imgs[0] }}" width="850" height="350">
+</div>
+</div>
+
+<div class="container">
+<div class="row">
+<div class="col-md-8 col-sm-6 hcenter vcenter" style="padding:10">
+<img class="center" id="p1" src="data:image/jpeg;base64,{{ imgs[1] }}" width="370" height="250">
+<div class="col-md-8 col-sm-6 hcenter vcenter" style="padding:10">
+<img class="center" id="p2" src="data:image/jpeg;base64,{{ imgs[2] }}" width="370" height="250">
+</div>
+</div>
+
 <div class="container">
 
-<div class="row">
-    <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
-      <div id ="time-scatter-nspikes"></div>
-    </div>
-       <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
-        <div class="card">
-            <div class="card-header">TimeSeries Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.time_range("start-nspikes", "end-nspikes", "toggle-nspikes") }}
-                    {{ stream_options.download("download-nspikes") }}
-	        </form>
+    
+    <!--  Loop over IDs -->
+    {% for ID in IDs %}
+        <!-- Plot and Options -->
+        <div class="row">
+            <!-- Plot -->
+            <div class="col-md-8">
+                <!-- plotly div -->
+                <div style="padding:0" id="plotly-controller-{{ ID }}"></div>
+            </div>
+            
+            <!-- Options -->
+            <div class="col-md-4 vcenter">
+                <div class="card hcenter">
+                    <div class="card-header">Display Options</div>
+                    <div class="card-body">
+                        <form class="form" role="form">
+                            {{ stream_options.time_range("start", "end", "toggle") }}
+                            {{ stream_options.download("download") }}
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-</div>
 
-<div class="row">
-    <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
-      <div id ="time-scatter-ndigi"></div>
-    </div>
-       <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
-        <div class="card">
-            <div class="card-header">TimeSeries Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.time_range("start-ndigi", "end-ndigi", "toggle-ndigi") }}
-                    {{ stream_options.download("download-ndigi") }}
-	        </form>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
+        <!-- Horizontal Break -->
+        <hr>
+    {% endfor %}
 
-{%endblock%}
+</div>
+{% endblock %}
+
+{# ------------------------------ Javascript -------------------------------- #}
 {% block script %}
 <script defer type="module">
-import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
-import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+    //import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries_mean.js') }}";
+    import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries.js') }}";
+    
+    // Get the elements and convert to JSON
+    var IDs_ = {{ IDs | tojson }};
+    var configs_ = {{ configs | tojson }};
 
-// get the configuration
-// var config = new timeseries.TimeSeries({{config|tojson|safe}});
-var config = {{config|tojson|safe}};
+    // Loop over each ID
+    for (var i = 0; i < IDs_.length; i++) {
 
-{% if channels and channels != "undefined" %}
-  {% set channels = channels|tojson %}
-{% endif %}
+        // Build the link
+        var link = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, "{{ database }}", IDs_[i], configs_[i] ));
+        // var link_mean = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLinkMean($SCRIPT_ROOT, "{{ database }}", IDs_[i], configs_[i] ));
+        var controller  = "plotly-controller-"+IDs_[i];
+        var start_id    = "#start";
+        var end_id      = "#end";
+        var toggle_id   = "#toggle";
+        var download_id = "#download";
 
-{% if channel_map and channel_map != "undefined" %}
-  {% set channel_map = channel_map|tojson %}
-{% endif %}
+//        var link_mean = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLinkMean($SCRIPT_ROOT, "{{ database }}", IDs_[i], configs_[i] ));
+//        var controller_mean  = "plotly-controller-mean-"+IDs_[i];
+//        var start_id_mean    = "#start-mean";
+//        var end_id_mean      = "#end-mean";
+//        var toggle_id_mean   = "#toggle-mean";
+//        var download_id_mean = "#download-mean";
 
-{% if hw_select and hw_select != "undefined" %}
-  {% set hw_select = hw_select|tojson %}
-{% endif %}
+        // Build plotly controller
+        var plotly_controller = new module.PlotlyController(controller, link, ["Sunsets/min", "mean"], configs_[i])
+            .timeRangeController(start_id, end_id, toggle_id)
+            .downloadDataController(download_id )
+        plotly_controller.setYRanges([[0, 500]]);
+        plotly_controller.setYTitles(["Sunsets/min"]);
+        plotly_controller.setPlotTitle("");
 
-var channels = {{channels}};
+//        var plotly_controller_mean = new module.PlotlyController(controller_mean, link_mean, [""], configs_[i])
+//            .timeRangeController(start_id_mean, end_id_mean, toggle_id_mean)
+//            .downloadDataController(download_id_mean)
+//        plotly_controller_mean.setYRanges([[0, 500]]);
+//        plotly_controller_mean.setYTitles(["Sunsets/min"]);
+//        plotly_controller_mean.setPlotTitle("");
 
-var config_controller_nspikes = new Config.GroupConfigController(config, {{link_function}}, ["nspikes"], channels, 0, 50, {{hw_select}}, {{channel_map}})
-    .metricController("#form-metric-nspikes")
-    .streamController("#form-stream-nspikes"); 
-
-// build plotly controller
-var plotly_nspikes = config_controller_nspikes.addPlotlyController("time-scatter-nspikes")
-   .timeRangeController("#start-nspikes", "#end-nspikes", "#toggle-nspikes")
-   .downloadDataController("#download-nspikes");
-plotly_nspikes.setPlotTitle("# of Spiked Channels");
-plotly_nspikes.setYTitles("# of channels");
-
-var config_controller_ndigi = new Config.GroupConfigController(config, {{link_function}}, ["ndigi"], channels, 0, 50, {{hw_select}}, {{channel_map}})
-    .metricController("#form-metric-ndigi")
-    .streamController("#form-stream-ndigi"); 
-
-// build plotly controller
-var plotly_ndigi = config_controller_ndigi.addPlotlyController("time-scatter-ndigi")
-   .timeRangeController("#start-ndigi", "#end-ndigi", "#toggle-ndigi")
-   .downloadDataController("#download-ndigi");
-plotly_ndigi.setPlotTitle("# of Digital Noise + Sunset Channels");
-plotly_ndigi.setYTitles("# of channels");
-plotly_ndigi.setYRanges([[0, 200]]);
-
-// start the controllers
-if ((channels && channels.length > 0) || (config.instances && config.instances.length > 0)) {
-  config_controller_nspikes.runAll();
-  config_controller_ndigi.runAll();
-}
-else {
-  alert("No channels available!");
-}
+        // Start it
+        plotly_controller.run();
+//        plotly_controller_mean.run();
+    }
 
 </script>
 {% endblock %}
+{# ---------------------------------- End ----------------------------------- #}

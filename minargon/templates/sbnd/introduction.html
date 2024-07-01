@@ -127,6 +127,10 @@
   <h3 class="hcenter">Detector Status</h3>
   <table class="table table-striped">
   <tr>
+    <th style="width: 31%;"><a href="{{url_for('event_display')}}">Event Status:</a></th>
+    <th><span id="Event-Status"> </span></th>
+  </tr>
+  <tr>
     <th style="width: 31%;"><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
     <th><span id="TPC-Status"> </span></th>
   </tr>
@@ -278,31 +282,33 @@ var bad_drifthv_pvs = {{bad_drifthv_pvs|tojson|safe}};
 {% for pv in bad_drifthv_pvs %}
 { BAD_DRIFTHVS.add("{{pv}}"); }
 {% endfor %}
+var HV_status = 0;
 if (BAD_DRIFTHVS.size > 0) {
-  let bad_drifthvs_str = "NOT OK. Bad: " + Array.from(BAD_DRIFTHVS).join(" ");
-  $("#DriftHV-Status").html(bad_drifthvs_str);
-  $("#DriftHV-Status").css({"color": "red"});
-}
-else {
-  $("#DriftHV-Status").text("OK");
-  $("#DriftHV-Status").css({"color": "green"});
+  HV_status = 1;
 }
 //vmon log
+var vmon_status = 0;
 $("#VMon-Nsamples").html({{vmon_nsamples}});
 
 let vmon_hi_str = "{{vmon_hi}}";
 $("#VMon-HI").html(vmon_hi_str);
-if ( {{vmon_hi}} > 0) {
-$("#VMon-HI").css({"color": "red"});
+$("#VMon-HI").css({"color": "green"});
+if ( {{vmon_hi}} >  0.005*{{vmon_nsamples}}) {
+  $("#VMon-HI").css({"color": "orange"});
 }
-if ( {{vmon_hi}} == 0) {
-  $("#VMon-HI").css({"color": "green"});
+if ( {{vmon_hi}} >  0.01*{{vmon_nsamples}}) {
+  $("#VMon-HI").css({"color": "red"});
+  HV_status = 1;
 }
 
 let vmon_hihi_str = "{{vmon_hihi}}";
 $("#VMon-HIHI").html(vmon_hihi_str);
-if ( {{vmon_hihi}} > 0) {
+if (( {{vmon_hihi}} > 0) || ( {{vmon_hihi}} < 5)) {
+  $("#VMon-HIHI").css({"color": "orange"});
+}
+if ( {{vmon_hihi}} > 5 ) {
   $("#VMon-HIHI").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{vmon_hihi}} == 0) {
   $("#VMon-HIHI").css({"color": "green"});
@@ -310,17 +316,23 @@ if ( {{vmon_hihi}} == 0) {
 
 let vmon_lo_str = "{{vmon_lo}}";
 $("#VMon-LO").html(vmon_lo_str);
-if ( {{vmon_lo}} > 0) {
-  $("#VMon-LO").css({"color": "red"});
+$("#VMon-LO").css({"color": "green"});
+if ( {{vmon_lo}} >  0.005*{{vmon_nsamples}}) {
+  $("#VMon-LO").css({"color": "orange"});
 }
-if ( {{vmon_lo}} == 0) {
-  $("#VMon-LO").css({"color": "green"});
+if ( {{vmon_lo}} >  0.01*{{vmon_nsamples}}) {
+  $("#VMon-LO").css({"color": "red"});
+  HV_status = 1;
 }
 
 let vmon_lolo_str = "{{vmon_lolo}}";
 $("#VMon-LOLO").html(vmon_lolo_str);
-if ( {{vmon_lolo}} > 0) {
+if (( {{vmon_lolo}} > 0) || ( {{vmon_lolo}} < 5)) {
+  $("#VMon-LOLO").css({"color": "orange"});
+}
+if ( {{vmon_lolo}} > 5 ) {
   $("#VMon-LOLO").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{vmon_lolo}} == 0) {
   $("#VMon-LOLO").css({"color": "green"});
@@ -331,17 +343,23 @@ $("#IMon-Nsamples").html({{imon_nsamples}});
 
 let imon_hi_str = "{{imon_hi}}";
 $("#IMon-HI").html(imon_hi_str);
-if ( {{imon_hi}} > 0) {
-$("#IMon-HI").css({"color": "red"});
+$("#IMon-HI").css({"color": "green"});
+if ( {{imon_hi}} >  0.005*{{imon_nsamples}}) {
+  $("#IMon-HI").css({"color": "orange"});
 }
-if ( {{imon_hi}} == 0) {
-  $("#IMon-HI").css({"color": "green"});
+if ( {{imon_hi}} >  0.01*{{imon_nsamples}}) {
+  $("#IMon-HI").css({"color": "red"});
+  HV_status = 1;
 }
 
 let imon_hihi_str = "{{imon_hihi}}";
 $("#IMon-HIHI").html(imon_hihi_str);
-if ( {{imon_hihi}} > 0) {
+if (( {{imon_hihi}} > 0) || ( {{imon_hihi}} < 5)) {
+  $("#IMon-HIHI").css({"color": "orange"});
+}
+if ( {{imon_hihi}} > 5 ) {
   $("#IMon-HIHI").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{imon_hihi}} == 0) {
   $("#IMon-HIHI").css({"color": "green"});
@@ -349,32 +367,48 @@ if ( {{imon_hihi}} == 0) {
 
 let imon_lo_str = "{{imon_lo}}";
 $("#IMon-LO").html(imon_lo_str);
-if ( {{imon_lo}} > 0) {
-  $("#IMon-LO").css({"color": "red"});
+$("#IMon-LO").css({"color": "green"});
+if ( {{imon_lo}} >  0.1*{{imon_nsamples}}) {
+  $("#IMon-LO").css({"color": "orange"});
 }
-if ( {{imon_lo}} == 0) {
-  $("#IMon-LO").css({"color": "green"});
+if ( {{imon_lo}} >  0.25*{{imon_nsamples}}) {
+  $("#IMon-LO").css({"color": "red"});
+  HV_status = 1;
 }
 
 let imon_lolo_str = "{{imon_lolo}}";
 $("#IMon-LOLO").html(imon_lolo_str);
-if ( {{imon_lolo}} > 0) {
+if (( {{imon_lolo}} > 0) || ( {{imon_lolo}} < 5)) {
+  $("#IMon-LOLO").css({"color": "orange"});
+}
+if ( {{imon_lolo}} > 5 ) {
   $("#IMon-LOLO").css({"color": "red"});
+  HV_status = 1;
 }
 if ( {{imon_lolo}} == 0) {
   $("#IMon-LOLO").css({"color": "green"});
+}
+
+if (HV_status == 1) {
+  let bad_drifthvs_str = "NOT OK";
+  $("#DriftHV-Status").html(bad_drifthvs_str);
+  $("#DriftHV-Status").css({"color": "red"});
+}
+else {
+  $("#DriftHV-Status").text("OK");
+  $("#DriftHV-Status").css({"color": "green"});
 }
 
 
 // TPCs
 var DISCONNECTED_PLANE = new Set();
 var BAD_PLANES = new Set();
+var TPC_ON = 1;
 
 {% for tpc_plane in tpc_planes %}
 {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
 {% set tpc_title = tpc_titles[loop.index0] %}
 {
-  
 var tpc_config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{tpc_channels}}, 0, 25, "", undefined, "");
 var tpc_data_link = tpc_config_controller.data_link(0, ["rms"], undefined, 1);
 var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60000);
@@ -419,21 +453,55 @@ var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
     }
 
     if (DISCONNECTED_PLANE.size == 6) {
-    $("#TPC-Status").text("TPC DAQ disconnected from DQM");
-    $("#TPC-Status").css({"color": "orange"});
-
-  } else if (BAD_PLANES.size > 0) {
-    let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
-    $("#TPC-Status").html(bad_planes_str);
-    $("#TPC-Status").css({"color": "red"});
-
-  } else {
-    $("#TPC-Status").text("OK");
-    $("#TPC-Status").css({"color": "green"});
-  }  
+      TPC_ON = 0;
+      $("#TPC-Status").text("TPC DAQ disconnected from DQM");
+      $("#TPC-Status").css({"color": "orange"});
+    } 
+    else if (BAD_PLANES.size > 0) {
+      let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
+      $("#TPC-Status").html(bad_planes_str);
+      $("#TPC-Status").css({"color": "red"});
+    }
+    else {
+      $("#TPC-Status").text("OK");
+      $("#TPC-Status").css({"color": "green"});
+    }  
   }
 ]);
 tpc_buffer.start();
+}
+{% endfor %}
+
+// Events
+var broken = 0;
+var event_config = {{event_config|tojson|safe}};
+
+{% for event in events %}
+{% set event_channels = event_channels[loop.index0]|tojson %}
+{
+
+var event_config_controller = new Config.GroupConfigController(event_config, undefined, ["broken"], {{event_channels}}, 0, 25, "", undefined, undefined);
+
+var event_data_link = event_config_controller.data_link(0, ["broken"], undefined, 1);
+var event_poll = new Data.D3DataPoll(event_data_link, 60*1000 /* 1 minute */);
+var event_buffer = new Data.D3DataBuffer(event_poll, 1, [
+  function(data) {
+    
+    var event_channels = {{event_channels}};
+    var broken_data = data;
+    var broken = broken_data[0].get_last()[1];
+
+    if (broken == 1){
+      $("#Event-Status").text("Event may be broken -- check event display");
+      $("#Event-Status").css({"color": "red"});
+    }
+    else {
+      $("#Event-Status").text("OK");
+      $("#Event-Status").css({"color": "green"});
+    }
+  }
+]);
+event_buffer.start();
 }
 {% endfor %}
 
