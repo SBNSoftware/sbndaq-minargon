@@ -23,13 +23,13 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [33.73, 33.76, 33.72, 33.78],
+                "vmon": [67.4, 67.5, 67.3, 67.6],
                 #"vmon": [5.2, 5.4],
-                "imon": [30.25, 31.0, 30.2, 31.30],
+                "imon": [61.9, 62.2, 61.7, 62.4],
                 #"imon": [4.5, 5.25],
-                "vsp": [34.95, 35.05],
+                "vsp": [69.95, 70.05],
                 #"vsp": [5.45, 5.55], 
-                "isp": [31.4, 32.05],
+                "isp": [63.5, 66.5],
                 #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
@@ -74,11 +74,11 @@ def introduction():
         print(vr[0])
         if (float(vr[1]) < VMon_LOLO):
             vmon_n_lolo += 1
-        elif (float(vr[1]) < VMon_LO):
+        if (float(vr[1]) < VMon_LO):
             vmon_n_lo += 1
-        elif (float(vr[1]) > VMon_HIHI):
+        if (float(vr[1]) > VMon_HIHI):
             vmon_n_hihi += 1
-        elif (float(vr[1]) > VMon_HI):
+        if (float(vr[1]) > VMon_HI):
             vmon_n_hi += 1
         else:
             continue
@@ -93,11 +93,11 @@ def introduction():
     for ir in imon_dbrows:
         if (float(ir[1]) < IMon_LOLO):
             imon_n_lolo += 1
-        elif (float(ir[1]) < IMon_LO):
+        if (float(ir[1]) < IMon_LO):
             imon_n_lo += 1
-        elif (float(ir[1]) > IMon_HIHI):
+        if (float(ir[1]) > IMon_HIHI):
             imon_n_hihi += 1
-        elif (float(ir[1]) > IMon_HI):
+        if (float(ir[1]) > IMon_HI):
             imon_n_hi += 1
         else:
             continue
@@ -130,12 +130,21 @@ def introduction():
     tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
     tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
 
+    # event
+    event_group_name = "tpc"
+    event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
+    print("event_config", event_config)
+    print("tpc_config", tpc_config)
+
     render_args = {
       "config": config,
       "channels": channels, #channels mean BOARD here
       "crts": crts,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "events": ["0"],
+      "event_config": event_config,
+      "event_channels": [[0]],
       "tpc_config": tpc_config,
       "tpc_channels": tpc_channels,
       "tpc_titles": tpc_titles,

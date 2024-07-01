@@ -225,7 +225,7 @@ def get_ignition_2hr_value_pv(connection, month, group, pv):
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
     start = int(stop_t)-7200000
-    LATEST_RAMP = 1719514320000
+    LATEST_RAMP = 1719774720000
     if (start < LATEST_RAMP):
         start = LATEST_RAMP
     start = str(start)

@@ -67,7 +67,7 @@ export class WarningRange {
 	y: [this.range[1], this.range[1]],
 	type: "scatter", 
 	name: "Warning HiHi",
-	marker: { color: "yellow"},
+	marker: { color: "orange"},
 	yaxis: this.y_axis.trace_name()
       };
     }
