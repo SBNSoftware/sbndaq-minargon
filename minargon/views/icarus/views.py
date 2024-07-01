@@ -598,5 +598,59 @@ def Level_Monitor():
 
     return render_template('icarus/level_monitor.html', **render_args)
 
+#PMT beam timeseries and waveform
+@app.route('/PMT_beamtiming/<beam_name>')
+def PMT_beamtiming(beam_name):
+    return pmt_beam_view(request.args, beam_name)
+
+def pmt_beam_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None):
+    # TODO: what to do with this?
+    initial_datum = args.get('data', None)
+    
+    # get the config for this group from redis
+    config = online_metrics.get_group_config("online", instance_name, front_end_abort=True)
+
+    if initial_datum is None:
+        if len(config["metric_list"]) > 0:
+            initial_datum = config["metric_list"][0]
+        else:
+            intial_datum = "rms"
+
+    # process the channels
+    # if the hw_select is present, get it
+    if hw_select is not None:
+        channels = hardwaredb.select(hw_select)
+        # lookup if there is a channel mapping
+        channel_map = hardwaredb.channel_map(hw_select, channels)
+        if channel_map is None:
+            channel_map = "undefined"
+    else:
+        channels = "undefined"
+        channel_map = "undefined"
+
+    # setup the title
+    title = instance_name
+    if hw_select is not None:
+        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
+
+    # setup hw_select
+    if hw_select is None:
+        hw_select = "undefined"
+    else:
+        hw_select = hw_select.to_url()
+
+    render_args = {
+        'title': title,
+        'link_function': link_function,
+        'view_ident': view_ident,
+        'config': config,
+        'metric': initial_datum,
+        'eventmeta_key': eventmeta_key,
+        'channels': channels,
+        'hw_select': hw_select,
+        'channel_map': channel_map,
+    }
+
+    return render_template('common/pmt_timeseries.html', **render_args)
 
 
