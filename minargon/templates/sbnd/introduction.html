@@ -49,7 +49,7 @@
   <h3 class="hcenter"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status</a></h3>
   <table class="table table-striped">
     <tr>
-      <th style="width: 31%;"> Current Status:</a></th>
+      <th style="width: 31%;"> Status:</a></th>
       <th><span id="DriftHV-Status"> </span></th>
     </tr>
     <tr>
@@ -104,7 +104,7 @@
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
   <h3 class="hcenter"> DQM Status </h3>
   <table class="table table-striped">
-        <tr>
+  <tr>
 	  <th>Redis DB memory usage: </th>
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
 	</tr>
@@ -116,10 +116,14 @@
 	  <th>Cryo DB connection: </th>
 	  <th><span id="ignition-ping"></span></th>
 	</tr>
-      <tr>
-        <th>DAQConsumer: </th>
-        <th><span id="OM-status"> </span></th>
-    </tr>
+  <tr>
+    <th>DAQConsumer: </th>
+    <th><span id="OM-status"> </span></th>
+  </tr>
+  <tr>
+    <th>DCS Archiver: </th>
+    <th><A HREF=/sbnd/dcs/ target="_blank">Click Here</A></th>
+  </tr>
   </table>
 </div>
 
@@ -244,7 +248,7 @@ poll_redis_mem_frac.add_callback(function(data) {
     $(spanid).text((data.val * 100).toFixed(2));
 
     spanid = "#redis-mem";
-    if (data.val > 0.85) {     $(spanid).css({"color": "red"});
+    if (data.val > 0.80) {     $(spanid).css({"color": "red"});
     }
     else {
       $(spanid).css({"color": "green"});
@@ -344,10 +348,10 @@ $("#IMon-Nsamples").html({{imon_nsamples}});
 let imon_hi_str = "{{imon_hi}}";
 $("#IMon-HI").html(imon_hi_str);
 $("#IMon-HI").css({"color": "green"});
-if ( {{imon_hi}} >  0.005*{{imon_nsamples}}) {
+if ( {{imon_hi}} >  0.0005*{{imon_nsamples}}) {
   $("#IMon-HI").css({"color": "orange"});
 }
-if ( {{imon_hi}} >  0.01*{{imon_nsamples}}) {
+if ( {{imon_hi}} >  0.001*{{imon_nsamples}}) {
   $("#IMon-HI").css({"color": "red"});
   HV_status = 1;
 }
@@ -368,10 +372,10 @@ if ( {{imon_hihi}} == 0) {
 let imon_lo_str = "{{imon_lo}}";
 $("#IMon-LO").html(imon_lo_str);
 $("#IMon-LO").css({"color": "green"});
-if ( {{imon_lo}} >  0.1*{{imon_nsamples}}) {
+if ( {{imon_lo}} >  0.05*{{imon_nsamples}}) {
   $("#IMon-LO").css({"color": "orange"});
 }
-if ( {{imon_lo}} >  0.25*{{imon_nsamples}}) {
+if ( {{imon_lo}} >  0.025*{{imon_nsamples}}) {
   $("#IMon-LO").css({"color": "red"});
   HV_status = 1;
 }
@@ -460,7 +464,7 @@ var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
     else if (BAD_PLANES.size > 0) {
       let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
       $("#TPC-Status").html(bad_planes_str);
-      $("#TPC-Status").css({"color": "red"});
+      $("#TPC-Status").css({"color": "orange"});
     }
     else {
       $("#TPC-Status").text("OK");
@@ -492,7 +496,7 @@ var event_buffer = new Data.D3DataBuffer(event_poll, 1, [
     var broken = broken_data[0].get_last()[1];
 
     if (broken == 1){
-      $("#Event-Status").text("Event may be broken -- check event display");
+      $("#Event-Status").text("Not OK -- check event display");
       $("#Event-Status").css({"color": "red"});
     }
     else {
