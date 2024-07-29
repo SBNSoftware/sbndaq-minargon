@@ -169,8 +169,8 @@ export class TimeSeriesScatter {
           }
           this.timestamps[i][j] = Math.round(dat[0] / 1000); // ms -> s
           this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)) // ms -> s
-            //.tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
-            .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+            .tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+            //.tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
           // this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)).format("YYYY-MM-DD HH:mm:ss");
           this.data[i][j] = dat[1];
          }
@@ -252,13 +252,13 @@ export class TimeSeriesScatter {
         }
         var min_time; var max_time;
         if (min_times.length > 0) {
-          //min_time = moment.unix(Math.min(...min_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
-          min_time = moment.unix(Math.min(...min_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          min_time = moment.unix(Math.min(...min_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+          //min_time = moment.unix(Math.min(...min_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
         }
         else min_time = -1;
         if (max_times.length > 0) { 
-          //max_time = moment.unix(Math.max(...max_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
-          max_time = moment.unix(Math.max(...max_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          max_time = moment.unix(Math.max(...max_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+          //max_time = moment.unix(Math.max(...max_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
         }
         else max_time = 10;
         return [min_time, max_time];
@@ -368,8 +368,8 @@ export class LineChart {
     addStaticTrace(xdata, ydata, timestamps, name) {
       var text = [];
       for (var i = 0; i < timestamps.length; i++) {
-        //text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"));
-        text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"));
+        text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"));
+        //text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"));
       }
       this.static_traces.push({
             x: xdata,
@@ -470,8 +470,8 @@ export class LineChart {
         for (var i = 0; i < this.data.length; i ++) {
             if (data[i].size > 0) {
               this.data[i] = data[i].get_last()[1];
-              //this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
-              this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+              this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+              //this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
               this.text[i] = "At: " + this.time[i];
               if (this.text_base) this.text[i] = this.text[i] + "<br>" + this.text_base[i];
             }
