@@ -118,7 +118,7 @@ var rwm = beam + "_RWM";
 
 {% for pmt in pmts %}
   draw.draw_waveform("EW-{{pmt}}", {[ew]: {{pmt}} }, "waveform", beam + " EW Waveform");
-  draw.draw_waveform("RWM-{{pmt}}", [rwm]: {{pmt}} }, "waveform", beam + " RWM Waveform");
+  draw.draw_waveform("RWM-{{pmt}}", {[rwm]: {{pmt}} }, "waveform", beam + " RWM Waveform");
 {% endfor %}
 
 // setup polling for event/run/subrun/time
