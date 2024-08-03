@@ -5,70 +5,62 @@
 {% block body %}
 {{ super() }}
 <div class="container">
-{% if eventmeta_key %}
-<div class="row">
-<table class="hcenter" style="width: 50%; text-align: center;">
-  <tr>
-    <th>Run: <span id="run-number"></span></th>
-    <th>Subrun: <span id="subrun-number"></span></th>
-    <th>Event: <span id="event-number"></span></th>
-    <th>Timestamp: <span id="timestamp"></span></th>
-  </tr>
-</table>
-</div>
-{% endif %}
-<div class="row">
+  {% if eventmeta_key %}
+  <div class="row">
+    <table class="hcenter" style="width: 50%; text-align: center;">
+      <tr>
+        <th>Run: <span id="run-number"></span></th>
+        <th>Subrun: <span id="subrun-number"></span></th>
+        <th>Event: <span id="event-number"></span></th>
+        <th>Timestamp: <span id="timestamp"></span></th>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+  <div class="row">
     <div class="col-lg-6 col-md-12 order-1" style="padding:0">
-        <div id="histogram"></div>
+      <div id="histogram"></div>
     </div>
     <div class="col-lg-6 col-md-12 order-2" style="padding:0">
-        <div id="scatter"></div>
+      <div id="scatter"></div>
     </div>
-</div>
-
-<!-- <div class="row">
-<div class="col-lg-4 col-md-8 col-sm-12 vcenter order-lg-1 order-md-2 hcenter">
-        <div class="card">
-            <div class="card-header">Display Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.metric_option(config["metric_config"], metric, "form-metric") }}
-                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
-                    {{ stream_options.height_option([25, 40, 60, 80, 100], 25, "form-height") }}
-                    {{ stream_options.threshold_option("form-range-lo", "form-range-hi") }}
-                    {{ stream_options.warning_option("form-warning-range-lo", "form-warning-range-hi") }}
-                </form>
-            </div>  
-       	   </div>    
-          </div>
-         <div class="col-lg-8 col-md-12 order-lg-2 order-md-1" style="padding:0" id="timeseries"></div>
-         </div> -->
-
-<div class="row">
+  </div>
+  <div class="row">
     <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
       <div id ="time-scatter"></div>
     </div>
-       <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
-        <div class="card">
-            <div class="card-header">TimeSeries Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.time_range("start", "end", "toggle") }}
-                    {{ stream_options.download("download") }}
-	        </form>
-            </div>
+    <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
+      <div class="card">
+        <div class="card-header">TimeSeries Options</div>
+          <div class="card-body">
+            <form class="form" role="form">
+              {{ stream_options.time_range("start", "end", "toggle") }}
+              {{ stream_options.download("download") }}
+            </form>
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
+  {% for pmt in pmts %}
+  <div class="row">
+    <div class="col-lg-6 col-md-12 order-1" style="padding:0" id="EW-holder-{{pmt}}">
+      <div id="EW-{{pmt}}"></div>
+    </div>
+    <div class="col-lg-6 col-md-12 order-2" style="padding:0" id="RWM-holder-{{pmt}}">
+      <div id="RWM-{{pmt}}"></div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {%endblock%}
 {% block script %}
 <script defer type="module">
 import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+import * as draw from "{{ url_for('static', filename='js/minargon/draw_waveform.js') }}";
 
 // get the configuration
-// var config = new timeseries.TimeSeries({{config|tojson|safe}});
 var config = {{config|tojson|safe}};
 
 {% if channels and channels != "undefined" %}
@@ -100,12 +92,6 @@ var histo = config_controller.addGroupDataHistoController("histogram", "{{title}
   .rangeController("#form-range-lo", "#form-range-hi", false)
   .set();
 
-// build cubism controller
-/* var cubism = config_controller.addCubismController("#timeseries", 25)
-  .heightController("#form-height")
-  .rangeController("#form-range-lo", "#form-range-hi")
-  .set(); */
-
 // build plotly controller
 var plotly = config_controller.addPlotlyController("time-scatter")
    .timeRangeController("#start", "#end", "#toggle")
@@ -119,35 +105,21 @@ else {
   alert("No channels available!");
 }
 
-// function to update href
-function wireLink(group, instance) {
-  return "channel_snapshot?channel=" + instance;
-}
+// add the waveforms plot
+var beam = "{{metric}}";
+if (beam.substring(0, 3)=='BNB')
+  beam = beam.substring(0, 3);
+else if (beam.substring(0, 4)=='NUMI')
+  beam = beam.substring(0, 4);
 
-// function to update href
-function wireLinkDAB(group, instance) {
-  return "channel_snapshot_dab?channel=" + instance;
-}
+var ew = beam + "_EW";
+var rwm = beam + "_RWM";
 
-function crateLink(group, instance) {
-  return "crate_view?crate=" + instance;
-}
 
-function femLink(group, instance) {
-  return "fem_view?fem=" + instance;
-}
-
-function channelLink(group, instance) {
-  return "channel_snapshot?channel=" + instance;
-}
-
-function pmtLink(group, instance) {
-  return "PMT_snapshot?PMT=" + instance;
-}
-
-function crtBoardLink(group, instance) {
-  return "CRT_board_snapshot?board_no=" + instance;
-}
+{% for pmt in pmts %}
+  draw.draw_waveform("EW-{{pmt}}", {[ew]: {{pmt}} }, "waveform", beam + " EW Waveform");
+  draw.draw_waveform("RWM-{{pmt}}", [rwm]: {{pmt}} }, "waveform", beam + " RWM Waveform");
+{% endfor %}
 
 // setup polling for event/run/subrun/time
 {% if eventmeta_key %}
