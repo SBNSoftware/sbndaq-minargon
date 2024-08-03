@@ -629,6 +629,8 @@ def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="
         channels = "undefined"
         channel_map = "undefined"
 
+    #pmts
+    pmts = {1,2,3,4,5,6,7,8};
     # setup the title
     title = instance_name
     if hw_select is not None:
@@ -648,6 +650,7 @@ def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="
         'metric': initial_datum,
         'eventmeta_key': eventmeta_key,
         'channels': channels,
+        'pmts': pmts,
         'hw_select': hw_select,
         'channel_map': channel_map,
     }
