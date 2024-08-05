@@ -62,9 +62,12 @@ export function draw_waveform(target, param, keyname, name) {
       type: 'scatter'
     };
 
+    var key = Object.keys(param)[0]; 
+    var keyValue = param[key];
     var date = new Date(parseInt(metadata.time));
     var pretty_time = date.toLocaleDateString("en-US", {timeZone: "America/Chicago"}) + " " + date.toLocaleTimeString("en-US", {timeZone: "America/Chicago"});
-    var title = name + " Channel " + param["wire"] + " from Run (" + metadata.run + ") SubRun (" + metadata.subrun + ") Event (" + metadata.event + ") <br>At: " + pretty_time + " (CST/GMT-6)";
+    //var title = name + " Channel " + param["wire"] + " from Run (" + metadata.run + ") SubRun (" + metadata.subrun + ") Event (" + metadata.event + ") <br>At: " + pretty_time + " (CST/GMT-6)";
+    var title = name + " Channel " + keyValue + " from Run (" + metadata.run + ") SubRun (" + metadata.subrun + ") Event (" + metadata.event + ") <br>At: " + pretty_time + " (CST/GMT-6)";
 
     var layout = {
       title: title,
@@ -117,9 +120,12 @@ export function draw_fft(target, param, keyname, name) {
       type: 'scatter'
     };
 
+    var key = Object.keys(param)[0];
+    var keyValue = param[key];
     var date = new Date(parseInt(metadata.time));
     var pretty_time = date.toLocaleDateString("en-US", {timeZone: "America/Chicago"}) + " " + date.toLocaleTimeString("en-US", {timeZone: "America/Chicago"});
-    var title = name + " Channel " + param["wire"] + " from Run (" + metadata.run + ") SubRun (" + metadata.subrun + ") Event (" + metadata.event + ") <br>At: " + pretty_time + " (CST/GMT-6)";
+    //var title = name + " Channel " + param["wire"] + " from Run (" + metadata.run + ") SubRun (" + metadata.subrun + ") Event (" + metadata.event + ") <br>At: " + pretty_time + " (CST/GMT-6)";
+    var title = name + " Channel " + keyValue + " from Run (" + metadata.run + ") SubRun (" + metadata.subrun + ") Event (" + metadata.event + ") <br>At: " + pretty_time + " (CST/GMT-6)";
 
     var layout = {
       title: title,
