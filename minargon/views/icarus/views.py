@@ -603,7 +603,7 @@ def Level_Monitor():
 def PMT_beamtiming(group_name, beam_name):
     return pmt_beam_view(request.args, group_name, beam_name)
 
-def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="undefined", eventmeta_key=True, hw_select=None):
+def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="undefined", eventmeta_key="eventmetaPMT", hw_select=None):
     # TODO: what to do with this?
     #initial_datum = args.get('data', None)
     initial_datum = beam_name
