@@ -630,11 +630,24 @@ def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="
         channel_map = "undefined"
 
     #pmts
-    pmts = {1,2,3,4,5,6,7,8};
-    # setup the title
-    title = instance_name
-    if hw_select is not None:
-        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
+    pmts = {0,1,2,3,4,5,6,7};
+
+    #crates
+    crates = {
+        0: 'WW-TOP',
+        1: 'WW-BOT',
+        2: 'WE-TOP',
+        3: 'WE-BOT',
+        4: 'EW-TOP',
+        5: 'EW-BOT',
+        6: 'EE-TOP',
+        7: 'EE-BOT'
+    };
+
+    # setup the tite
+    title = instanc_name
+    if hw_select isnot None:
+        title = ("% %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
 
     # setup hw_select
     if hw_select is None:
@@ -651,10 +664,9 @@ def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="
         'eventmeta_key': eventmeta_key,
         'channels': channels,
         'pmts': pmts,
+        'crates': crates,
         'hw_select': hw_select,
         'channel_map': channel_map,
     }
 
     return render_template('icarus/pmt_timeseries.html', **render_args)
-
-
