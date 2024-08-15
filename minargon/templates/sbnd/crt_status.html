@@ -114,7 +114,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
       }
       var row = `
           <tr>
-            <th>` + channels[ind] + `</th>
+            <th><a href="CRT_board_snapshot?board_no=` + channels[ind] + `">` + channels[ind] + `</a></th>
             <th ` + c + `>` + baselines[ind].toFixed(2) +  `</th>
           </tr>`; 
       table_html = table_html.concat(row);
