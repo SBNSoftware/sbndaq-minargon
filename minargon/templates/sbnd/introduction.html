@@ -348,10 +348,10 @@ $("#IMon-Nsamples").html({{imon_nsamples}});
 let imon_hi_str = "{{imon_hi}}";
 $("#IMon-HI").html(imon_hi_str);
 $("#IMon-HI").css({"color": "green"});
-if ( {{imon_hi}} >  0.0005*{{imon_nsamples}}) {
+if ( {{imon_hi}} >  0.025*{{imon_nsamples}}) {
   $("#IMon-HI").css({"color": "orange"});
 }
-if ( {{imon_hi}} >  0.001*{{imon_nsamples}}) {
+if ( {{imon_hi}} >  0.05*{{imon_nsamples}}) {
   $("#IMon-HI").css({"color": "red"});
   HV_status = 1;
 }
