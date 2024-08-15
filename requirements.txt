@@ -15,4 +15,4 @@ psycopg2==2.7.3
 pytz
 hiredis
 simplejson
-elasticsearch=7.17.9
+elasticsearch==7.17.9
