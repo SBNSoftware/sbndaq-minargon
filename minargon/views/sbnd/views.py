@@ -24,13 +24,9 @@ from six.moves import range
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
                 "vmon": [96.36, 96.4, 96.34, 96.42],
-                #"vmon": [5.2, 5.4],
-                "imon": [89.18, 89.48, 89.1, 90.16],
-                #"imon": [4.5, 5.25],
+                "imon": [89.18, 89.48, 88.88, 90.18],
                 "vsp": [99.95, 100.05],
-                #"vsp": [5.45, 5.55], 
                 "isp": [91.5, 300.5],
-                #"isp": [5.45, 5.55],
                 "scheme": [-1, 2]
                 }
 
@@ -72,7 +68,7 @@ def introduction():
     vmon_n_lo = 0
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
-        print(vr[0])
+        #print(vr[0])
         if (float(vr[1]) < VMon_LOLO):
             vmon_n_lolo += 1
         if (float(vr[1]) < VMon_LO):
@@ -134,8 +130,8 @@ def introduction():
     # event
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
-    print("event_config", event_config)
-    print("tpc_config", tpc_config)
+    #print("event_config", event_config)
+    #print("tpc_config", tpc_config)
 
     render_args = {
       "config": config,
@@ -500,7 +496,7 @@ def PMT(hw_select=None, PMTLOC=None):
     if PMTLOC:
         hw_select = hardwaredb.HWSelector("pmt_placements", ["pmt_in_tpc_plane"], [PMTLOC])
    
-    print(hw_select)
+    #print(hw_select)
     args = dict(**request.args)
     args["data"] = "rms"
     args["stream"] = "fast"
@@ -697,7 +693,7 @@ def Impedence_Ground_Monitor():
       "configs": configs,
       "database": database
     }
-    print("render_args", render_args)
+    #print("render_args", render_args)
     return render_template('sbnd/impedence_ground_monitor.html', **render_args)
 
 @app.route('/Impedence_Ground_Monitor_CSU')
@@ -762,7 +758,7 @@ def cryo_monitor():
     this_month = current_time.month
     current_timestamp = time.mktime(current_time.timetuple())
     month_2digit = str(this_month).zfill(2)
-    print(month_2digit)
+    #print(month_2digit)
     for k in pv_lists.keys():
         this_list = pv_lists[k]
         for pv in this_list:
@@ -776,7 +772,7 @@ def cryo_monitor():
             alarm_time = 180
             this_dbrow = [(this_dbrow[0][0], this_dbrow[0][1], formatted_time, alarm_time, timestamp_diff/1000)]
             dbrows = dbrows + this_dbrow
-    print(dbrows)
+    #print(dbrows)
     return render_template('sbnd/cryo_monitor.html', rows = dbrows)
 
     # try:
@@ -830,7 +826,7 @@ def cryo_stream(pv):
     # }
     # return render_template('common/cryo_stream.html', **render_args)
     configs = ignition_api.cryo_pv_meta_internal("sbnd_ignition", pv)
-    print(configs)
+    #print(configs)
 
     render_args = {
       "configs": configs,
@@ -847,7 +843,7 @@ def DriftHV_Heinzinger():
     configs = {}
     for pv in pv_lists:
         configs[pv] = {'unit': '', 'yTitle':'', 'title':'', 'warningRange': DRIFTHV_ALARM_LIMITS[pv]}
-        print(configs[pv])
+        #print(configs[pv])
 
     dbrows = []
     current_time = datetime.now()
