@@ -230,8 +230,8 @@ def get_ignition_2hr_value_pv(connection, month, group, pv):
         start = LATEST_RAMP
     start = str(start)
     stop = str(int(stop_t))
-    print("start", start)
-    print("stop", stop)
+    #print("start", start)
+    #print("stop", stop)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
