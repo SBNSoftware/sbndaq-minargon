@@ -579,7 +579,19 @@ def LLT_rates():
 def HLT_rates():
     return timeseries_view(request.args, "HLT_ID", "", "ptbHltLink")
 
-#TODO: group the LLT_TDCs together?
+@app.route('/Beam_Light_Diff')
+def Beam_Light_Diff():
+    return timeseries_view(request.args, "BEAM_LIGHT_DIFF")
+
+@app.route('/Beam_CRT_Diff')
+def Beam_CRT_Diff():
+    return timeseries_view(request.args, "BEAM_CRT_DIFF")
+
+@app.route('/PTB_TDC_Diff')
+def PTB_TDC_Diff():
+    return timeseries_view(request.args, "PTB_TDC_DIFF")
+
+""" #TODO: group the LLT_TDCs together?
 @app.route('/LLT27_TDC_1')
 def LLT27_TDC_1():
     render_args = {
@@ -620,7 +632,7 @@ def HLT_diff_TDC_flash():
     render_args = {
         "stream_name": 'HLT_-_TDC_flash',
     }
-    return render_template('common/single_stream.html', **render_args) 
+    return render_template('common/single_stream.html', **render_args)  """
 
 @app.route('/PTB_snapshot')
 def PTB_snapshot():
@@ -640,9 +652,9 @@ def PTB_snapshot():
 
     return render_template("sbnd/ptb_snapshot.html", **template_args)
 
-@app.route('/PTB_TDC_diff')
+""" @app.route('/PTB_TDC_diff')
 def PTB_TDC_diff():
-    return "PTB_TDC_diff"
+    return "PTB_TDC_diff" """
 
 @app.route('/MSUM_snapshot')
 def MSUM_snapshot():
