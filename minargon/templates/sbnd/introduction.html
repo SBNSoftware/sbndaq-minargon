@@ -551,7 +551,7 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
       $("#CRT-Status").css({"color": "orange"});
     }
     else if (BAD_CRTS.size > 0) {
-      let bad_crts_str = "NOT OK. Bad channels: " + Array.from(BAD_CRTS).join(" ");
+      let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
       $("#CRT-Status").html(bad_crts_str);
       $("#CRT-Status").css({"color": "red"});
     }
