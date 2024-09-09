@@ -60,7 +60,8 @@
     var download_id = "#download-"+{{id}};
 
     var config = {{config | tojson}};
-    
+    $(toggle_id).val("startWith6hour");
+
     // Build plotly controller
     var plotly_controller = new module.PlotlyController(controller, link, [config["yTitle"]], config)
 	.timeRangeController(start_id, end_id, toggle_id)

@@ -44,7 +44,7 @@
   </div>
   {% for pmt in pmts %}
   <div class="row">
-    <b>Crate {{crates[pmt]}}</b>
+    <h3>Crate {{crates[pmt]}}</h3>
   </div>
   <div class="row">
     <div class="col-lg-6 col-md-12 order-1" style="padding:0" id="EW-holder-{{pmt}}">
@@ -120,8 +120,8 @@ var rwm = beam + "_RWM";
 
 
 {% for pmt in pmts %}
-  draw.draw_waveform("EW-{{pmt}}", {[ew]: {{pmt}} }, "waveform", beam + " EW Waveform");
-  draw.draw_waveform("RWM-{{pmt}}", {[rwm]: {{pmt}} }, "waveform", beam + " RWM Waveform");
+  draw.draw_waveform("EW-{{pmt}}", {[ew]: {{pmt}} }, "waveform", beam + " EW Waveform", '10');
+  draw.draw_waveform("RWM-{{pmt}}", {[rwm]: {{pmt}} }, "waveform", beam + " RWM Waveform", '10');
 {% endfor %}
 
 // setup polling for event/run/subrun/time

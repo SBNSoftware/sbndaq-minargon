@@ -33,7 +33,7 @@ function get_meta(keyname, param, callback) {
 // target: div-id of the location of the plot
 // param: dictionary where the key-value pairs will be GET params for the URL specified
 //        to get data from the backend raw data API
-export function draw_waveform(target, param, keyname, name) {
+export function draw_waveform(target, param, keyname, name, fontSize=12) {
   function do_draw(metadata) {
   d3.json($SCRIPT_ROOT + "/online/waveform/" + keyname + "?" + $.param(param), function(err, data) {
     if (!data) {
@@ -71,6 +71,9 @@ export function draw_waveform(target, param, keyname, name) {
 
     var layout = {
       title: title,
+      font: {
+        size: fontSize,
+      },      
       xaxis: {
         title: "Time (usec)",
       },
@@ -89,7 +92,7 @@ export function draw_waveform(target, param, keyname, name) {
 // target: div-id of the location of the plot
 // param: dictionary where the key-value pairs will be GET params for the URL specified
 //        to get data from the backend raw data API
-export function draw_fft(target, param, keyname, name) {
+export function draw_fft(target, param, keyname, name, fontSize=12) {
   function do_draw(metadata) {
   d3.json($SCRIPT_ROOT + "/online/waveform/" + keyname + "?" + $.param(param), function(err, data) {
     if (!data) {
@@ -129,6 +132,9 @@ export function draw_fft(target, param, keyname, name) {
 
     var layout = {
       title: title,
+      font: {
+        size: fontSize,
+      },      
       xaxis: {
         title: "Frequency (MHz)",
       },
