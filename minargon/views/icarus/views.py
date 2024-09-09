@@ -645,8 +645,8 @@ def pmt_beam_view(args, instance_name, beam_name, view_ident="", link_function="
     };
 
     # setup the tite
-    title = instanc_name
-    if hw_select isnot None:
+    title = instance_name
+    if hw_select is not None:
         title = ("% %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
 
     # setup hw_select
