@@ -3,6 +3,7 @@ from minargon import app
 from flask import render_template, jsonify, request, redirect, url_for, flash, abort
 import jinja2
 from minargon.metrics import postgres_api
+from minargon.metrics import ignition_api
 
 from minargon.tools import parseiso, RedisDataStream, PostgresDataStream
 from minargon.metrics import online_metrics
@@ -63,12 +64,14 @@ def icarus_pmthv(connection, side):
     dbrows = postgres_api.get_icarus_pmthv(connection, side, front_end_abort=True)
     return render_template('icarus/pmthv.html', rows=dbrows, connection=connection, side=side)
 
-@app.route('/<connection>/epics_last_value/<group>')
-def epics_last_value(connection,group):
-    dbrows = postgres_api.get_epics_last_value(connection,group)     
+@app.route('/<connection>/epics_last_value/<groups>')
+def epics_last_value(connection,groups):
+    dbrows = []
+    for group in groups.split("-"):
+        dbrows += postgres_api.get_epics_last_value(connection,group)     
 
     try:
-        return render_template('common/'+group+'.html',rows=dbrows)
+        return render_template('common/'+groups+'.html',rows=dbrows)
     except jinja2.exceptions.TemplateNotFound:
         abort(404)
 
@@ -121,13 +124,16 @@ def single_stream(stream_name):
 def pvTree(connection):
     return render_template('common/pvTree.html', data=postgres_api.pv_internal(connection, "pv_single_stream", front_end_abort=True))
 
+@app.route('/<connection>/pvTree_cryo')
+def pvTree_cryo(connection):
+    return render_template('common/pvTree_cryo.html', data=ignition_api.pv_internal(connection, "pv_single_stream", front_end_abort=True))
+
 def timeseries_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None, db="online"):
     # TODO: what to do with this?
     initial_datum = args.get('data', None)
     
     # get the config for this group from redis
     config = online_metrics.get_group_config(db, instance_name, front_end_abort=True)
-
     if initial_datum is None:
         if len(config["metric_list"]) > 0:
             initial_datum = config["metric_list"][0]
@@ -269,6 +275,8 @@ def pv_multiple_stream(database, var):
       "downloads" : downloads,
       "database": database
     }
+    print("******************")
+    print(render_args)
     return render_template('common/pv_multiple_stream.html', **render_args)
 
 @app.route("/data_list")

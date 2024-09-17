@@ -5,7 +5,6 @@ numpy
 #pyzmq
 redis==3.5
 plotly==4.2
-#argparse
 #sphinx
 #requests
 #sqlalchemy
@@ -16,3 +15,4 @@ psycopg2==2.7.3
 pytz
 hiredis
 simplejson
+elasticsearch==7.17.9

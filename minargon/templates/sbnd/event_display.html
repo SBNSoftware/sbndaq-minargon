@@ -1,0 +1,124 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}Introduction to Minargon{% endblock %}
+{% block body %}
+{{ super() }}
+<!-- <div class="col-md-8 hcenter"> -->
+<div class="container">
+
+<div class="row">
+<h1>Event Display <span id="redis-ping"></span> </h1> 
+</div>
+<br>
+
+<div class="row">
+    <h5>Check that the time on the event displays are up to date</h5> 
+</div>
+<br>
+
+<div class="row">
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<h2 class="hcenter">East</h2> 
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[0] }}" width="500" height="300">
+</div>
+
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<h2 class="hcenter">West</h2> 
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[1] }}" width="500" height="300">
+</div>
+</div>
+
+<div class="row">
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[2] }}" width="500" height="300">
+</div>
+
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[3] }}" width="500" height="300">
+</div>
+</div>
+
+<div class="row">
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[4] }}" width="500" height="300">
+</div>
+
+<div class="col-lg-6 col-md-3 col-sm-6" style="padding:0">
+<img id="picture" src="data:image/jpeg;base64,{{ imgs[5] }}" width="500" height="300">
+</div>
+</div>
+
+{%endblock%}
+
+
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+import {throw_database_error} from "{{ url_for('static', filename='js/minargon/error.js') }}";
+
+// monitor DAQConsumer
+var timeout = 5 * 1000; // ms
+
+function time_delta(earlier) {
+  var now = moment(new Date).tz("America/Chicago").unix() * 1000. /* s -> ms */;
+  return Math.max(0, now - earlier);
+}
+
+function is_recent(time, time_is_ok) {
+  return time_delta(time) < time_is_ok;
+}
+
+
+function update_is_recent(data_link, spanid, time_is_ok) {
+  data_link.get_data(function(err, data) {
+    if (err) {
+      throw_database_error(err, "update_heartbeat: " + data_link.accessors()[0][0]);
+      return;
+    }
+
+    var datalist = data.values[data_link.accessors()[0][0]];
+    var recent;
+    var delta_str = "";
+    
+    if (datalist.length == 0) {
+      recent = false;
+    }
+    else {
+      recent = is_recent(datalist[datalist.length-1][0], time_is_ok);
+      var delta = (time_delta(datalist[datalist.length-1][0]) / 1000.).toFixed(0);
+      delta_str = " (" + String(delta) + "s)";
+    }
+    if (recent) {
+      $(spanid).text("ON" + delta_str);
+      $(spanid).css({"color": "green"});
+    }
+    else {
+      $(spanid).text("OFF" + delta_str);
+      $(spanid).css({"color": "red"});
+    }
+    setTimeout(function() {update_is_recent(data_link, spanid, time_is_ok);}, timeout);
+  });
+
+}
+
+var poll_redis_ping = new Poll.Poll($SCRIPT_ROOT + "/online/ping_redis");
+poll_redis_ping.add_callback(function(data) {
+    var spanid = "#redis-ping";
+    if (data == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("ON");
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("OFF");
+    }
+});
+poll_redis_ping.run();
+
+// ping for new images
+
+</script> 
+<meta http-equiv="refresh" content="30">
+{%endblock%}

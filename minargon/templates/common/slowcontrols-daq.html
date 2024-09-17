@@ -1,0 +1,353 @@
+{% extends "layout.html" | front_ended %}
+
+{% block title %}Electronics Racks Monitoring{% endblock %}
+
+{% block body %}
+{{ super() }}
+<h2>Electronics Racks Monitoring</h2>
+<P>
+<TABLE>
+<TR><TH></TH><TH>RPS Status</TH><TH>Interlock</TH><TH>Temperature &deg;C</TH><TH>Fan Speed 0</TH><TH>Fan Speed 1</TH><TH>Fan Speed 2</TH><TH>PDU Current</TH><TH>PDU Temp. &deg;C</TH></TR>
+
+<!--
+TODO
+- fan speed3 on vme01, in channel table but no PV
+- Missing PVs
+- Present PVs but missing channel table entries
+- The Rack0 VME01 temps and fan speeds are in "tpc_readout_power" channel group in the channel table
+  so dont show up. Think I should change their channel group?
+-->
+
+<TR align="center"><TD><b>TPC Readout</b></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR align="center"><TD>TPC RO 01</TD>
+    <TD style="text-align:center" rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='330') }}" id="sbnd_tpc_readout_rack0/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='283') }}" id="sbnd_tpc_readout_01/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='271') }}" id="sbnd_tpc_readout_01/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='294') }}" id="sbnd_tpc_readout_01/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='295') }}" id="sbnd_tpc_readout_01/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='296') }}" id="sbnd_tpc_readout_01/fan_speed2"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='854') }}" id="sbnd_tpc_readout_rack0/pdu_current"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='853') }}" id="sbnd_tpc_readout_rack0/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 02</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='284') }}" id="sbnd_tpc_readout_02/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='272') }}" id="sbnd_tpc_readout_02/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='297') }}" id="sbnd_tpc_readout_02/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='298') }}" id="sbnd_tpc_readout_02/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='299') }}" id="sbnd_tpc_readout_02/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO NIM</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='339') }}" id="sbnd_tpc_readout_nim/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='282') }}" id="sbnd_tpc_readout_nim/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='327') }}" id="sbnd_tpc_readout_nim/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='328') }}" id="sbnd_tpc_readout_nim/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='329') }}" id="sbnd_tpc_readout_nim/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 03</TD>
+    <TD style="text-align:center" rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='331') }}" id="sbnd_tpc_readout_rack1/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='285') }}" id="sbnd_tpc_readout_03/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='273') }}" id="sbnd_tpc_readout_03/temperature">&nbsp;&nbsp;&nbsp;&nbsp;</TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='300') }}" id="sbnd_tpc_readout_03/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='301') }}" id="sbnd_tpc_readout_03/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='302') }}" id="sbnd_tpc_readout_03/fan_speed2"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='856') }}" id="sbnd_tpc_readout_rack1/pdu_current"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='855') }}" id="sbnd_tpc_readout_rack1/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 04</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='286') }}" id="sbnd_tpc_readout_04/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='274') }}" id="sbnd_tpc_readout_04/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='303') }}" id="sbnd_tpc_readout_04/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='304') }}" id="sbnd_tpc_readout_04/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='305') }}" id="sbnd_tpc_readout_04/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 05</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='287') }}" id="sbnd_tpc_readout_05/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='275') }}" id="sbnd_tpc_readout_05/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='306') }}" id="sbnd_tpc_readout_05/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='307') }}" id="sbnd_tpc_readout_05/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='308') }}" id="sbnd_tpc_readout_05/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 06</TD>
+    <TD style="text-align:center" rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='332') }}" id="sbnd_tpc_readout_rack2/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='288') }}" id="sbnd_tpc_readout_06/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='276') }}" id="sbnd_tpc_readout_06/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='309') }}" id="sbnd_tpc_readout_06/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='310') }}" id="sbnd_tpc_readout_06/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='311') }}" id="sbnd_tpc_readout_06/fan_speed2"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='858') }}" id="sbnd_tpc_readout_rack2/pdu_current"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='857') }}" id="sbnd_tpc_readout_rack2/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 07</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='289') }}" id="sbnd_tpc_readout_07/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='277') }}" id="sbnd_tpc_readout_07/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='312') }}" id="sbnd_tpc_readout_07/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='313') }}" id="sbnd_tpc_readout_07/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='314') }}" id="sbnd_tpc_readout_07/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 08</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='290') }}" id="sbnd_tpc_readout_08/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='278') }}" id="sbnd_tpc_readout_08/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='315') }}" id="sbnd_tpc_readout_08/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='316') }}" id="sbnd_tpc_readout_08/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='317') }}" id="sbnd_tpc_readout_08/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 09</TD>
+    <TD style="text-align:center" rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='333') }}" id="sbnd_tpc_readout_rack3/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='291') }}" id="sbnd_tpc_readout_09/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='279') }}" id="sbnd_tpc_readout_09/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='318') }}" id="sbnd_tpc_readout_09/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='319') }}" id="sbnd_tpc_readout_09/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='320') }}" id="sbnd_tpc_readout_09/fan_speed2"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='860') }}" id="sbnd_tpc_readout_rack3/pdu_current"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='859') }}" id="sbnd_tpc_readout_rack3/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 10</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='292') }}" id="sbnd_tpc_readout_10/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='280') }}" id="sbnd_tpc_readout_10/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='321') }}" id="sbnd_tpc_readout_10/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='322') }}" id="sbnd_tpc_readout_10/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='323') }}" id="sbnd_tpc_readout_10/fan_speed2"></a></TD>
+</TR>
+
+<TR><TD>TPC RO 11</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='293') }}" id="sbnd_tpc_readout_11/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='281') }}" id="sbnd_tpc_readout_11/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='324') }}" id="sbnd_tpc_readout_11/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='325') }}" id="sbnd_tpc_readout_11/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='326') }}" id="sbnd_tpc_readout_11/fan_speed2"></a></TD>
+</TR>
+
+<TR align="center"><TD><b>TPC Power</b></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>PL506 West</TD>
+    <TD style="text-align:center", rowspan="4"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_tpc_ps_rack/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9094') }}" id="sbnd_tpc_ps_pl506_west/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9093') }}" id="sbnd_tpc_ps_pl506_west/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td rowspan="4"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_tpc_ps_rack/pdu_current"></a></TD>
+    <td rowspan="4"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_tpc_ps_rack/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>MPOD West</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9098') }}" id="sbnd_tpc_ps_mpod_west/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9097') }}" id="sbnd_tpc_ps_mpod_west/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>PL506 East</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9096') }}" id="sbnd_tpc_ps_pl506_east/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9095') }}" id="sbnd_tpc_ps_pl506_east/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>MPOD East</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9100') }}" id="sbnd_tpc_ps_mpod_east/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9099') }}" id="sbnd_tpc_ps_mpod_east/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR align="center"><TD><b>PDS Readout</b></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>Rack0 Mon01</TD>
+    <TD style="text-align:center", rowspan="4"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9103') }}" id="sbnd_pds_readout_rack0/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9108') }}" id="sbnd_pds_readout_rack0_mon01/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9107') }}" id="sbnd_pds_readout_rack0_mon01/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td rowspan="4"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9101') }}" id="sbnd_pds_readout_rack0/pdu_current"></a></TD>
+    <td rowspan="4"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9102') }}" id="sbnd_pds_readout_rack0/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>Rack0 VME01</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9110') }}" id="sbnd_pds_readout_rack0_vme01/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9109') }}" id="sbnd_pds_readout_rack0_vme01/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9121') }}" id="sbnd_pds_readout_rack0_vme01/fan_speed0"></a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9122') }}" id="sbnd_pds_readout_rack0_vme01/fan_speed1"></a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9123') }}" id="sbnd_pds_readout_rack0_vme01/fan_speed2"></a></td>
+</TR>
+
+<TR><TD>Rack0 VME02</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9112') }}" id="sbnd_pds_readout_rack0_vme02/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9111') }}" id="sbnd_pds_readout_rack0_vme02/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>Rack0 VME03</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9114') }}" id="sbnd_pds_readout_rack0_vme03/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9113') }}" id="sbnd_pds_readout_rack0_vme03/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>Rack1 MTCA</TD>
+    <TD style="text-align:center", rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7327') }}" id="sbnd_pds_readout_rack1/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9116') }}" id="sbnd_pds_readout_rack1_mtca/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9115') }}" id="sbnd_pds_readout_rack1_mtca/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9104') }}" id="sbnd_pds_readout_rack1/pdu_current"></a></TD>
+    <td rowspan="3"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9105') }}" id="sbnd_pds_readout_rack1/pdu_temperature"></a></TD>
+</TR>
+
+<TR><TD>Rack1 PTB</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9118') }}" id="sbnd_pds_readout_rack1_ptb/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9117') }}" id="sbnd_pds_readout_rack1_ptb/temperature"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+</TR>
+
+<TR><TD>Rack1 VME01</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='9120') }}" id="sbnd_pds_readout_rack1_vme01/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7331') }}" id="sbnd_pds_readout_rack1_vme01/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7328') }}" id="sbnd_pds_readout_rack1_vme01/fan_speed0"></a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7329') }}" id="sbnd_pds_readout_rack1_vme01/fan_speed1"></a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='7330') }}" id="sbnd_pds_readout_rack1_vme01/fan_speed2"></a></td>
+</TR>
+
+<!--
+<TR><TD>PTB MTCA</TD>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='334') }}" id="sbnd_ptb_rack/rps_status" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <TD style="text-align:center"><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='363') }}" id="sbnd_ptb_mtca/interlock" class="led-green">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='338') }}" id="sbnd_ptb_mtca/temperature"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='335') }}" id="sbnd_ptb_mtca/fan_speed0"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='336') }}" id="sbnd_ptb_mtca/fan_speed1"></a></TD>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='337') }}" id="sbnd_ptb_mtca/fan_speed2"></a></TD>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <TD>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+    <td><a href="{{ url_for('pv_single_stream', database='sbnd_epics', ID='') }}" id="sbnd_ptb_rack/timestamp"></a></TD>
+</TR>
+-->
+
+
+</TABLE>
+</P>
+
+{%endblock%}
+
+{% block style %}
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
+{% endblock %}
+
+<!---->
+{% block script %}
+
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+ 
+<!-- Populate above table -->
+<script type="text/javascript">
+$(document).ready(function() {
+var dt_format_options = options = {
+  year: 'numeric', month: 'numeric', day: 'numeric',
+  hour: 'numeric', minute: 'numeric', second: 'numeric',
+  hour12: false,
+};
+
+{%for row in rows%}
+{
+  var item = document.getElementById("{{row[0]}}");
+  var pvName = "{{row[0]}}";
+
+  if (item) 
+  {
+    if ( pvName.endsWith("interlock") || pvName.endsWith("rps_status"))
+    {
+      var pvValue = "{{row[3]}}";
+      if ( pvValue =="1.000" || pvValue == "1" )
+      {
+         item.className = "led-green";
+      }
+      else
+      {
+         item.className = "led-red";
+      }
+    }
+    else if ( pvName.endsWith("timestamp"))
+    {
+      var format = Intl.DateTimeFormat("en-US", dt_format_options);
+      var zeit = new Date("{{row[3]}}"*1000);
+      item.innerHTML = format.format(zeit);
+    }
+    else
+    {
+      item.innerHTML = "{{row[3]}}";
+    }
+  }
+}
+{%endfor%}		
+});
+</script>
+
+<meta http-equiv="refresh" content="15">
+<!-- </html> -->
+{%endblock%}
+

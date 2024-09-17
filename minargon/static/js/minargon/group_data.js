@@ -56,6 +56,18 @@ export class GroupDataScatterController {
     this.scatter.addStaticTrace(xdata, ydata, times, "Reference");
   }
 
+  updateMeanData(data) {
+    var xdata = this.instances;
+    var times = [];
+    var ydata = [];
+    for (var i = 0; i < data.length; i++) {
+      times.push(data[i][0]);
+      ydata.push(data[i][1]);
+    }
+    this.scatter.clearStaticTraces();
+    this.scatter.addStaticTrace(xdata, ydata, times, "Mean");
+  }
+
   // "set" the configuration after constructing the class and calling
   // the various "xxxController" functions
   set() {
@@ -391,6 +403,8 @@ export class GroupDataHistoController {
     return false;
   }
   updateReferenceData() {} // noop
+
+  updateMeanData() {} // noop
 
   // "set" the configuration after constructing the class and calling
   // the various "xxxController" functions

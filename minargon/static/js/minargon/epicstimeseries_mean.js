@@ -1,6 +1,6 @@
 import * as Data from "./Data.js";
 import * as DataLink from "./DataLink.js";
-import * as Chart from "./charts.js";
+import * as Chart from "./epicscharts.js";
 import {ScatterYAxis} from "./chart_proto.js";
 
 // re-export DataLink
@@ -28,384 +28,6 @@ export {DataLink, Data};
 // Alternatively, you can also set them up through the
 // GroupConfigController if you want them to handle a group of metrics
 // -----------------------------------------------------------------------------
-export class PlotlyController {
-  // target: the div-id (including the '#') where the cubism plots will
-  //         be drawn
-  // links: the DataLink object which will be used to get data to plot
-  // metric_config: The metric configuration for the associated plot
-  constructor(target, link, titles, metric_config, oneyaxis) {
-    this.link = link;
-    this.target = target;
-    this.max_data = 1000;
-    this.titles = titles;
-    this.ytitles = [];
-    this.oneyaxis = oneyaxis;
-    if (this.oneyaxis === undefined) this.oneyaxis = false;
-
-    // title of plot is link name
-    var plot_title = link.name();
-    // make a new plotly scatter plot
-    this.scatter = new Chart.TimeSeriesScatter(target); 
-    // set the plot title
-    this.scatter.title = plot_title;
-    this.scatter.draw();
-    // appply config
-    this.updateMetricConfig(metric_config, false);
-    // set the data
-    for (var i = 0; i < titles.length; i ++) {
-      this.scatter.add_trace(titles[i], 0);
-    }
-
-    this.is_live = true;
-    this.is_running = false;
-  }
-  // ---------------------------------------------------------------------------
-  // commuicate to the "config" wrapper -- whether or not the # of instances in this class should be restricted
-  restrictNumInstances() {
-    return true;
-  }
-  updateReferenceData() {} // noop
-
-  updateMeanData() {} // noop
-
-  setSaveName(name) {
-    this.scatter.savename = name;
-  }
-
-  setPlotTitle(title) {
-    this.scatter.title = title;
-  }
-
-  setYTitles(ytitles) {
-    this.ytitles = ytitles;
-    this.scatter.y_axes = this.buildScatterAxes(); 
-  }
-
-  setYRanges(ranges) {
-    this.yranges = ranges;
-    this.scatter.y_axes = this.buildScatterAxes(); 
-  }
-
-  // ---------------------------------------------------------------------------
-  buildScatterAxes() {
-    var ret = [];
-    for (var i = 0; i < this.metric_config.length; i++) {
-      var title = "";
-
-      if (this.ytitles.length > i) {
-        title = this.ytitles[i];
-      }
-      else if (this.metric_config[i].yTitle !== undefined) {
-        if (this.metric_config[i].unit !== undefined) {
-          title = this.metric_config[i].yTitle + " [" + this.metric_config[i].unit + "]";
-        }
-        else {
-          title = this.metric_config[i].yTitle;
-        }
-      }
-      // If only one metric, make that the title
-      else if (this.metric_config.length == 1) {
-        title = this.metric_config[0]["name"];
-      }
-      else {
-        title = this.titles[i];
-      }
-
-      var range;
-      if (this.yranges !== undefined && this.yranges.length > i && this.yranges[i].length == 2) {
-        range = this.yranges[i];
-      }
-      else if (this.metric_config[i].range !== undefined && this.metric_config[i].range.length == 2) {
-        range = this.metric_config[i].range;
-      }
-    
-      ret.push(new ScatterYAxis(title, range, i));
-
-      if (this.oneyaxis) break;
-    }
-    return ret;
-  }
-  // ---------------------------------------------------------------------------
-  // Internal function: grap the time step from the server and run a
-  // callback
-  getTimeStep(callback) {
-    var self = this;
-    this.link.get_step(function(data) {
-        callback(self, data.step);
-    });
-  }
-  // ---------------------------------------------------------------------------
-  // start running
-  run() {
-    this.is_running = true;
-    this.getTimeStep(function(self, step) {
-      self.updateStep(step);
-      self.updateData(self.link);
-    });
-  }
-  // ---------------------------------------------------------------------------
-  // Functions called by the GroupConfigController
-  // update the titles
-  updateTitles(titles) {
-    this.scatter.titles = titles;
-    this.titles = titles;
-  }
-  // ---------------------------------------------------------------------------
-  // update the metric config option
-  updateMetricConfig(config, do_append) {
-    if (do_append === undefined || !do_append) {
-      this.metric_config = [config];
-    }
-    else {
-      this.metric_config.push(config);
-    }
-    // update the y-axis
-    this.scatter.y_axes = this.buildScatterAxes();
-    
-    // update the warning lines
-    this.scatter.delete_warning_lines();
-    if (this.metric_config.length == 1 && this.metric_config[0].warningRange !== undefined) {
-      this.scatter.add_warning_line(this.metric_config[0].yTitle, this.metric_config[0].warningRange, 0);
-    }
-  }
-  // ---------------------------------------------------------------------------
-  // update the data step
-  updateStep(step) {
-    if (step < 10000) step = 10000;
-    this.step = step;
-    // set the plot to ignore data from big skips in time
-    this.scatter.crop_range = this.step * 100;
-  }
-  // ---------------------------------------------------------------------------
-  // set the step for the first time
-  setStep(step) {
-    this.updateStep(step);
-  }
-  // ---------------------------------------------------------------------------
-  // update the data link and start polling for new data
-  updateData(link) {
-    this.link = link;
-
-    // reset the poll
-    if (!(this.buffer === undefined) && this.buffer.isRunning()) {
-      this.buffer.stop();
-    }
-
-    // make a new buffer
-    // get the poll
-    var poll = new Data.D3DataPoll(this.link, this.step, []);
-
-    // get the data source
-    //var source = new Data.D3DataSource(this.link, -1);
-
-    // wrap with a buffer
-    this.buffer = new Data.D3DataBuffer(poll, this.max_data, [this.scatter.updateData.bind(this.scatter), this.setTimeAxes.bind(this)]);
-    // run it
-    this.runBuffer();
-  }
- 
-  setDataRange(start, stop) {
-    this.is_live = false;
-    this.start = start;
-    this.end = end;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Tell the buffer to get data for a specific time range
-  getData(start, stop) {
-    this.buffer.stop();
-    this.buffer.getData(start, stop);
-  }
-  // ---------------------------------------------------------------------------
-  // Connect setting the time range of the data to be shown to an HTML
-  // form
-  // id_start: The id of the datatimepicker controlled form field which
-  //           holds the start time
-  // id_end: The id of the datatimepicker controlled form field which
-  //         folds the end time
-  // id_toggle: The id of the toggle object which could either specify
-  //            "live" -- update in real time, or "lookback" -- get data
-  //            from the id_start/id_end time range
-  timeRangeController(id_start, id_end, id_toggle) {
-    var self = this;
-
-    self.listDateChangeEVTTime = 0;
-    $(id_toggle).on("date-change", function() {
-      // There is a bug in the date-picker library where this
-      // event fires multiple times. "Debounce" this event fire
-      // with a timer check.
-      var fire = true;
-      if (event.timeStamp - self.listDateChangeEVTTime < 500){
-        fire = false;
-      }
-      self.listDateChangeEVTTime = event.timeStamp;
-      if (!fire) return;
-
-      var toggle_val = $(id_toggle).val();
-      if (toggle_val == "live" ) {
-        self.is_live = true;
-      }
-      else if (toggle_val == "lookback") {
-        self.start = $(id_start).datetimepicker('getValue');
-        self.end = $(id_end).datetimepicker('getValue');
-        self.is_live = false;
-        // stop the buffer
-        if (self.buffer.isRunning()) {
-          self.buffer.stop();
-        }
-      }
-      else if (toggle_val == "hour"){
-        var d = new Date();
-        d.setHours(d.getHours() -1);
-        self.start = d;
-        self.end = new Date();
-        self.is_live = false;
-        // stop the buffer
-        if (self.buffer.isRunning()) {
-          self.buffer.stop();
-        }
-      }
-      else if (toggle_val == "8hour"){
-        var d = new Date();
-        d.setHours(d.getHours()-8);
-        self.start = d;
-        self.end = Date.now();
-        self.is_live = false;
-        // stop the buffer
-        if (self.buffer.isRunning()) {
-          self.buffer.stop();
-        }
-      }
-      else if (toggle_val == "day"){
-        var d = new Date();
-        d.setDate(d.getDate() -1);
-        self.start = d;
-        self.end = new Date();
-        self.is_live = false;
-        // stop the buffer
-        if (self.buffer.isRunning()) {
-          self.buffer.stop();
-        }
-      }
-      else if (toggle_val == "week"){
-        var d = new Date();
-        d.setDate(d.getDate() -7);
-        self.start = d;
-        self.end = Date.now();
-        self.is_live = false;
-        // stop the buffer
-        if (self.buffer.isRunning()) {
-          self.buffer.stop();
-        }
-      }
-
-      self.runBuffer();
-    });
-
-    //loading the page it makes plots with a fixed time of 6 hours
-    var toggle_val = $(id_toggle).val();
-    if (toggle_val == "startWith6hour"){
-      var d = new Date();
-      d.setHours(d.getHours()-6);
-      self.start = d;
-      self.end = Date.now();
-      self.is_live = false;
-    }
-    return this;
-  }
-  // ---------------------------------------------------------------------------
-  downloadDataController(id) {
-    var self = this;
-    $(id).click(function() {
-      self.download("data.json", JSON.stringify(self.downloadFormat()));
-    });
-    return this;
-  }
-
-  addLink(link, config, name) {
-    this.link = this.link.add(link);
-    this.titles.push(name);
-    this.updateMetricConfig(config, true);
-    var yaxis_index = 0;
-    if (!this.oneyaxis) yaxis_index = this.metric_config.length - 1;
-    this.scatter.add_trace(name, yaxis_index); 
-    if (this.is_running) {
-      this.updateData(this.link);
-    }
-  }
-
-  treeSelectController(id, type) {
-    var self = this;
-    $(id).on('nodeSelected', function(event, node) {
-      if (type == "postgres") {
-        if (node.ID === undefined) return;
-        // collapse the tree
-        $(id).treeview('collapseAll', { silent: true });
-        // make the link and get the config object
-        var postgres_link = new DataLink.EpicsStreamLink($SCRIPT_ROOT, node.database, node.ID)
-
-        // get the config and then finish updating the plot
-        d3.json(postgres_link.config_link(), function(config) {
-          self.addLink(new Data.D3DataLink(postgres_link), config.metadata, node.name);
-        });
-      }
-    });
-    return this;
-  }
-  // ---------------------------------------------------------------------------
-  runBuffer() {
-    if (this.is_live) {
-      this.scatter.crop_old_data = true;
-      // set the start
-      // to be on the safe side, get back to ~1000 data points
-      this.start = new Date(); 
-      this.start.setSeconds(this.start.getSeconds() - this.step * this.max_data / 1000); // ms -> s
-      this.buffer.start(this.start);
-    }
-    else {
-      this.scatter.crop_old_data = false;
-      this.buffer.getData(this.start, this.end);
-    }
-  }
-  // ---------------------------------------------------------------------------
-  setTimeAxes() {
-    if (this.is_live) {
-      // let plotly set the x-range
-      this.scatter.x_range = undefined;
-    }
-    else {
-      // set it ourselves
-      this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
-                                moment(this.end).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
-    }
-  }
-  // ---------------------------------------------------------------------------
-  downloadFormat() {
-    // get the number of input streams controlled by this plot
-    var n_data = this.link.accessors().length;
-    var ret = {};
-    for (var i = 0; i < n_data; i++) {
-      ret[this.titles[i]] = this.buffer.buffers[i].get(0, this.buffer.buffers[i].size);
-    }
-    return ret;
-  }
-  // ---------------------------------------------------------------------------
-  download(filename, data) {
-    var blob = new Blob([data], {type: 'text/csv'});
-    if(window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, filename);
-    }
-    else{
-      var elem = window.document.createElement('a');
-      elem.href = window.URL.createObjectURL(blob);
-      elem.download = filename;        
-      document.body.appendChild(elem);
-      elem.click();        
-      document.body.removeChild(elem);
-    }
-  }
-}
-
 export class PlotlyControllerMean {
   // target: the div-id (including the '#') where the cubism plots will
   //         be drawn
@@ -431,9 +53,13 @@ export class PlotlyControllerMean {
     // appply config
     this.updateMetricConfig(metric_config, false);
     // set the data
-    for (var i = 0; i < titles.length; i ++) {
-      this.scatter.add_trace(titles[i], 0);
-    }
+    this.scatter.add_trace(titles[0], 0);
+    //this.scatter.add_trace_mean(titles[0], 0);
+      
+    //for (var i = 0; i < titles.length; i ++) {
+    //  this.scatter.add_trace_mean(titles[i], 0);
+    //}
+    //
 
     this.is_live = true;
     this.is_running = false;
@@ -444,8 +70,6 @@ export class PlotlyControllerMean {
     return true;
   }
   updateReferenceData() {} // noop
-
-  updateMeanData() {} // noop
 
   setSaveName(name) {
     this.scatter.savename = name;
@@ -509,9 +133,6 @@ export class PlotlyControllerMean {
   // callback
   getTimeStep(callback) {
     var self = this;
-    this.link.get_step(function(data) {
-        callback(self, data.step);
-    });
     this.link.get_step(function(data) {
         callback(self, data.step);
     });
@@ -547,9 +168,6 @@ export class PlotlyControllerMean {
     
     // update the warning lines
     this.scatter.delete_warning_lines();
-    if (this.metric_config.length == 1 && this.metric_config[0].warningRange !== undefined) {
-      this.scatter.add_warning_line(this.metric_config[0].yTitle, this.metric_config[0].warningRange, 0);
-    }
   }
   // ---------------------------------------------------------------------------
   // update the data step
@@ -586,6 +204,27 @@ export class PlotlyControllerMean {
     // run it
     this.runBuffer();
   }
+  updateDataMean(link_mean) {
+    this.link_mean = link_mean;
+
+    // reset the poll
+    if (!(this.buffer_mean === undefined) && this.buffer_mean.isRunning()) {
+      this.buffer_mean.stop();
+    }
+
+    // make a new buffer
+    // get the poll
+    var poll_mean = new Data.D3DataPoll(this.link_mean, this.step, []);
+
+    // get the data source
+    //var source = new Data.D3DataSource(this.link, -1);
+
+    // wrap with a buffer
+    this.buffer_mean = new Data.D3DataBuffer(poll_mean, this.max_data, [this.scatter.updateDataMean.bind(this.scatter), this.setTimeAxes.bind(this)]);
+    // run it
+    this.runBufferMean();
+  }
+ 
  
   setDataRange(start, stop) {
     this.is_live = false;
@@ -598,6 +237,10 @@ export class PlotlyControllerMean {
   getData(start, stop) {
     this.buffer.stop();
     this.buffer.getData(start, stop);
+  }
+  getDataMean(start, stop) {
+    this.buffer_mean.stop();
+    this.buffer_mean.getDataMean(start, stop);
   }
   // ---------------------------------------------------------------------------
   // Connect setting the time range of the data to be shown to an HTML
@@ -683,6 +326,7 @@ export class PlotlyControllerMean {
       }
 
       self.runBuffer();
+      self.runBufferMean();
     });
     return this;
   }
@@ -740,6 +384,20 @@ export class PlotlyControllerMean {
       this.buffer.getData(this.start, this.end);
     }
   }
+  runBufferMean() {
+    if (this.is_live) {
+      this.scatter.crop_old_data = true;
+      // set the start
+      // to be on the safe side, get back to ~1000 data points
+      this.start = new Date(); 
+      this.start.setSeconds(this.start.getSeconds() - this.step * this.max_data / 1000); // ms -> s
+      this.buffer.start(this.start);
+    }
+    else {
+      this.scatter.crop_old_data = false;
+      this.buffer_mean.getDataMean(this.start, this.end);
+    }
+  }
   // ---------------------------------------------------------------------------
   setTimeAxes() {
     if (this.is_live) {
@@ -748,8 +406,8 @@ export class PlotlyControllerMean {
     }
     else {
       // set it ourselves
-      this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
-                                moment(this.end).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
+      this.scatter.x_range = [moment(this.start).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"), 
+                                moment(this.end).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss")];
     }
   }
   // ---------------------------------------------------------------------------
@@ -778,8 +436,6 @@ export class PlotlyControllerMean {
     }
   }
 }
-
-
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
@@ -1103,10 +759,10 @@ function create_cubism_context(target, step) {
 	.ticks(12)
 	.orient(d)
         .focusFormat(function(date) { 
-          return moment(date).tz("America/Chicago").format('HH:mm:ss') + " CST/GMT-6"; 
+          return moment(date).tz("Greenwich").format('HH:mm:ss') + " CST/GMT-6"; 
         })
         .tickFormat(function(date) {
-          return context.scale.tickFormat()(new Date(date.toLocaleString("en-US", {timeZone: "America/Chicago"})));
+          return context.scale.tickFormat()(new Date(date.toLocaleString("en-US", {timeZone: "Greenwich"})));
         });
      d3.select(this).call(axis);
   });
@@ -1125,8 +781,8 @@ function create_cubism_context(target, step) {
 function build_data_link(ind, buffer) {
   return function(start, stop, step, callback) {
     // setup timestamps
-    var tz_start = moment.tz(start, "America/Chicago");
-    var tz_stop = moment.tz(stop, "America/Chicago");  
+    var tz_start = moment.tz(start, "Greenwich");
+    var tz_stop = moment.tz(stop, "Greenwich");  
     var ts_start = tz_start.unix() * 1000;
     var ts_stop = tz_stop.unix() * 1000;
     var n_data = (ts_stop - ts_start) / step;

@@ -50,6 +50,18 @@ class PostgresDataStream(DataStream):
         config = pv_meta_internal(database, self.ID, front_end_abort=True)
         return (dtype, self.ID, database, config)  
 
+class IgnitionDataStream(DataStream):
+    def __init__(self, name, ID):
+        super(IgnitionDataStream, self).__init__(name)
+        self.ID = ID
+
+    def to_config(self):
+        # from .metrics.ignition_api import pv_meta_internal
+        dtype = "ignition"
+        database = "ignition"
+        # config = pv_meta_internal(database, self.ID, front_end_abort=True)
+        return (dtype, self.ID, database)  
+
 class StreamConverter(BaseConverter):
     def to_python(self, value):
         database = value.split(",")[0]
@@ -94,21 +106,30 @@ class FixedOffset(tzinfo):
         return 'FixedOffset(%d)' % (self.utcoffset().total_seconds() / 60)
 
 def parseiso(timestr):
-    """Convert an iso time string -> [ms] unix timestamp."""
-    try: 
-        naive_date_str, _, offset_str = timestr.rpartition(' ')
-        dt = datetime.strptime(naive_date_str,'%Y-%m-%dT%H:%M:%S.%fZ')
+    """Convert an iso time string with dubious timezone info -> [ms] unix timestamp."""
+    if 'Z' in timestr: # already has UTC time (as from timeArgs in DataLink.js))
+        utc_date_str = timestr.split('Z')[0]
+        dt = datetime.strptime(utc_date_str, '%Y-%m-%dT%H:%M:%S.%f')
+    else:
+        try: # maybe no timezone info at all, lets just assume utc
+            dt = datetime.strptime(timestr, '%Y-%m-%dT%H:%M:%S.%f')
+        except: # maybe local time with a utc offset
+            naive_date_str, _, offset_str = timestr.rpartition('+' if '+' in timestr else '-')
+            dt_local = datetime.strptime(naive_date_str, '%Y-%m-%dT%H:%M:%S.%f')
 
-        offset = int(offset_str[-4:-2])*60 + int(offset_str[-2:])
-        if offset_str[0] == "-":
-            offset = -offset
+            if len(offset_str) == 2: #hh
+                offset = int(offset_str) * 60
+            elif len(offset_str) == 4: #hhmm
+                offset = int(offset_str[:2]) * 60 + int(offset_str[2:])
+            elif len(offset_str) == 5: #hh:mm
+                offset = int(offset_str[:2]) * 60 + int(offset_str[3:])
+            else:
+                raise ValueError('offset_str "' + offset_str + '" not valid iso')
 
-        dt = dt.replace(tzinfo=FixedOffset(offset))
-    except:
-        try:
-            dt = datetime.strptime(timestr, '%m/%d/%Y %H:%M')
-        except:
-            raise ValueError()
+            offset = offset if '+' in timestr else -offset
+
+            dt_local = dt_local.replace(tzinfo=FixedOffset(offset))
+            dt = dt_local - dt_local.utcoffset()
 
     return int(calendar.timegm(dt.timetuple())*1e3 + dt.microsecond/1e3)
 
