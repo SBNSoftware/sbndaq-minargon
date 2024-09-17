@@ -1,0 +1,520 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}Slow Control Alarms{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="col-md-8 hcenter">
+<h1>
+  <p> Slow Control Alarms History </p>
+</h1>
+
+<p> Plots can be zoomed, dragged and hovered. Double click to snap axis to fit data. Email alexander.wilkinson.20@ucl.ac.uk with any questions. </p>
+
+
+<div id="selectDropdowns">
+  <label>Show alarms for system(s):</label>
+  <ul>
+    <select id="systSelect" onchange="updateSubDropdown(1)">
+      <option selected disabled value="Empty">Choose system</option>
+    </select>
+
+    &nbsp;
+
+    <select id="subSyst1Select" onchange="updateSubDropdown(2)">
+      <option selected disabled value="Empty">Choose next subsytem</option>
+    </select>
+
+    &nbsp;
+
+    <select id="subSyst2Select">
+      <option selected disabled value="Empty">Choose next subsytem</option>
+    </select>
+
+    <!--
+    &nbsp;
+
+    <select id="subSyst3Select">
+      <option selected disabled value="Empty">Choose next subsytem</option>
+    </select>
+    -->
+  </ul>
+</div>
+
+<label>Hide alarms for:</label>
+<div style="width:400px;height:150px;overflow:scroll;" id="hideCheckboxes">
+  <ul>
+    <li><input id="hideOK" type="checkbox"> OK</li>
+    <li><input id="hideDisconnected" type="checkbox"> Disconnected</li>
+    <li><input id="hidedisconnected" type="checkbox"> disconnected</li>
+    <li><input id="hideUDF_ALARM" type="checkbox"> UDF_ALARM</li>
+    <li><input id="hideLOLO_ALARM" type="checkbox"> LOLO_ALARM</li>
+    <li><input id="hideLOW_ALARM" type="checkbox"> LOW_ALARM</li>
+    <li><input id="hideNO_ALARM" type="checkbox"> NO_ALARM</li>
+    <li><input id="hideHIGH_ALARM" type="checkbox"> HIGH_ALARM</li>
+    <li><input id="hideHIHI_ALARM" type="checkbox"> HIHI_ALARM</li>
+    <li><input id="hideREAD_ALARM" type="checkbox"> READ_ALARM</li>
+    <li><input id="hideWRITE_ALARM" type="checkbox"> WRITE_ALARM</li>
+    <li><input id="hideCALC_ALARM" type="checkbox"> CALC_ALARM</li>
+    <li><input id="hideTIMEOUT_ALARM" type="checkbox"> TIMEOUT_ALARM</li>
+    <li><input id="hideLINK_ALARM" type="checkbox"> LINK_ALARM</li>
+    <li><input id="hideCOMM_ALARM" type="checkbox"> COMM_ALARM</li>
+    <li><input id="hideSTATE_ALARM" type="checkbox"> STATE_ALARM</li>
+    <li><input id="hideSCAN_ALARM" type="checkbox"> SCAN_ALARM</li>
+    <li><input id="hideDisable_ALARM" type="checkbox"> Disable_ALARM</li>
+    <li><input id="hideWrite_Error" type="checkbox"> Write_Error</li>
+    <li><input id="hideArchive_Off" type="checkbox"> Archive_Off</li>
+    <li><input id="hideNaN" type="checkbox"> NaN</li>
+  </ul>
+</div>
+
+<br>
+
+<div>
+  <button type="button" onclick="makePlots()">Go!</button>
+</div>
+
+<br><br>
+
+<div id="selectionTitleDiv"> </div>
+
+<div id="tableDiv"> </div>
+
+<div id="histoDiv"> </div>
+
+<div id="traceDiv"> </div>
+
+<script>
+  const ALARMS =  {{ alarms|tojson }};
+  const NESTEDCOMPONENTS = {{ components|tojson }};
+  const CURRENTTIME = "{{ current_time|safe }}";
+  const EARLIESTTIME = "{{ earliest_time|safe }}";
+
+  const SELECTIDS = ["systSelect", "subSyst1Select", "subSyst2Select"];
+  const CHECKBOXIDS = [
+    "hideOK",
+    "hideDisconnected",
+    "hidedisconnected",
+    "hideUDF_ALARM",
+    "hideLOLO_ALARM",
+    "hideLOW_ALARM",
+    "hideNO_ALARM",
+    "hideHIGH_ALARM",
+    "hideHIHI_ALARM",
+    "hideREAD_ALARM",
+    "hideWRITE_ALARM",
+    "hideCALC_ALARM",
+    "hideTIMEOUT_ALARM",
+    "hideLINK_ALARM",
+    "hideCOMM_ALARM",
+    "hideSTATE_ALARM",
+    "hideSCAN_ALARM",
+    "hideDisable_ALARM",
+    "hideWrite_Error",
+    "hideArchive_Off",
+    "hideNaN"
+  ];
+
+  initSystDropdown();
+  initHideCheckbox()
+
+  // alarm selection menus control--------------------------------------- 
+
+  function updateDropdown(select, names) {
+    clearDropdown(select);
+    if (names.length == 1) {
+      addSelectOption(select, names[0]);
+      select.value = names[0];
+    }
+    else {
+      addSelectOption(select, "all");
+      for(var iSyst = 0; iSyst < names.length; iSyst++) {
+        addSelectOption(select, names[iSyst]);
+      }
+      select.value = "Empty";
+    }
+    triggerOnChange(select);
+  }
+
+  function initSystDropdown() {
+    var select = document.getElementById("systSelect");
+    updateDropdown(select, Object.keys(NESTEDCOMPONENTS));
+    for (let i = 1; i < SELECTIDS.length; i++) {
+      const select = document.getElementById(SELECTIDS[i]);
+      select.value = "";
+    }
+  }
+
+  function initHideCheckbox() {
+    for (let i = 0; i < CHECKBOXIDS.length; i++) {
+      const res = document.getElementById(CHECKBOXIDS[i]);
+      res.checked = false;
+    }
+  }
+
+  function updateSubDropdown(ID) {
+    var parentSelected = document.getElementById(SELECTIDS[ID - 1]).value;
+    var select = document.getElementById(SELECTIDS[ID]);
+
+    if (parentSelected == "all" || parentSelected == "") {
+      clearDropdown(select);
+      return;
+    }
+
+    var components = getComponentsAtID(NESTEDCOMPONENTS, ID);
+    if (components == null) {
+      clearDropdown(select);
+      return;
+    }
+
+    const names = Object.keys(components);
+    updateDropdown(select, names);
+  }
+
+  function addSelectOption(select, name) {
+    var el = document.createElement("option");
+    el.textContent = name;
+    el.value = name;
+    select.appendChild(el);
+  }
+
+  function clearDropdown(select) {
+    const L = select.options.length - 1;
+    for (var i = 0; i < L; i++) {
+      select.remove(1);
+    }
+    select.value = "";
+    triggerOnChange(select);
+  }
+
+  function getComponentsAtID(NESTEDCOMPONENTS, ID) {
+    var components = NESTEDCOMPONENTS;
+    for (let i = 0; i < ID; i++) { 
+      const ID = SELECTIDS[i];
+      components = components[document.getElementById(ID).value];
+      if (components == null) {
+        break;
+      }
+    }
+    return components;
+  }
+
+  function triggerOnChange(element) {
+    const ev = new Event("change");
+    element.dispatchEvent(ev);
+  }
+
+  // end-------------------------------------------------------- 
+
+  // plot generation--------------------------------------------
+
+  function makePlots() {
+    dropdownRes = getDropdownResults();
+    checkboxRes = getCheckboxResults();
+
+    if (dropdownRes.includes("Empty")) {
+      alert("Invalid system selection!");
+      return;
+    }
+
+    alarmHits = getAlarmHits(dropdownRes, checkboxRes);
+    alarmHits.sort(function(a, b) { return Date.parse(a["time"]) - Date.parse(b["time"]); });
+
+    const title = dropdownRes.join("/");
+    document.getElementById("selectionTitleDiv").innerHTML = (
+        "<p>Showing  alarms for <b>" + title + "</b> from " + EARLIESTTIME + " to " + CURRENTTIME +
+        ". Total logged alarms: " + alarmHits.length + "</p>"
+    );
+
+    makeTablePlot(alarmHits);
+    makeHistoPlot(alarmHits);
+    makeTracesPlot(alarmHits);
+  }
+
+  // end-------------------------------------------------------- 
+
+  // plot data preparation--------------------------------------
+
+  function getDropdownResults() {
+    var dropdownRes = [ ];
+    for (let i = 0; i < SELECTIDS.length; i++) {
+      const select = document.getElementById(SELECTIDS[i]);
+      if (select.value == "") {
+        break;
+      }
+      dropdownRes.push(select.value);
+    }
+    return dropdownRes;
+  }
+
+  function getCheckboxResults() {
+    var checkboxRes = new Set([ ]);
+    for (let i =0; i < CHECKBOXIDS.length; i++) {
+      const res = document.getElementById(CHECKBOXIDS[i]);
+      if (res.checked) {
+        checkboxRes.add(CHECKBOXIDS[i].slice(4));
+      }
+    }
+    return checkboxRes;
+  }
+
+  function getAlarmHits(selectedComponents, hiddenAlarms) {
+    var selectedHits = [];
+    var selectedAlarms = ALARMS;
+    var handleAll = false;
+    for (let i = 0; i < selectedComponents.length; i++) {
+      const component = selectedComponents[i];
+      if (component == "all") {
+        handleAll = true;
+        break;
+      }
+      selectedAlarms = selectedAlarms[component];
+    }
+    if (handleAll) {
+      selectedAlarms = mergeComponentAlarmHits(selectedAlarms);
+    }
+    else {
+      selectedAlarms = selectedAlarms.map(
+        (alarmHit) => ({...alarmHit, "histoCateg": alarmHit["pv"]})
+      )
+    }
+    selectedAlarms = selectedAlarms.filter((alarmHit) => !(hiddenAlarms.has(alarmHit["message"])));
+    return selectedAlarms;
+  }
+
+  function mergeComponentAlarmHits(selectedAlarms, hiddenAlarms) {
+    selectedAlarmsFlat = flatten(selectedAlarms);
+    selectedAlarmsMerged = [];
+    for (const [components, alarmHits] of Object.entries(selectedAlarmsFlat)) {
+      for (const alarmHit of alarmHits) { 
+        alarmHit["pv"] = components + "/" + alarmHit["pv"].split("/").slice(-2).join("/");
+        alarmHit["histoCateg"] = components.split("/")[0];
+        selectedAlarmsMerged.push(alarmHit);
+      }
+    }
+    return selectedAlarmsMerged;
+  }
+
+  function flatten(d, parentKey="", flat_d={}) {
+    for (const key in d) {
+      if (d[key].constructor == Object) {
+        flatten(d[key], parentKey + key + "/", flat_d);
+      }
+      else {
+        flat_d[parentKey + key] = d[key];
+      } 
+    }
+    return flat_d;
+  }
+
+  // end-------------------------------------------------------- 
+
+  // plot drawing-----------------------------------------------
+
+  function makeTracesPlot(alarmHits) {
+    function makeTraceData(alarmData, alarmName) {
+      const alarmTimes = alarmData.map(function(alarm) { return alarm["time"]; }); 
+      const alarmValues = alarmData.map(function(alarm) { return alarm["value"]; }); 
+      const alarmMessages = alarmData.map(function(alarm) { return [ alarm["message"] ]; }); 
+      const alarmMarkerSymbols = alarmData.map(function(alarm) { return [ alarm["marker_sym"] ]; }); 
+      return {
+        "x" : alarmTimes,
+        "y" : alarmValues,
+        "type" : "lines",
+        "line" : { "shape" : "vh" }, // think data order is reversed so "vh" gives "hv effect (which I want)
+        "customdata" : alarmMessages,
+        "hovertemplate" : (
+          "<b>Value</b>: %{y}<br>" +
+          "<b>Status</b>: %{customdata[0]}<br>" +
+          "<b>Time</b>: %{x}<br>" +
+          "<extra></extra>"
+        ),
+        "visible" : false,
+        "name" : alarmName,
+        "marker" : {
+          "size" : 14,
+          "symbol" : alarmMarkerSymbols
+        }
+      }
+    }
+    
+    function makeTraceButton(iTrace, numTraces, alarmName) {
+      let traceMask = new Array(numTraces).fill(false);
+      traceMask[iTrace] = true;
+      return {
+        "method" : "update",
+        "args" : [
+          {"visible": traceMask},
+          {"xaxis" : { "range" : [EARLIESTTIME, CURRENTTIME] } }
+        ],
+        "label" : alarmName
+      }
+    }
+    
+    var alarmDataObj = { };
+    for (var alarmHit of alarmHits) {
+      if (!(alarmHit["pv"] in alarmDataObj)) {
+        alarmDataObj[alarmHit["pv"]] = [ ];
+      }
+      switch(alarmHit["message"]) {
+        case "LOLO_ALARM":
+          alarmHit["marker_sym"] = 106;
+          break;
+        case "LOW_ALARM":
+          alarmHit["marker_sym"] = 6;
+          break;
+        case "NO_ALARM":
+          alarmHit["marker_sym"] = 0;
+          break;
+        case "HIGH_ALARM":
+          alarmHit["marker_sym"] = 5;
+          break;
+        case "HIHI_ALARM":
+          alarmHit["marker_sym"] = 105;
+          break;
+        default: // Unkown messages
+          alarmHit["marker_sym"] = 101;
+      }
+      alarmDataObj[alarmHit["pv"]].push(alarmHit);
+    }
+
+    var traceButtons = [ ];
+    var traceData = [ ];
+    var iAlarm = 0;
+    const numAlarmNames = Object.keys(alarmDataObj).length;
+    for (var [alarmName, alarmHits] of Object.entries(alarmDataObj)) {
+      traceData.push(makeTraceData(alarmHits, alarmName));
+      traceButtons.push(makeTraceButton(iAlarm++, numAlarmNames, alarmName));
+    }
+
+    const traceLayout = {
+      "updatemenus" : [{
+        "y" : -0.1,
+        "x" : 1.0,
+        "yanchor" : "top",
+        "buttons" : traceButtons
+      }],
+      "height" : 900,
+      "margin" : { "b" : 400 },
+      "hoverlabel" : {
+        "font" : {
+          "size" : 12,
+          "family" : "Rockwell",
+        },
+        "namelength" : -1
+      },
+      "yaxis" : {
+        "title" : { "text": "value" },
+        "automargin" : true
+      },
+      "xaxis": {
+        "automargin": true,
+        "range" : [EARLIESTTIME, CURRENTTIME]
+      },
+      "title" : "Alarm History for Single PVs (select one from dropdown)"
+    }
+      
+    Plotly.newPlot("traceDiv", traceData, traceLayout);
+  }
+
+  function makeHistoPlot(alarmHits) {
+    var alarmsHistDataObj = { };
+    for (const alarmHit of alarmHits) {
+      // if (alarmHit["message"] == "NO_ALARM") {
+      //   continue;
+      // }
+
+      if (!(alarmHit["histoCateg"] in alarmsHistDataObj)) {
+        alarmsHistDataObj[alarmHit["histoCateg"]] = {
+          "x" : [ ],
+          "type" : "histogram",
+          "xbins" : { "size" : "D1" },
+          "name" : alarmHit["histoCateg"],
+          "meta" : [ alarmHit["histoCateg"] ],
+          "hovertemplate" : "<b>%{y}</b>"
+        }
+      }
+      alarmsHistDataObj[alarmHit["histoCateg"]]["x"].push(alarmHit["time"]);
+    }
+    var alarmsHistData = [];
+    for (const [alarmName, alarmHistData] of Object.entries(alarmsHistDataObj)) {
+      alarmsHistData.push(alarmHistData);
+    }
+
+    const alarmHistLayout = {
+      "xaxis": {
+        "automargin": true,
+        "range" : [EARLIESTTIME, CURRENTTIME]
+      },
+      "yaxis": {
+        "automargin": true,
+        "title": { "text": "alarm count" }
+      },
+      "margin": { "t": 100, "l": 100, "r": 100 , "b" : 100 },
+      "height": 600,
+      "autosize" : true,
+      "title" : "All Alarm Messages (1 Day Binning)",
+      "barmode" : "stack",
+      "showlegend" : false,
+      "hoverlabel" : {
+        "font" : {
+          "size" : 12,
+          "family" : "Rockwell",
+        },
+        "namelength" : -1
+      },
+      "hovermode" : "x unified"
+    }
+
+    Plotly.newPlot("histoDiv", alarmsHistData, alarmHistLayout);
+  }
+
+
+  function makeTablePlot(alarmHits) {
+    var entryNames = [ ];
+    var entryTimes = [ ];
+    var entryMessages = [ ];
+    var entryValues = [ ];
+
+    for (const alarmHit of alarmHits.reverse()) {
+      entryNames.push(alarmHit["pv"]);
+      entryTimes.push(alarmHit["time"]);
+      entryMessages.push(alarmHit["message"]);
+      entryValues.push(alarmHit["value"]);
+    }
+
+    const alarmTableEntries = [ entryNames, entryTimes, entryMessages, entryValues ];
+
+    const alarmTableData = [{
+      "type" : "table",
+      "columnwidth" : [4, 1.3, 1, 1],
+      "header" : {
+        "values" : [
+          [ "<b>pv Name</b>" ],
+          [ "<b>Time</b>" ],
+          [ "<b>Message</b>" ],
+          [ "<b>Value</b>" ]
+        ],
+        "align" : "center"
+      },
+      "cells" : {
+        "values" : alarmTableEntries,
+        "align" : "left"
+      }
+    }]
+
+    const alarmTableLayout = {
+      "title" : "Alarm History",
+      "responsive" : true,
+      "autosize" : true,
+      "automargin" : true,
+      "height" : 800,
+      "style_table" : {'overflowX': 'auto'}
+    }
+
+    Plotly.newPlot("tableDiv", alarmTableData, alarmTableLayout);
+  }
+
+  // end-------------------------------------------------------- 
+
+</script>
+
+{%endblock%}

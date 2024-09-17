@@ -10,6 +10,7 @@ this.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
 import os
 import subprocess 
 import psycopg2
@@ -25,6 +26,10 @@ import time
 import calendar
 import re
 from pytz import timezone
+import numpy as np
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
 # status interpreter functions
 from .checkStatus import statusString
@@ -33,6 +38,9 @@ from .checkStatus import transferString
 from .checkStatus import messageString
 import six
 from six.moves import range
+import io
+from PIL import Image
+import base64
 
 
 # error class for connecting to postgres
@@ -58,7 +66,7 @@ class PostgresConnectionError:
     def register_fileopen_error(self, err, name):
         self.err = err
         self.name = name
-        self.msg = "Error opening secret key file: %s" % str(err)
+        self.msg = "Error opening secret key file: %s" % err[1]
         return self
 
     def register_notfound_error(self, name):
@@ -397,11 +405,12 @@ def ps_series(connection, ID):
     # Make a request for time range
     args = stream_args(request.args)
     start_t = args['start']    # Start time
+    now = datetime.now(timezone('UTC')) # Get the time now in UTC
+    # 24 hours ago
+    start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
     if start_t is None:
+        # TODO:
         return abort(404, "Must specify a start time to a PostgreSQL request") 
-
-        start_t = datetime.now(timezone('UTC')) - timedelta(days=100)  # Start time
-        start_t = calendar.timegm(start_t.timetuple()) *1e3 + start_t.microsecond/1e3 # convert to unix ms
 
     stop_t  = args['stop']     # Stop time
 
@@ -437,14 +446,382 @@ def ps_series(connection, ID):
                 continue
 
             # Add the data to the list
-        data_list.append( [float(row['sample_time']), value] )
+        ts = float(row['sample_time'])
+        if ID == "9367":
+            ts = ts #+ 5*60*60*1e3
+        data_list.append( [ts, value] )
 
     # Setup the return dictionary
     ret = {
-        ID: data_list
+        ID: data_list,
+        "warningRange": []
     }
 
     return jsonify(values=ret, query=query)
+
+BREAK_TIMESTAMPS = [1719343380000, 1719412080000, 1719426720000, 1719500460000, 1719514320000]
+VOLTS = [15, 20, 25, 30, 35]
+BREAK_TIMESTAMPS = [big/1000. for big in BREAK_TIMESTAMPS]
+@app.route("/<connection>/ps_series_mean/<ID>")
+@postgres_route
+def ps_series_mean(connection, ID):
+    config = connection[1]
+
+    # Make a request for time range
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    if start_t is None:
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        #start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 60*60*60*1e3 # convert to unix ms
+        start_t = BREAK_TIMESTAMPS[0]*1e3
+
+    stop_t  = args['stop']     # Stop time
+
+    # Catch for if no stop time exists
+    if (stop_t == None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+
+    # remove the timing keys from the dict
+    table_args = request.args.to_dict()
+    table_args.pop('start', None)
+    table_args.pop('stop', None)
+    table_args.pop('n_data', None)
+    table_args.pop('now', None)
+
+    data, query = postgres_query([ID], start_t, stop_t, args['n_data'], *connection, **table_args)
+
+    # Format the data from database query
+    data_list = []
+    val_list = []
+    t_list = []
+
+    for row in reversed(data):
+        value = None
+        for i in range(len(config["value_names"])):
+            accessor = "val%i" % i
+            if row[accessor] is not None:
+                value = row[accessor]
+                break
+            else: # no good data here, ignore this time value
+                continue
+
+        # Add the data to the list
+        if value is None:
+            continue
+        if value < 1:
+            continue
+        query_ts = float(row['sample_time'])
+        query_ts = query_ts + 5*60*60*1e3
+        data_list.append( [query_ts, value] )
+        val_list.append( value )
+        t_list.append( query_ts )
+
+    # make a list of rolling averages
+    rolling = []
+    break_idx = [0] + [np.argmin(np.abs(np.array(data_list)[:,0]/1e3 - b)) for b in BREAK_TIMESTAMPS]
+    period = 0
+    for i in range(len(data_list)-1):
+        this_vals = val_list[break_idx[period]:i+1]
+        this_len = float(len(this_vals))
+        if this_len < 20:
+            this_vals = val_list[break_idx[period]:break_idx[period]+20]
+        this_avg = float(sum(this_vals)) / this_len
+        if len(this_vals) == 0:
+             continue
+        this_avg = np.mean(this_vals)
+        this_avg = np.median(this_vals)
+        rolling.append([t_list[i], this_avg])
+        if (period < len(break_idx)-1):
+            if (i == break_idx[period+1]):
+                 period += 1
+
+    # firm mean, rms
+    firm_mean = []
+    firm_median = []
+    firm_std = []
+    for v_setting in range(len(break_idx)-1):
+        this_vals = val_list[break_idx[v_setting]:break_idx[v_setting+1]]
+        if (v_setting == 0):
+            print("this_vals", this_vals)
+        this_mean = np.mean(this_vals)
+        this_median = np.median(this_vals)
+        this_std = np.std(this_vals)
+        firm_mean.append(this_mean)
+        firm_median.append(this_median)
+        firm_std.append(this_std)
+    this_vals = val_list[break_idx[-1]:]
+    this_mean = np.mean(this_vals)
+    this_median = np.median(this_vals)
+    this_std = np.std(this_vals)
+    firm_mean.append(this_mean)
+    firm_median.append(this_median)
+    firm_std.append(this_std)
+
+    # Setup the return dictionary
+    ret = {
+        "metrics": {
+            "volts": [0]+VOLTS,
+            "mean": firm_mean,
+            "median": firm_median,
+            "std": firm_std,
+        },
+        ID: rolling,
+        "configs": {
+            "warningRange": [0, 1000]
+        }
+    }
+    
+    print("sunset metrics", ret["metrics"])
+
+    return jsonify(values=ret, query=query)
+
+@app.route("/<connection>/ps_series_plot/<ID>")
+@postgres_route
+def ps_series_plot(connection, ID):
+    config = connection[1]
+
+    # Make a request for time range
+    args = stream_args(request.args)
+    start_t = args['start']    # Start time
+    now = datetime.now(timezone('UTC')) # Get the time now in UTC
+    if start_t is None:
+        #start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
+        start_t = BREAK_TIMESTAMPS[0]*1e3
+
+    stop_t  = args['stop']     # Stop time
+
+    # Catch for if no stop time exists
+    if (stop_t == None): 
+        now = datetime.now(timezone('UTC')) # Get the time now in UTC
+#        now = now.astimezone(timezone('US/Central'))
+        stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
+
+    # remove the timing keys from the dict
+    table_args = request.args.to_dict()
+    table_args.pop('start', None)
+    table_args.pop('stop', None)
+    table_args.pop('n_data', None)
+    table_args.pop('now', None)
+
+    data, query = postgres_query([ID], start_t, stop_t, 5000, *connection, **table_args)
+
+    # Format the data from database query
+    data_list = []
+    val_list = []
+    t_list = []
+
+    for row in reversed(data):
+        value = None
+        for i in range(len(config["value_names"])):
+            accessor = "val%i" % i
+            if row[accessor] is not None:
+                value = row[accessor]
+                break
+            else: # no good data here, ignore this time value
+                continue
+
+        # Add the data to the list
+        if value is None:
+            continue
+        if value < 1:
+            continue
+        query_ts = float(row['sample_time'])
+        query_ts = query_ts + 5*60*60*1e3
+        data_list.append( [query_ts, value] )
+        val_list.append( value )
+        t_list.append( query_ts )
+
+    # make a list of rolling averages
+    rolling_avg = []
+    rolling_med = []
+    break_idx = [0] + [np.argmin(np.abs(np.array(t_list)/1e3 - b)) for b in BREAK_TIMESTAMPS]
+    period = 0
+    for i in range(len(data_list)-1):
+        this_vals = val_list[break_idx[period]:i+1]
+        this_len = float(len(this_vals))
+        if this_len < 20.:
+            this_vals = val_list[break_idx[period]:break_idx[period]+20]
+        this_avg = np.mean(this_vals)
+        rolling_avg.append([t_list[i], this_avg])
+        this_med = np.median(this_vals)
+        rolling_med.append([t_list[i], this_med])
+        if (period < len(break_idx)-1):
+            if (i == break_idx[period+1]):
+                 period += 1
+
+    # make a list of window scan averages
+    window_avg = []
+    window_med = []
+    break_idx = [0] + [np.argmin(np.abs(np.array(t_list)/1e3 - b)) for b in BREAK_TIMESTAMPS]
+    period = 0
+    for i in range(len(data_list)-1):
+        this_t = t_list[i]
+        setting_start_t = t_list[break_idx[period]]
+        if (period == (len(break_idx)-1)):
+            setting_end_t = this_t
+            this_setting_vals = val_list[break_idx[period]:]
+            setting_end_idx = i
+        else:
+            setting_end_t = t_list[break_idx[period+1]]
+            this_setting_vals = val_list[break_idx[period]:break_idx[period+1]]
+            setting_end_idx = break_idx[period+1]
+
+        window_len_ts = 20*60*60*1e3
+        window_len = 20
+        if ((this_t - setting_start_t) < window_len) :
+            this_window_vals = val_list[break_idx[period]:(break_idx[period]+window_len)]
+        elif ((setting_end_t - this_t) < window_len) :
+            this_window_vals = val_list[(setting_end_idx-window_len):setting_end_idx]
+        else:
+            this_window_vals = val_list[(i-20):(i+20)]
+        this_window_avg = np.mean(this_window_vals)
+        this_window_med = np.median(this_window_vals)
+
+        window_avg.append([t_list[i], this_window_avg])
+        window_med.append([t_list[i], this_window_med])
+        if (period < len(break_idx)-1):
+            if (i == break_idx[period+1]):
+                 period += 1
+
+    # firm mean, rms
+    firm_mean = []
+    firm_median = []
+    firm_std = []
+    for v_setting in range(len(break_idx)-1):
+        this_vals = val_list[break_idx[v_setting]:break_idx[v_setting+1]]
+        if (v_setting == 0):
+            print("this_vals", this_vals)
+        this_mean = np.mean(this_vals)
+        this_median = np.median(this_vals)
+        this_std = np.std(this_vals)
+        firm_mean.append(this_mean)
+        firm_median.append(this_median)
+        firm_std.append(this_std)
+    this_vals = val_list[break_idx[-1]:]
+    this_mean = np.mean(this_vals)
+    this_median = np.median(this_vals)
+    this_std = np.std(this_vals)
+    firm_mean.append(this_mean)
+    firm_median.append(this_median)
+    firm_std.append(this_std)
+
+    x = np.array(data_list)[:,0]
+    y = np.array(data_list)[:,1]
+    x_mean = np.array(rolling_avg)[:,0]
+    y_mean = np.array(rolling_avg)[:,1]
+    x_med = np.array(rolling_med)[:,0]
+    y_med = np.array(rolling_med)[:,1]
+    x_w_mean = np.array(window_avg)[:,0]
+    y_w_mean = np.array(window_avg)[:,1]
+    x_w_med = np.array(window_med)[:,0]
+    y_w_med = np.array(window_med)[:,1]
+
+    # summary plot
+    fig, ax = plt.subplots(figsize=(12,4))
+
+    for i, b in enumerate(BREAK_TIMESTAMPS):
+        utc_dt = datetime.utcfromtimestamp(b)
+        timestamp = calendar.timegm(utc_dt.timetuple())
+        local_dt = datetime.fromtimestamp(timestamp)
+        ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+        timestamp_string = local_dt.strftime('%m-%d %H:%M')
+        plt.axvline(b*1e3, color="k", linestyle="--")
+        ax_string = timestamp_string+", V = %i kV" % VOLTS[i]
+        plt.text(b*1e3+1e6, 150, ax_string, rotation=90, fontsize=8)
+        if i < len(BREAK_TIMESTAMPS)-1:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], BREAK_TIMESTAMPS[i+1], 21)
+        else:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], x[-1]/1e3, 21)
+        xs = xs*1e3
+        ys = np.array([firm_mean[i+1]]*len(xs))/60
+        y_devs = np.array([firm_std[i+1]]*len(xs))/60
+        plt.plot(xs, ys, color="skyblue", alpha=0.4)
+        plt.fill_between(list(xs), 
+                         list(ys-y_devs), list(ys+y_devs), step="post", 
+                         color="skyblue", alpha=0.1)
+
+    plt.plot(x, y/60, "o", markersize=1, alpha=0.5, color="navy")
+    plt.plot(x_mean, y_mean/60, "o-", markersize=1, label="mean (cumulative)", color="red")
+    plt.plot(x_med, y_med/60, "o-", markersize=1, label="median (cumulative)", color="orange")
+    plt.plot(x_w_mean, y_w_mean/60, "o-", markersize=1, label="mean (20-point window)", color="green")
+    plt.plot(x_w_med, y_w_med/60, "o-", markersize=1, label="median (20-point window)", color="y")
+
+    for i, b in enumerate(BREAK_TIMESTAMPS):
+        utc_dt = datetime.utcfromtimestamp(b)
+        timestamp = calendar.timegm(utc_dt.timetuple())
+        local_dt = datetime.fromtimestamp(timestamp)
+        ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+        timestamp_string = local_dt.strftime('%m-%d %H:%M')
+        plt.axvline(b*1e3, color="k", linestyle="--")
+        ax_string = timestamp_string+", V = %i kV" % VOLTS[i]
+        plt.text(b*1e3+1e6, 150, ax_string, rotation=90, fontsize=8)
+        if i < len(BREAK_TIMESTAMPS)-1:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], BREAK_TIMESTAMPS[i+1], 21)
+        else:
+            xs = np.linspace(BREAK_TIMESTAMPS[i], x[-1]/1e3, 21)
+        ys = np.array([firm_mean[i+1]]*len(xs))
+        plt.plot(xs*1e3, ys/60, color="blue")
+   
+    utc_dt = datetime.utcfromtimestamp(t_list[-1]/1e3)
+    timestamp = calendar.timegm(utc_dt.timetuple())
+    local_dt = datetime.fromtimestamp(timestamp)
+    ct_dt = local_dt.replace(microsecond=utc_dt.microsecond)
+    last_timestamp_string = local_dt.strftime('%m-%d %H:%M')
+
+    ax.set_xticks([])
+    ax.set_xticklabels([])
+    ax.set_ylabel("Sunsets Frequency [Hz]")
+    ax.set_xlabel("Time")
+    ax.set_title("Ramp-up Summary, last update: %s" % last_timestamp_string)
+    ax.legend(loc="upper left", ncol=2)
+    plt.tight_layout()
+
+    temp_data = io.BytesIO()
+    plt.savefig(temp_data, format="JPEG", dpi=300)
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    summary_img = encoded_img_data.decode('utf-8')
+
+    # trend fit plot
+    fig, ax = plt.subplots(figsize=(6,4))
+    xs = [15,20,25,30,35]
+    ys = np.array(firm_mean[1:])/60
+    yerrs = np.array(firm_std[1:])/60
+    plt.errorbar(xs, ys, yerr=yerrs, capsize=3, color="k")
+    plt.xlim(0, 100)
+    plt.ylim(0, 15)
+    plt.xlabel("Cathode Voltage")
+    plt.ylabel("Sunset Frequency [Hz]")
+    plt.grid()
+    plt.tight_layout()
+
+    temp_data = io.BytesIO()
+    plt.savefig(temp_data, format="JPEG", dpi=300)
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    trend_img = encoded_img_data.decode('utf-8')
+
+    # deadtime fit plot
+    fig, ax = plt.subplots(figsize=(6,4))
+    xs = [15,20,25,30,35]
+    ys = np.array(firm_mean[1:])*4*1e-3/60*100
+    yerrs = np.array(firm_std[1:])*4*1e-3/60*100
+    plt.errorbar(xs, ys, yerr=yerrs, capsize=3, color="k")
+    plt.xlim(0, 100)
+    plt.ylim(0, 15)
+    plt.xlabel("Cathode Voltage")
+    plt.ylabel("Approx. Dead Time [%]")
+    plt.grid()
+    plt.tight_layout()
+
+    temp_data = io.BytesIO()
+    plt.savefig(temp_data, format="JPEG", dpi=300)
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    deadtime_img = encoded_img_data.decode('utf-8')
+
+    imgs = [summary_img, trend_img, deadtime_img]
+    return imgs
+    
+
 
 def get_configs(connection, IDs, **kwargs):
     return pv_list(connection, IDs=tuple(IDs), **kwargs)

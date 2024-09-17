@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from minargon import app
-from flask import jsonify, Response, request, abort
+from flask import jsonify, Response, request, abort, render_template
 from redis import Redis
 import redis.exceptions
 import simplejson as json
@@ -12,11 +12,16 @@ from pytz import timezone
 
 from . import redis_api
 from . import postgres_api
+from . import ignition_api
 from psycopg2.extras import RealDictCursor
 from minargon.hardwaredb import select
 import six
 from six.moves import range
 from six.moves import zip
+
+import io
+from PIL import Image
+import base64
 
 # error class for connecting to redis
 class RedisConnectionError:
@@ -98,7 +103,13 @@ def total_memory_usage_fraction(rconnect):
 @app.route('/<rconnect>/ping_redis')
 @redis_route
 def ping_redis(rconnect):
-    return jsonify(data=rconnect.ping())
+    try:
+        x = rconnect.ping()
+    except Exception as err:
+        import sys
+        sys.stderr.write('ERROR: %s' % str(err))
+        raise Exception("Redis cannot get foo")
+    return jsonify(str(x))
 
 # get a datum stored in a snapshot
 @app.route('/<rconnect>/snapshot/<data>')
@@ -353,6 +364,29 @@ def stream_group_hw_avg(connect, stream_type, metric_name, group_name, hw_select
              ret[metric_name][hw_select.to_url()] = values[metric_name][hw_channels[0]]
 
     return jsonify(values=ret, min_end_time=min_end_time)
+
+@app.route('/<connect>/dcs_prd_disk_usage')
+@postgres_api.postgres_route
+def dcs_prd_disk_usage(connection, stream_type, metric, group):
+    connection, config = connection
+
+    # first figure out if any of the provided metrics are being archived
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    query = "SELECT  extract(epoch FROM LAST_SMPL_TIME_A)*1000 AS SAMPLE_TIME_A,LAST_SMPL_VALUE_A from RUNCON_PRD.MONITOR_MAP where GROUP_NAME = '{GROUP_NAME}' "\
+            "AND METRIC = '{METRIC_NAME}' ORDER BY LAST_SMPL_TIME_A DESC LIMIT 1"
+
+    query = query.format(GROUP_NAME=group, METRIC_NAME=metric)
+    try:
+        cursor.execute(query)
+    except:
+        cursor.execute("ROLLBACK")
+        connection.commit()
+        raise
+    time = 0
+    data = cursor.fetchall()
+    for line in data: # should only be one
+        time = data[0]["sample_time_a"]
+    return True
 
 @postgres_api.postgres_route
 def stream_group_archived_last_time(connection, stream_type, metric, group):
@@ -877,3 +911,13 @@ def get_group_config_internal(rconnect, rname, group_name):
         config["stream_links"].append("metric_archiving")
 
     return config
+
+@app.route('/<rconnect>/eventdisplay/<key>')
+@redis_route
+def eventdisplay(rconnect, key):
+    image_data = rconnect.get(key)
+    image = Image.open(io.BytesIO(image_data))
+    temp_data = io.BytesIO()
+    image.save(temp_data, "JPEG")
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    return encoded_img_data.decode('utf-8')

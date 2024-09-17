@@ -66,7 +66,7 @@
 
 {% block script %}
 <script defer type="module">
-import * as module from "{{ url_for('static', filename='js/minargon/timeseries.js') }}";
+import * as module from "{{ url_for('static', filename='js/minargon/epicstimeseries.js') }}";
 // build the link
 var link = new module.Data.D3DataLink(new module.DataLink.EpicsStreamLink($SCRIPT_ROOT, "{{database}}", "{{ID}}"));
 

@@ -23,15 +23,11 @@ export class TimeSeriesScatter {
     constructor(target) {
       this.target = target;
       this.n_data = 0;
-      this.n_data_mean = 0;
 
       this.data = [];
       this.times = [];
-      this.data_mean = [];
-      this.times_mean = [];
       this.timestamps = [];
       this.data_traces = [];
-      this.data_traces_mean = [];
       this.warning_lines = [];
       this.is_drawn = false;
       this._y_axes = [];
@@ -117,35 +113,24 @@ export class TimeSeriesScatter {
       Plotly.addTraces(this.target, this.data_traces[this.n_data-1].trace(), this.n_data-1);
     }
 
-    add_trace_mean(title, y_axis_index) {
-      // // New data point! Increment the number
-      // this.n_data_mean += 1;
-      // // add in storage
-      // this.data_mean.push([]);
-      // this.times_mean.push([]); 
-      // this.timestamps_mean.push([]);
-      // // add the trace
-      // this.data_traces_mean.push(new DataTrace(title, this._y_axes[y_axis_index], this.data_mean[this.n_data_mean-1], this.times_mean[this.n_data_mean-1]));
-      // this._trace_names.push(title);
-
-      // // add the trace
-      // Plotly.addTraces(this.target, this.data_traces_mean[this.n_data_mean-1].trace(), this.n_data_mean-1);
-
-      this.n_data += 1;
-      // add in storage
-      this.data.push([]);
-      this.times.push([]); 
-      this.timestamps.push([]);
-      // add the trace
-      this.data_traces.push(new DataTrace("mean", this._y_axes[y_axis_index], this.data[this.n_data-1], this.times[this.n_data-1]));
-      this._trace_names.push(title);
-
-      // add the trace
-      Plotly.addTraces(this.target, this.data_traces[this.n_data-1].trace(), this.n_data-1);
-    }
-
     draw() {
       var traces = [];
+      //var ramptimes = [1719412080000, 1719426720000];
+      //var ramptimes_converted = [];
+      //  for (var i = 0; i < ramptimes.length; i++) {
+      //      ramptimes_converted.push(moment.unix(ramptimes[i] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"));
+      //      }
+      //for (var r = 0; r < ramptimes.length; r++) {
+      //  var trace_ramp = {
+      //    x: [ramptimes[r], ramptimes[r]],
+      //    y: [0, 1000],
+      //    mode: 'line',
+      //    type: 'scatter',
+      //    name: 'ramp',
+      //    marker: { color: 'rgb(128,128,128)' }
+      //  };
+      //  traces.push(trace_ramp);
+      //}
       for (var i = 0; i < this.n_data; i++) {
         traces.push(this.data_traces[i].trace());
       }
@@ -184,7 +169,8 @@ export class TimeSeriesScatter {
           }
           this.timestamps[i][j] = Math.round(dat[0] / 1000); // ms -> s
           this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)) // ms -> s
-            .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+            .tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+            //.tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
           // this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)).format("YYYY-MM-DD HH:mm:ss");
           this.data[i][j] = dat[1];
          }
@@ -266,11 +252,13 @@ export class TimeSeriesScatter {
         }
         var min_time; var max_time;
         if (min_times.length > 0) {
-          min_time = moment.unix(Math.min(...min_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          min_time = moment.unix(Math.min(...min_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+          //min_time = moment.unix(Math.min(...min_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
         }
         else min_time = -1;
         if (max_times.length > 0) { 
-          max_time = moment.unix(Math.max(...max_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          max_time = moment.unix(Math.max(...max_times)).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+          //max_time = moment.unix(Math.max(...max_times)).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
         }
         else max_time = 10;
         return [min_time, max_time];
@@ -380,7 +368,8 @@ export class LineChart {
     addStaticTrace(xdata, ydata, timestamps, name) {
       var text = [];
       for (var i = 0; i < timestamps.length; i++) {
-        text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"));
+        text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss"));
+        //text.push("At: " + moment.unix(timestamps[i] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"));
       }
       this.static_traces.push({
             x: xdata,
@@ -472,27 +461,6 @@ export class LineChart {
         return ret;
     }
 
-    trace_mean() {
-        var ret = [{
-            x: this.xdata,
-            y: this.data_mean,
-            type: "scatter",
-            text: this.text,
-            name: "Data",
-            marker: { color: COLORS[1]},
-        }];
-
-        if (!(this.max === undefined)) ret.push(this.max);
-        if (!(this.min === undefined)) ret.push(this.min);
-
-        for (var i = 0; i < this.static_traces.length; i++) {
-          ret.push(this.static_traces[i]);
-        }
-
-        return ret;
-    }
-
-
     // update the data used in a plotly histogram
     // data: a list of CircularBuffer objects -- one for each time
     //       stream.
@@ -502,7 +470,8 @@ export class LineChart {
         for (var i = 0; i < this.data.length; i ++) {
             if (data[i].size > 0) {
               this.data[i] = data[i].get_last()[1];
-              this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+              this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("Greenwich").format("YYYY-MM-DD HH:mm:ss");
+              //this.time[i] = moment.unix(data[i].get_last()[0] / 1000.).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
               this.text[i] = "At: " + this.time[i];
               if (this.text_base) this.text[i] = this.text[i] + "<br>" + this.text_base[i];
             }

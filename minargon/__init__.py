@@ -94,6 +94,5 @@ thisdir = os.path.dirname(os.path.abspath(__file__))
 pmt_map_dir = os.path.join(thisdir, "static/conf/")
 app.config["PMT_MAP"] = pmt_map_dir
 
-# Setup json encoding/decoding
 app.json_encoder = JSONEncoder
 app.json_decoder = JSONDecoder
