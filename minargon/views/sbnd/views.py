@@ -23,12 +23,13 @@ from six.moves import range
 
 #Alarm limits
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [96.36, 96.4, 96.34, 96.42],
-                "imon": [89.18, 89.48, 88.88, 90.18],
+                "vmon": [96.35, 96.4, 96.33, 96.42 ],
+                "imon": [89.13, 89.48, 88.88, 90.18],
                 "vsp": [99.95, 100.05],
                 "isp": [91.5, 300.5],
                 "scheme": [-1, 2]
                 }
+
 
 VMon_LO = DRIFTHV_ALARM_LIMITS["vmon"][0]
 VMon_HI = DRIFTHV_ALARM_LIMITS["vmon"][1]
@@ -103,11 +104,13 @@ def introduction():
     #crts = config['instances'] #crt board list from fcl file
 
     crt_maps = {
-        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 181],
+        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58],
         "South Wall": [60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173],
         "East Wall": [160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18],
-        "West Wall": [174, 148, 163, 164, 165, 80, 142, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
-        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101]
+        "West Wall": [174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
+        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101],
+        "Top-Low Wall": [111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75],
+        "Top-High Wall": [121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209]
     }
 
     crts = crt_maps.keys() #crt refers to a WALL
@@ -399,11 +402,13 @@ def CRT_status():
     #crts = config['instances'] #crt board list from fcl file
 
     crt_maps = {
-        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 181],
+        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58],
         "South Wall": [60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173],
         "East Wall": [160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18],
-        "West Wall": [174, 148, 163, 164, 165, 80, 142, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
-        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101]
+        "West Wall": [174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
+        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101],
+        "Top-Low Wall": [111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75],
+        "Top-High Wall": [121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209]
     }
 
     crts = crt_maps.keys() #crt refers to a WALL
@@ -536,44 +541,9 @@ def PTB_status():
 #     # print("args")
 #     return timeseries_view(request.args, "LLT_ID", "", "ptbLltLink")
 
-
 @app.route('/LLT_rates')
 def LLT_rates():
-    initial_datum = "LLT_rate"
-    instance_name = "LLT_ID"
-    view_ident = ""
-    link_function = "ptbLltLink"
-    eventmeta_key = None
-    hw_select = None
-    db = "online"
-    
-    # get the config for this group from redis
-    config = online_metrics.get_group_config(db, instance_name, front_end_abort=True)
-
-    channels = "undefined"
-    channel_map = "undefined"
-
-    title = instance_name
-
-    if hw_select is None:
-        hw_select = "undefined"
-    else:
-        title = ("%s %s -- " % ("-".join(hw_select.columns), "-".join(hw_select.values))) + title
-        hw_select = hw_select.to_url()
-
-    render_args = {
-        'title': "LLT Test",
-        'link_function': link_function,
-        'view_ident': view_ident,
-        'config': config,
-        'metric': initial_datum,
-        'eventmeta_key': eventmeta_key,
-        'channels': channels,
-        'hw_select': hw_select,
-        'channel_map': channel_map,
-        'dbname': db
-    }
-    return render_template('sbnd/llt.html', **render_args)
+    return timeseries_view(request.args, "LLT_ID", "", "ptbLltLink")
 
 @app.route('/HLT_rates')
 def HLT_rates():
