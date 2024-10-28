@@ -451,7 +451,7 @@ var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
     if (DISCONNECTED_PLANE.size == 6) {
       TPC_ON = 0;
       $("#TPC-Status").text("TPC DAQ disconnected from DQM");
-      $("#TPC-Status").css({"color": "orange"});
+      $("#TPC-Status").css({"color": "red"});
     } 
     else if (BAD_PLANES.size > 0) {
       let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
@@ -540,7 +540,7 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
 
     if (baseline_sum == 0){
       $("#CRT-Status").text("CRT DAQ disconnected from DQM");
-      $("#CRT-Status").css({"color": "orange"});
+      $("#CRT-Status").css({"color": "red"});
     }
     else if (BAD_CRTS.size > 0) {
       let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
