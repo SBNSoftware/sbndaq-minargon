@@ -270,10 +270,10 @@ poll_ignition_ping.run();
 
 // Placeholders for detector status until we have a real status criteria
 $("#PMT-Status").text("need alarm limits");
-$("#PMT-Status").css({"color": "black"});
+$("#PMT-Status").css({"color": "orange"});
 
 $("#Trigger-Status").text("need alarm limits");
-$("#Trigger-Status").css({"color": "black"});
+$("#Trigger-Status").css({"color": "orange"});
 
 // Drift HV
 // current status
@@ -549,7 +549,7 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
     else if (BAD_CRTS.size > 0) {
       let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
       $("#CRT-Status").html(bad_crts_str);
-      $("#CRT-Status").css({"color": "red"});
+      $("#CRT-Status").css({"color": "orange"});
     }
     else {
       $("#CRT-Status").text("OK");
