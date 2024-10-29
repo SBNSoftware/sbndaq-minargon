@@ -22,6 +22,18 @@ from minargon.metrics import online_metrics
 from six.moves import range
 
 #Alarm limits
+
+CRT_MAPS = {
+"North Wall": sorted([88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58]),
+"South Wall": sorted([60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173]),
+"East Wall": sorted([160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18]),
+"West Wall": sorted([174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207]),
+"Bottom Wall": sorted([82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101]),
+"Top-Low Wall": sorted([111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75]),
+"Top-High Wall": sorted([121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209])
+}
+CRTS = CRT_MAPS.keys() #crt refers to a WALL
+
 DRIFTHV_ALARM_LIMITS = {
                 "vmon": [96.35, 96.4, 96.33, 96.42 ],
                 "imon": [89.13, 89.48, 88.88, 90.18],
@@ -103,18 +115,7 @@ def introduction():
     config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
     #crts = config['instances'] #crt board list from fcl file
 
-    crt_maps = {
-        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58],
-        "South Wall": [60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173],
-        "East Wall": [160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18],
-        "West Wall": [174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
-        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101],
-        "Top-Low Wall": [111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75],
-        "Top-High Wall": [121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209]
-    }
-
-    crts = crt_maps.keys() #crt refers to a WALL
-    channels = [crt_maps[k] for k in crts]
+    channels = [CRT_MAPS[k] for k in CRTS]
 
     # tpcs
     group_name = "tpc_channel"
@@ -136,7 +137,7 @@ def introduction():
     render_args = {
       "config": config,
       "channels": channels, #channels mean BOARD here
-      "crts": crts,
+      "crts": CRTS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "events": ["0"],
@@ -395,28 +396,17 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
+CRT_config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+CRT_config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+
 @app.route('/CRT_status')
 def CRT_status():
-    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
-    #crts = config['instances'] #crt board list from fcl file
-
-    crt_maps = {
-        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58],
-        "South Wall": [60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173],
-        "East Wall": [160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18],
-        "West Wall": [174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
-        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101],
-        "Top-Low Wall": [111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75],
-        "Top-High Wall": [121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209]
-    }
-
-    crts = crt_maps.keys() #crt refers to a WALL
-    channels = [crt_maps[k] for k in crts]
+    CRT_boards = [CRT_MAPS[k] for k in CRTS]
 
     render_args = {
-      "config": config,
-      "channels": channels, #channels mean BOARD here
-      "crts": crts,
+      "config": CRT_config_board,
+      "channels": CRT_boards, #channels mean BOARD here
+      "crts": CRTS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "eventmeta_key": False, #Art Event metadata
@@ -431,10 +421,6 @@ def CRT_board():
 @app.route('/CRT_board_snapshot')
 def CRT_board_snapshot():
     board_no = int(request.args.get("board_no", 0))
-    # get the config for this group from redis
-    config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
-    config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
-
     view_ind = {'board_no': board_no}
     view_ind_opts = {'board_no': list(range(20))}
 
@@ -443,8 +429,8 @@ def CRT_board_snapshot():
 
     template_args = {
         'title': ("CRT Board %i Snapshot" % board_no),
-        'board_config': config_board,
-        'channel_config': config_channel,
+        'board_config': CRT_config_board,
+        'channel_config': CRT_config_channel,
         'board_no': board_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -461,14 +447,12 @@ def CRT_channel():
 @app.route('/CRT_channel_snapshot')
 def CRT_channel_snapshot():
     channel_no = int(request.args.get("channel_no", 0))
-    config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
-
     view_ind = {'channel_no': channel_no}
     view_ind_opts = {'channel_no': list(range(20))}
 
     template_args = {
         'title': ("CRT channel %i Snapshot" % channel_no),
-        'channel_config': config_channel,
+        'channel_config': CRt_config_channel,
         'channel_no': channel_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -482,7 +466,7 @@ def PMT_status():
     crts = [79,80]
 
     render_args = {
-      "crts": crts,
+      "crts": CRTS,
       "eventmeta_key": False, # TODO
     }
 
@@ -525,7 +509,7 @@ def PTB_status():
     crts = [79,80]
 
     render_args = {
-      "crts": crts,
+      "crts": CRTS,
       "eventmeta_key": False, # TODO
     }
 
