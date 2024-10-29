@@ -131,8 +131,7 @@ def introduction():
     # event
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
-    #print("event_config", event_config)
-    #print("tpc_config", tpc_config)
+    
 
     render_args = {
       "config": config,

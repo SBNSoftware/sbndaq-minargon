@@ -124,7 +124,8 @@
 </div>
 
 <div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
-  <h3 class="hcenter">Detector Status</h3>
+  <h3 class="hcenter">Detector Status </h3>
+  <h5>Run: <span id="run-number"></span>, Timestamp: <span id="timestamp"></span></h5>
   <table class="table table-striped">
   <tr>
     <th style="width: 31%;"><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
@@ -468,42 +469,8 @@ tpc_buffer.start();
 }
 {% endfor %}
 
-// Events
-var broken = 0;
-var event_config = {{event_config|tojson|safe}};
-
-{% for event in events %}
-{% set event_channels = event_channels[loop.index0]|tojson %}
-{
-
-var event_config_controller = new Config.GroupConfigController(event_config, undefined, ["broken"], {{event_channels}}, 0, 25, "", undefined, undefined);
-
-var event_data_link = event_config_controller.data_link(0, ["broken"], undefined, 1);
-var event_poll = new Data.D3DataPoll(event_data_link, 60*1000 /* 1 minute */);
-var event_buffer = new Data.D3DataBuffer(event_poll, 1, [
-  function(data) {
-    
-    var event_channels = {{event_channels}};
-    var broken_data = data;
-    var broken = broken_data[0].get_last()[1];
-
-    if (broken == 1){
-      $("#Event-Status").text("Not OK -- check event display");
-      $("#Event-Status").css({"color": "red"});
-    }
-    else {
-      $("#Event-Status").text("OK");
-      $("#Event-Status").css({"color": "green"});
-    }
-  }
-]);
-event_buffer.start();
-}
-{% endfor %}
-
 
 //CRTs
-
 var baseline_sum = 0;
 var BAD_CRTS = new Set();
 var crt_config = {{config|tojson|safe}};
@@ -556,6 +523,23 @@ var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
 crt_buffer.start();
 }
 {% endfor %}
+
+// check if metadata time is recent
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+    var dqm_recent = is_recent(time, 5*1000);
+    if (!dqm_recent) {
+      $("#TPC-Status").text("TPC DAQ disconnected from DQM");
+      $("#TPC-Status").css({"color": "red"});
+      $("#CRT-Status").text("CRT DAQ disconnected from DQM");
+      $("#CRT-Status").css({"color": "red"});
+    }
+});
+poll.run();
+
 </script> 
 <meta http-equiv="refresh" content="30">
 {%endblock%}
