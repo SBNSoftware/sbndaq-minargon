@@ -29,6 +29,7 @@ Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
 </h4>
 </div>
 <br>
+
 <br>
 
 {% for crt in crts %}
@@ -71,7 +72,7 @@ var config = {{config|tojson|safe}};
 {
 
 // Setup the config
-var config_controller = new Config.GroupConfigController(config, undefined, ["baseline"], {{channels}}, 0, 25, "", undefined, undefined);
+var config_controller = new Config.GroupConfigController(config, undefined, ["baseline"], {{channels}}, 0, 32);
 
 // Use the config to get the DataLink
 var data_link = config_controller.data_link(0, ["baseline"], undefined, 1);
@@ -81,10 +82,9 @@ var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
 var buffer = new Data.D3DataBuffer(poll, 1, [
   function(data) {
     var channels = {{channels}};
-
     var isbad = [];
+    var baseline_data = data.slice(0, channels.length);
 
-    var baseline_data = data; // .slice(0, channels.length);
     var baselines = [];
     for (var i = 0; i < channels.length; i++) {
       var baseline = -1;
@@ -92,7 +92,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         var baseline = baseline_data[i].get_last()[1];
       }
       baselines.push(baseline);
-      var bad = ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
+      var bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
       isbad.push(bad);
     }
 
