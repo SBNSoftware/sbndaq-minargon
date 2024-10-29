@@ -12,6 +12,7 @@
 <div class="row">
 <h1>CRT Board {{board_no}} Data</h1>
 </div>
+
 <div class="row">
 <div class="col-md-4 vcenter">
         <div class="card hcenter">
@@ -62,13 +63,34 @@
 {% block script %}
 <script defer type="module">
 import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 
 // get the configuration
 var board_config = {{board_config|tojson|safe}};
 
-var board_config_controller = new Config.GroupConfigController(board_config, undefined, ["{{board_config['metric_list'][0]}}"], [{{board_no}}], 0, 32)
+var board_config_controller = new Config.GroupConfigController(board_config, undefined, ["baseline"], [{{board_no}}], 0, 32)
     .metricController("#board-form-metric")
     .streamController("#board-form-stream"); 
+
+var data_link = board_config_controller.data_link(0, ["baseline"], undefined, 1);
+var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var channels = [{{board_no}}];
+    var isbad = [];
+    var baseline_data = data.slice(0, channels.length);
+
+    var baselines = [];
+    for (var i = 0; i < channels.length; i++) {
+      var baseline = -1;
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+    }
+  }
+]);
+buffer.start();
 
 var board_plotly = board_config_controller.addPlotlyController("board-time-scatter")
    .timeRangeController("#board-start", "#board-end", "#board-toggle")
