@@ -530,7 +530,7 @@ poll.add_callback(function(data) {
     $("#run-number").html(data.run);
     var time = moment(new Date(parseInt(data.time)));
     $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
-    var dqm_recent = is_recent(time, 5*1000);
+    var dqm_recent = is_recent(time, 120*1000);
     if (!dqm_recent) {
       $("#TPC-Status").text("TPC DAQ disconnected from DQM");
       $("#TPC-Status").css({"color": "red"});
