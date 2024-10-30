@@ -23,11 +23,15 @@ export class TimeSeriesScatter {
     constructor(target) {
       this.target = target;
       this.n_data = 0;
+      this.n_data_mean = 0;
 
       this.data = [];
       this.times = [];
+      this.data_mean = [];
+      this.times_mean = [];
       this.timestamps = [];
       this.data_traces = [];
+      this.data_traces_mean = [];
       this.warning_lines = [];
       this.is_drawn = false;
       this._y_axes = [];
@@ -113,6 +117,33 @@ export class TimeSeriesScatter {
       Plotly.addTraces(this.target, this.data_traces[this.n_data-1].trace(), this.n_data-1);
     }
 
+    add_trace_mean(title, y_axis_index) {
+      // // New data point! Increment the number
+      // this.n_data_mean += 1;
+      // // add in storage
+      // this.data_mean.push([]);
+      // this.times_mean.push([]); 
+      // this.timestamps_mean.push([]);
+      // // add the trace
+      // this.data_traces_mean.push(new DataTrace(title, this._y_axes[y_axis_index], this.data_mean[this.n_data_mean-1], this.times_mean[this.n_data_mean-1]));
+      // this._trace_names.push(title);
+
+      // // add the trace
+      // Plotly.addTraces(this.target, this.data_traces_mean[this.n_data_mean-1].trace(), this.n_data_mean-1);
+
+      this.n_data += 1;
+      // add in storage
+      this.data.push([]);
+      this.times.push([]); 
+      this.timestamps.push([]);
+      // add the trace
+      this.data_traces.push(new DataTrace("mean", this._y_axes[y_axis_index], this.data[this.n_data-1], this.times[this.n_data-1]));
+      this._trace_names.push(title);
+
+      // add the trace
+      Plotly.addTraces(this.target, this.data_traces[this.n_data-1].trace(), this.n_data-1);
+    }
+
     draw() {
       var traces = [];
       for (var i = 0; i < this.n_data; i++) {
@@ -154,6 +185,7 @@ export class TimeSeriesScatter {
           this.timestamps[i][j] = Math.round(dat[0] / 1000); // ms -> s
           this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)) // ms -> s
             .tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss");
+          // this.times[i][j] = moment.unix(Math.round(dat[0] / 1000)).format("YYYY-MM-DD HH:mm:ss");
           this.data[i][j] = dat[1];
          }
       }
@@ -439,6 +471,27 @@ export class LineChart {
 
         return ret;
     }
+
+    trace_mean() {
+        var ret = [{
+            x: this.xdata,
+            y: this.data_mean,
+            type: "scatter",
+            text: this.text,
+            name: "Data",
+            marker: { color: COLORS[1]},
+        }];
+
+        if (!(this.max === undefined)) ret.push(this.max);
+        if (!(this.min === undefined)) ret.push(this.min);
+
+        for (var i = 0; i < this.static_traces.length; i++) {
+          ret.push(this.static_traces[i]);
+        }
+
+        return ret;
+    }
+
 
     // update the data used in a plotly histogram
     // data: a list of CircularBuffer objects -- one for each time

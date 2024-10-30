@@ -1,0 +1,214 @@
+{% extends "layout.html" | front_ended %}
+
+{% block title %}SBND Cryo Monitor{% endblock %}
+
+{% block body %}
+{{ super() }}
+<h2 class="hcenter">
+SBND Cryo Monitor
+</h2>
+<br>
+<h6 class="hcenter">
+Cryo DB connection: <span id="ignition-ping"></span>
+</h6>
+<br>
+<h6 class="hcenter">
+If "DB update" flashes red, the latest update of the PV is older than 3 minutes 
+<br>
+If "DB update" flashes yellow, the lastest update of the PV is older than 24 hours (likely a website issue)
+</h6>
+
+<P>
+
+<div class="row">
+
+<div class="col-lg-4 col-md-4" style="padding:0">
+<h4>West APA</h4>
+<TABLE>
+<TR><TH>PV</TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8107a')}}">te-8107a</a></TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8112a')}}">te-8112a</a></TH>
+<TR align="center"><TD>value</TD>
+<TD style="text-align:center"><a id="3554/value"></a></TD>
+<TD style="text-align:center"><a id="3569/value"></a></TD>
+<TR align="center"><TD>timestamp</TD>
+<TD style="text-align:center"><a id="3554/last_read_time"></a></TD>
+<TD style="text-align:center"><a id="3569/last_read_time"></a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3554/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="3569/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+</TR>
+</TABLE>
+</div>
+
+<div class="col-lg-4 col-md-4" style="padding:10">
+<h4>East APA</h4>
+<TABLE>
+<TR><TH>PV</TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8101a')}}">te-8101a</a></TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8106a')}}">te-8106a</a></TH>
+<TR align="center"><TD>value</TD>
+<TD style="text-align:center"><a id="3536/value"></a></TD>
+<TD style="text-align:center"><a id="3551/value"></a></TD>
+<TR align="center"><TD>timestamp</TD>
+<TD style="text-align:center"><a id="3536/last_read_time"></a></TD>
+<TD style="text-align:center"><a id="3551/last_read_time"></a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3536/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="3551/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+</TR>
+</TABLE>
+</div>
+
+</div>
+
+<br>
+<br>
+
+<div class="row">
+
+<div class="col-lg-4 col-md-4" style="padding:0">
+<h4>Cryo Bottom</h4>
+<TABLE>
+<TR><TH>PV</TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8062a')}}">te-8062a</a></TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8022a')}}">te-8022a</a></TH>
+<TR align="center"><TD>value</TD>
+<TD style="text-align:center"><a id="3413/value"></a></TD>
+<TD style="text-align:center"><a id="3419/value"></a></TD>
+<TR align="center"><TD>timestamp</TD>
+<TD style="text-align:center"><a id="3413/last_read_time"></a></TD>
+<TD style="text-align:center"><a id="3419/last_read_time"></a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3413/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+<TD style="text-align:center"><a id="3419/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+</TR>
+</TABLE>
+</div>
+
+<div class="col-lg-3 col-md-3" style="padding:10">
+<h4>Cryo Wall</h4>
+<TABLE>
+<TR><TH>PV</TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8035a')}}">te-8035a</a></TH>
+<TR align="center"><TD>value</TD>
+<TD style="text-align:center"><a id="3458/value"></a></TD>
+<TR align="center"><TD>timestamp</TD>
+<TD style="text-align:center"><a id="3458/last_read_time"></a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3458/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+</TR>
+</TABLE>
+</div>
+
+<div class="col-lg-4 col-md-4" style="padding:10">
+<h4>Cryo Top</h4>
+<TABLE>
+<TR><TH>PV</TH>
+<TH><a href="{{url_for('cryo_stream', pv='te-8003a')}}">te-8003a</a></TH>
+<TR align="center"><TD>value</TD>
+<TD style="text-align:center"><a id="3512/value"></a></TD>
+<TR align="center"><TD>timestamp</TD>
+<TD style="text-align:center"><a id="3512/last_read_time"></a></TD>
+<TR align="center"><TD>DB update</TD>
+<TD style="text-align:center"><a id="3512/db_update">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a></TD>
+</TR>
+</TABLE>
+</P>
+</div>
+
+</div>
+
+{%endblock%}
+
+{% block style %}
+      table
+      {
+        border:1px solid black;padding:5px;font-size: 100%
+      }
+      td
+      {
+        text-align:right;
+        border:1px solid grey;padding:5px;
+      }
+      th
+      {
+        text-align:center;
+        border:1px solid grey;padding:5px;
+      }
+      body
+      {
+        margin: 28px;
+      }
+{% endblock %}
+
+<!---->
+{% block script %}
+
+<link href="{{ url_for('static', filename='css/lights.css') }}" rel="stylesheet" type="text/css">
+<script src="{{ url_for('static', filename='js/lights.js') }}"></script>
+ 
+<!-- Populate above table -->
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+import {throw_database_error} from "{{ url_for('static', filename='js/minargon/error.js') }}";
+$(document).ready(function() {
+
+var poll_ignition_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_ignition");
+poll_ignition_ping.add_callback(function(data) {
+    var spanid = "#ignition-ping";
+    if (data == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("ON");
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("OFF");
+    }
+
+});
+poll_ignition_ping.run();
+
+{%for row in rows%}
+{
+  var item_value = document.getElementById("{{row[0]}}"+"/value");
+  var pv_value = "{{row[1]}}";
+  item_value.innerHTML = "{{row[1]}}";
+
+  var item_tstamp = document.getElementById("{{row[0]}}"+"/last_read_time");
+  var pv_tstamp = "{{row[2]}}";
+  item_tstamp.innerHTML = "{{row[2]}}";
+
+  var alarm_time = {{row[3]}};
+  var pv_dbupdate = {{row[4]}};
+  var item_dbupdate = document.getElementById("{{row[0]}}"+"/db_update");
+  if (pv_dbupdate < alarm_time)
+  {
+    item_dbupdate.className = "led-green";
+  }
+  else
+  {
+    if (pv_dbupdate > 86400)
+    {
+      item_dbupdate.className = "led-yellow";
+    }
+    else
+    {
+    item_dbupdate.className = "led-red";
+    }
+  }
+}
+{%endfor%}
+});
+</script>
+
+
+
+
+<meta http-equiv="refresh" content="15">
+<!-- </html> -->
+{%endblock%}
+
