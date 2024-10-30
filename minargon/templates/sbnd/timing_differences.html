@@ -52,11 +52,8 @@
 import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 
-// get the configuration
-// var config = new timeseries.TimeSeries({{config|tojson|safe}});
 var config = {{config|tojson|safe}};
 var channels = undefined;
-// var metrics = ["ETRIG_BES_diff", "ch4exists", "ch1exists"];
 
 {% for midx in metrics %}
   var this_set = {{ metrics_sets[loop.index0]|tojson }};
