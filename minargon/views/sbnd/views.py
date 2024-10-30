@@ -21,7 +21,18 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
-#Alarm limits
+# Channel mapping
+TPC_CHANNELS = [list(range(0, 1984)),
+            list(range(1984, 3968)),
+            list(range(3968, 5632)),
+            list(range(5632, 7616)),
+            list(range(7616, 9600)),
+            list(range(9600, 11264))]
+TPC_PLANES = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
+TPC_TITLES = TPC_PLANES
+
+PMTS = ["PMT"]
+PMT_CHANNELS = [list(range(126))]
 
 CRT_MAPS = {
 "North Wall": sorted([88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58]),
@@ -33,6 +44,8 @@ CRT_MAPS = {
 "Top-High Wall": sorted([121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209])
 }
 CRTS = CRT_MAPS.keys() #crt refers to a WALL
+
+# Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
                 "vmon": [96.35, 96.4, 96.33, 96.42 ],
@@ -54,6 +67,12 @@ IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
+
+PMT_RMS_ALARM_MIN = 0.5
+PMT_RMS_ALARM_MAX = 7.
+
+PMT_BASELINE_ALARM_MIN = 11000
+PMT_BASELINE_ALARM_MAX = 12000
 
 TPC_RMS_ALARM_MAX = 15
 
@@ -112,22 +131,16 @@ def introduction():
         else:
             continue
 
-    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
-    #crts = config['instances'] #crt board list from fcl file
-
-    channels = [CRT_MAPS[k] for k in CRTS]
+    # crts
+    crt_config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+    crt_channels = [CRT_MAPS[k] for k in CRTS]
 
     # tpcs
     group_name = "tpc_channel"
     tpc_config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
-    tpc_channels = [list(range(0, 1984)),
-                list(range(1984, 3968)),
-                list(range(3968, 5632)),
-                list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264))]
-    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
-    tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
+
+    # pmts
+    pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
     # event
     event_group_name = "tpc"
@@ -135,18 +148,25 @@ def introduction():
     
 
     render_args = {
-      "config": config,
-      "channels": channels, #channels mean BOARD here
+      "crt_config": crt_config,
+      "crt_channels": crt_channels, #channels mean BOARD here
       "crts": CRTS,
-      "baseline_min": CRT_BASELINE_ALARM_MIN,
-      "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
+      "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+      "pmts": PMTS,
+      "pmt_config": pmt_config,
+      "pmt_channels": PMT_CHANNELS,
+      "pmt_rms_min": PMT_RMS_ALARM_MIN,
+      "pmt_rms_max": PMT_RMS_ALARM_MAX,
+      "pmt_baseline_min": PMT_BASELINE_ALARM_MIN,
+      "pmt_baseline_max": PMT_BASELINE_ALARM_MAX,
       "events": ["0"],
       "event_config": event_config,
       "event_channels": [[0]],
       "tpc_config": tpc_config,
-      "tpc_channels": tpc_channels,
-      "tpc_titles": tpc_titles,
-      "tpc_planes": tpc_planes,
+      "tpc_channels": TPC_CHANNELS,
+      "tpc_titles": TPC_TITLES,
+      "tpc_planes": TPC_PLANES,
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": False, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs,
@@ -168,20 +188,12 @@ def introduction():
 def TPC_status():
     group_name = "tpc_channel"
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
-    channels = [list(range(0, 1984)),
-                list(range(1984, 3968)),
-                list(range(3968, 5632)),
-                list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264))]
-    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
-    tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
 
     render_args = {
       "config": config,
-      "channels": channels,
-      "tpc_titles": tpc_titles,
-      "tpc_planes": tpc_planes,
+      "channels": TPC_CHANNELS,
+      "tpc_titles": TPC_TITLES,
+      "tpc_planes": TPC_PLANES,
       "tpc_rms_max": TPC_RMS_ALARM_MAX,
       "eventmeta_key": "eventmeta"
     }
@@ -198,21 +210,12 @@ def TPC_metrics_per_plane():
     #flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
     #titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
 
-    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
-    channels = [list(range(0, 1984)),
-                list(range(1984, 3968)),
-                list(range(3968, 5632)),
-                list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264))]
-    titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
-
     render_args = {
       "config": config,
-      "channels": channels,
+      "channels": TPC_CHANNELS,
       "metric": "rms",
-      "titles": titles,
-      "tpc_planes": tpc_planes,
+      "titles": TPC_TITLES,
+      "tpc_planes": TPC_PLANES,
       "eventmeta_key": "eventmeta"
     }
     return render_template('sbnd/tpc_metrics_per_plane.html', **render_args)
@@ -463,14 +466,27 @@ def CRT_channel_snapshot():
 # PMTs
 @app.route('/PMT_status')
 def PMT_status():
-    crts = [79,80]
+
+    # filter out disconnected channels
+    # disconnected_pmt_channels = []
+    # for i in range(len(channels)):
+    #   dc = [channel for channel in channels[i] if channel in disconnected_pmt_channels]
+    #   for j in dc:
+    #     channels[i].remove(j)
+
+    config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
     render_args = {
-      "crts": CRTS,
-      "eventmeta_key": False, # TODO
+      "config": config,
+      "channels": PMT_CHANNELS,
+      "pmts": PMTS,
+      "rms_min": PMT_RMS_ALARM_MIN,
+      "rms_max": PMT_RMS_ALARM_MAX,
+      "baseline_min": PMT_BASELINE_ALARM_MIN,
+      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "eventmeta_key": "eventmetaPMT",
     }
-
-    return render_template('sbnd/pmt_status.html', **render_args) 
+    return render_template('sbnd/pmt_status.html', **render_args)
 
 
 @app.route('/PMT')
@@ -480,7 +496,6 @@ def PMT(hw_select=None, PMTLOC=None):
     if PMTLOC:
         hw_select = hardwaredb.HWSelector("pmt_placements", ["pmt_in_tpc_plane"], [PMTLOC])
    
-    #print(hw_select)
     args = dict(**request.args)
     args["data"] = "rms"
     args["stream"] = "fast"
@@ -488,18 +503,15 @@ def PMT(hw_select=None, PMTLOC=None):
 
 @app.route('/PMT_snapshot')
 def PMT_snapshot():
-    channel = request.args.get("PMT", 0, type=int)
-    group_name = "PMT"
-    # TODO: fix hardcode
-    pmt_range = list(range(360))
-    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+    this_PMT = request.args.get("PMT", 0, type=int)
+    config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
     template_args = {
-      "channel": channel,
+      "channel": this_PMT,
       "config": config,
-      "pmt_range": pmt_range,
-      "view_ind": {"PMT": channel},
-      "view_ind_opts": {"PMT": pmt_range},
+      "pmt_range": PMT_CHANNELS,
+      "view_ind": {"PMT": this_PMT},
+      "view_ind_opts": {"PMT": PMT_CHANNELS},
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
 
