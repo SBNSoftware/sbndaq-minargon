@@ -16,57 +16,35 @@
 </table>
 </div>
 {% endif %}
-<!-- These are the plots for the histogram and scatterplot of initial metric across channels-->
-<!--
- <div class="row">
-    <div class="col-lg-6 col-md-12 order-1" style="padding:0">
-        <div id="histogram"></div>
-    </div>
-    <div class="col-lg-6 col-md-12 order-2" style="padding:0">
-        <div id="scatter"></div>
-    </div>
-</div>
--->
 
-<!-- This is the metric selector and green bar indicating uptime-->
-<!--
+{% for this_metric in metrics %}
+<h3>{{this_metric}}</h3>
 <div class="row">
-<div class="col-lg-4 col-md-8 col-sm-12 vcenter order-lg-1 order-md-2 hcenter">
-        <div class="card">
-            <div class="card-header">Display Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.metric_option(config["metric_config"], metric, "form-metric") }}
-                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
-                    {{ stream_options.height_option([25, 40, 60, 80, 100], 25, "form-height") }}
-                    {{ stream_options.threshold_option("form-range-lo", "form-range-hi") }}
-                    {{ stream_options.warning_option("form-warning-range-lo", "form-warning-range-hi") }}
-                </form>
-            </div>  
-       	   </div>    
-          </div>
-         <div class="col-lg-8 col-md-12 order-lg-2 order-md-1" style="padding:0" id="timeseries"></div>
-         </div>
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-{{loop.index0}}"></div>
     </div>
--->
-
-<div class="row">
-    <div class="col-lg-8 col-md-12 order-1 vcenter" style="padding:0">
-      <div id ="time-scatter"></div>
-    </div>
-       <!-- <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter"> -->
        <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
         <div class="card">
             <div class="card-header">TimeSeries Options</div>
             <div class="card-body">
                 <form class="form" role="form">
-                    {{ stream_options.time_range("start", "end", "toggle") }}
-                    {{ stream_options.download("download") }}
+                    {{ stream_options.time_range("start-{{loop.index0}}", "end-{{loop.index0}}", "toggle-{{loop.index0}}") }}
+                    {{ stream_options.download("download-{{loop.index0}}") }}
 	        </form>
             </div>
         </div>
     </div>
 </div>
+<div class="row">
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-2-{{loop.index0}}"></div>
+    </div>
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-3-{{loop.index0}}"></div>
+    </div>
+</div>
+{% endfor %}
+
 </div>
 {%endblock%}
 {% block script %}
@@ -77,48 +55,34 @@ import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 // get the configuration
 // var config = new timeseries.TimeSeries({{config|tojson|safe}});
 var config = {{config|tojson|safe}};
+var channels = undefined;
+// var metrics = ["ETRIG_BES_diff", "ch4exists", "ch1exists"];
 
-var channels = {{channels}};
+{% for midx in metrics %}
+  var this_set = {{ metrics_sets[loop.index0]|tojson }};
+{
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, [this_set[0]], channels, 0, 50);
+var plotly = config_controller.addPlotlyController("time-scatter-{{loop.index0}}")
+   .timeRangeController("#start-{{loop.index0}}", "#end-{{loop.index0}}", "#toggle-{{loop.index0}}")
+   .downloadDataController("#download-{{loop.index0}}");
+var config_controller_2 = new Config.GroupConfigController(config, {{link_function}}, [this_set[1]], channels, 0, 50);
+var plotly_2 = config_controller_2.addPlotlyController("time-scatter-2-{{loop.index0}}")
+   .timeRangeController("#start-{{loop.index0}}", "#end-{{loop.index0}}", "#toggle-{{loop.index0}}")
+   .downloadDataController("#download-{{loop.index0}}");
+var config_controller_3 = new Config.GroupConfigController(config, {{link_function}}, [this_set[2]], channels, 0, 50);
+var plotly_3 = config_controller_3.addPlotlyController("time-scatter-3-{{loop.index0}}")
+   .timeRangeController("#start-{{loop.index0}}", "#end-{{loop.index0}}", "#toggle-{{loop.index0}}")
+   .downloadDataController("#download-{{loop.index0}}");
 
-//var config_controller = new Config.GroupConfigController(config, {{link_function}}, ["{{metric}}"], channels, 0, 50, {{hw_select}}, {{channel_map}})
-var config_controller = new Config.GroupConfigController(config, undefined, ["{{metric}}"], {{channels}}, 0, 50, "", undefined)
-    .metricController("#form-metric")
-    .streamController("#form-stream"); 
-
-// add the scatter plot
-/** var scatter = config_controller.addGroupDataScatterController("scatter", "{{title}}")
-  .rangeController("#form-range-lo", "#form-range-hi", false)
-  .warningrangeController("#form-warning-range-lo", "#form-warning-range-hi")
-  .set();
-
-// and histogram
-var histo = config_controller.addGroupDataHistoController("histogram", "{{title}}")
-  .rangeController("#form-range-lo", "#form-range-hi", false)
-  .set();
-  **/
-
-// build cubism controller
-var cubism = config_controller.addCubismController("#timeseries", 25)
-  .heightController("#form-height")
-  .rangeController("#form-range-lo", "#form-range-hi")
-  .set();
-
-// build plotly controller
-var plotly = config_controller.addPlotlyController("time-scatter")
-   .timeRangeController("#start", "#end", "#toggle")
-   .downloadDataController("#download");
-
-// start the controllers
-if ((channels && channels.length > 0) || (config.instances && config.instances.length > 0)) {
-  config_controller.runAll();
+config_controller.runAll();
+config_controller_2.runAll();
+config_controller_3.runAll();
 }
-else {
-  alert("No channels available!");
-}
+{% endfor %}
 
 // setup polling for event/run/subrun/time
 {% if eventmeta_key %}
-var poll = new Poll.Poll($SCRIPT_ROOT + "/{{dbname}}/hget/{{eventmeta_key}}/run,subrun,event,time");
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
 poll.add_callback(function(data) {
     $("#run-number").html(data.run);
     $("#subrun-number").html(data.subrun);
