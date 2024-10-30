@@ -1,0 +1,146 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+{% extends "layout.html" | front_ended %}
+{% block title %}CRT Status{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+<div class="row">
+<h1 class="hcenter">
+CRT Status
+</h1>
+</div>
+
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+    <th>Timestamp: <span id="timestamp"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+
+<div class="row">
+<h4 class="hcenter" style="color:red; margin-top: 20px;">
+Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
+</h4>
+</div>
+<br>
+
+<br>
+
+{% for crt in crts %}
+{% if loop.index0 % 3 == 0 %}
+  <div class="row">
+{% endif %}
+    <div class="col-lg-4 col-md-4" style="padding:0">
+      <h3>
+        <a>{{crt}}</a>
+      </h3>
+      <table class="table table-striped" id="{{ crt | replace(' ', '-') | replace(';', '')}}">
+        <thead>
+        <tr>
+          <th> Board </th>
+          <th> Baseline </th>
+        </tr>
+        </thead>
+      </table>
+    </div>
+    {% if loop.index0 % 3 == 2 %}
+  </div>
+  <br>
+{% endif %}
+
+{% endfor %}
+
+{%endblock%}
+
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var config = {{config|tojson|safe}};
+
+// setup each plane poll
+{% for crt in crts %}
+  {% set channels = channels[loop.index0]|tojson %}
+{
+
+// Setup the config
+var config_controller = new Config.GroupConfigController(config, undefined, ["baseline"], {{channels}}, 0, 32);
+
+// Use the config to get the DataLink
+var data_link = config_controller.data_link(0, ["baseline"], undefined, 1);
+
+// Turn that DataLink into a DataBuffer
+var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
+var buffer = new Data.D3DataBuffer(poll, 1, [
+  function(data) {
+    var channels = {{channels}};
+    var isbad = [];
+    var baseline_data = data.slice(0, channels.length);
+
+    var baselines = [];
+    for (var i = 0; i < channels.length; i++) {
+      var baseline = -1;
+      if (baseline_data[i].size > 0) {
+        var baseline = baseline_data[i].get_last()[1];
+      }
+      baselines.push(baseline);
+      var bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
+      isbad.push(bad);
+    }
+
+    var header = `
+        <thead>
+        <tr>
+          <th> Board </th>
+          <th> Baseline </th>
+        </tr>
+        </thead>
+        <tbody>`;
+
+    var table_html = header;
+
+    for (var ind = 0; ind < channels.length; ind++) {
+      var c = "";
+      if (isbad[ind]) {
+        c = 'style="background-color: red"';
+      }
+      var row = `
+          <tr>
+            <th><a href="CRT_board_snapshot?board_no=` + channels[ind] + `">` + channels[ind] + `</a></th>
+            <th ` + c + `>` + baselines[ind].toFixed(2) +  `</th>
+          </tr>`; 
+      table_html = table_html.concat(row);
+    }
+    table_html = table_html + "</tbody>";
+
+    $("#{{crt | replace(' ', '-') | replace(';', '')}}").html(table_html);
+
+  }
+]);
+
+buffer.start();
+}
+{% endfor %}
+
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}

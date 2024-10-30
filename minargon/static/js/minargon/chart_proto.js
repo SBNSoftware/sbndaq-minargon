@@ -6,6 +6,8 @@ export class WarningRange {
     this.y_axis = y_axis;
     this.min = undefined;
     this.max = undefined;
+    this.minmin = undefined;
+    this.maxmax = undefined;
   }
 
   trace(time_range) {
@@ -43,7 +45,39 @@ export class WarningRange {
       this.max.x[0] = min_time;
       this.max.x[1] = max_time;
     }
-    return [this.min, this.max];
+    if (this.minmin === undefined) {
+      this.minmin = {
+	x: [min_time, max_time],
+	y: [this.range[2], this.range[2]],
+	type: "scatter", 
+	name: "Warning LoLo",
+	marker: { color: "blue"},
+	yaxis: this.y_axis.trace_name()
+      };
+    }
+    else {
+      this.minmin.y[0] = this.range[2];
+      this.minmin.y[1] = this.range[2];
+      this.minmin.x[0] = min_time;
+      this.minmin.x[1] = max_time;
+    }
+    if (this.maxmax === undefined) {
+      this.maxmax = {
+	x: [min_time, max_time],
+	y: [this.range[1], this.range[1]],
+	type: "scatter", 
+	name: "Warning HiHi",
+	marker: { color: "orange"},
+	yaxis: this.y_axis.trace_name()
+      };
+    }
+    else {
+      this.maxmax.y[0] = this.range[3];
+      this.maxmax.y[1] = this.range[3];
+      this.maxmax.x[0] = min_time;
+      this.maxmax.x[1] = max_time;
+    }
+    return [this.min, this.max, this.minmin, this.maxmax];
   }
 }
 
@@ -117,6 +151,7 @@ export class DataTrace {
     this.y_axis = y_axis;
     this.data_handle = data_handle;
     this.times_handle = times_handle;
+    this.times_handle = times_handle;
   }
 
   trace() {
@@ -129,6 +164,10 @@ export class DataTrace {
     };
     if (this.y_axis.index > 0) {
       ret.marker = { color: YCOLORS[this.y_axis.index-1] };
+    }
+    if (this.title === "ramp") {
+      ret.marker = { color: 'rgb(0,0,128)' };
+
     }
     return ret;
   }

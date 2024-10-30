@@ -15,13 +15,14 @@
         {% endblock %}
         <script src="{{ url_for('static', filename='js/library/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/library/d3.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/moment/moment.min.js') }}"></script> 
+        <script src="{{ url_for('static', filename='js/moment/moment.min.js') }}"></script> 
         <script src="{{ url_for('static', filename='js/library/plotly.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/library/bootstrap.min.js') }}" defer></script>
         <script src="{{ url_for('static', filename='js/library/bootstrap-treeview.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/library/cubism.v1.js') }}"></script> 
-	<script src="{{ url_for('static', filename='js/moment/moment-timezone-with-data.min.js') }}" defer></script> 
+        <script src="{{ url_for('static', filename='js/library/cubism.v1.js') }}"></script> 
+        <script src="{{ url_for('static', filename='js/moment/moment-timezone-with-data.min.js') }}" defer></script> 
         <script src="{{ url_for('static', filename='js/library/jquery.datetimepicker.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/minargon/minargon.js') }}"></script>
 
         <!-- $SCRIPT_ROOT for app location -->
         <script type="text/javascript">
@@ -93,35 +94,68 @@
                   aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>-->
-          <div class="navbar-collapse collapse" id="navbar">
+          <div class="navbar-collapse collapse bg-maroon" id="navbar">
             <ul class="navbar-nav mr-auto">
               <li class='dropdown nav-item'>
-                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>SBN-ND TPC<b class='caret'></b></a>
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('TPC_status', 'Status') }}
+                  {{ nav_link('TPC_metrics_per_plane', 'Metrics per plane') }}
+                  {{ nav_link('TPC_rms_by_board_view', 'Electronics View - RMS') }}
+                  {{ nav_link('event_display', 'Event Display') }}
                   {{ nav_link('wireplane_view', 'Metrics', data='rms') }}
+                  {{ nav_link('tpc_sunset_metrics', 'Sunset Metrics') }}
                   {{ nav_link('channel_snapshot', 'Waveform') }}
                 </ul>
               </li>
-              <li class='dropdown nav-item'>
+
+              <!-- <li class='dropdown nav-item'>
                 <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>DAB TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('wireplane_view_dab', 'Metrics', data='rms') }}
                   {{ nav_link('channel_snapshot_dab', 'Waveform') }}
                 </ul>
-              </li>
-               
+              </li> -->
+              
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
-									{{ nav_link('CRT_board', 'CRT') }}
+									{{ nav_link('CRT_status', 'Status') }}
+									{{ nav_link('CRT_board', 'Board Metrics') }}
+									{{ nav_link('CRT_channel', 'Channel Metrics') }}
 								</ul>
 						  </li>
 							
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
-									{{ nav_link('PMT', 'PMT') }}
+									<!-- {{ nav_link('PMT_status', 'Status') }} -->
+									{{ nav_link('PMT', 'Metrics') }}
 									{{ nav_link('PMT_snapshot', 'Waveforms') }}
+								</ul>
+						  </li>
+
+              <li class='dropdown nav-item'>
+				   <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
+				   <ul class='dropdown-menu bg-maroon'>  
+				  		{{ nav_link('PTB_status', 'Status') }}
+				  		{{ nav_link('LLT_rates', 'LLT') }}
+              {{ nav_link('HLT_rates', 'HLT') }}
+              {{ nav_link ('Beam_Light_Diff', 'Beam Light Difference')}}
+              {{ nav_link ('Beam_CRT_Diff', 'Beam CRT Difference')}}
+              {{ nav_link ('PTB_TDC_Diff', 'PTB TDC Difference')}}
+              {{ nav_link('MSUM_snapshot', 'MSUM Waveforms') }}
+              {{ nav_link('PTB_snapshot', 'PTB Waveforms') }}
+              {{ nav_link('Trigger_Board_Monitor', 'Trigger Board') }}
+            </ul>
+          </li>
+
+              <li class='dropdown nav-item'>
+							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Timing<b class='caret'></b></a>
+						    <ul class='dropdown-menu bg-maroon'>  
+									{{ nav_link('Timing_status', 'Status') }}
+                  {{ nav_link('Timing_Metrics', 'Timing Metrics') }}
+                  {{ nav_link('Timing_Differences', 'Timing Differences') }}
 								</ul>
 						  </li>
 
@@ -133,27 +167,40 @@
                   {{ nav_link('fem_snapshot', 'FEM Snapshot') }}
                 </ul>
               </li>-->
+               <li class='dropdown nav-item'>
+               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Cryo<b class='caret'></b></a>
+                 <ul class='dropdown-menu bg-maroon'>
+                   {{ nav_link('cryo_monitor', 'Cryo') }}
+                 </ul>
+               </li>
               <li class='dropdown nav-item'>
-              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>EPICS Status<b class='caret'></b></a>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>DCS (shifter)<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
-                  {{ nav_link('epics_last_value', 'TPC Readout Crates', connection='sbnd_epics', group='slowcontrols') }}
-                  {{ nav_link('epics_last_value', 'TPC Readout Power', connection='sbnd_epics', group='tpc_readout_power') }}
-									{{ nav_link('epics_last_value', 'Arapuca Power', connection='sbnd_epics', group='arapuca_hv') }}
-                  {{ nav_link('epics_last_value', 'DAQ Status', connection='sbnd_epics', group='daq') }}
                   {{ nav_link('Impedence_Ground_Monitor', 'Ground Monitor') }}
-                  {{ nav_link('Impedence_Ground_Monitor_CSU', 'CSU Ground Monitor') }}
-                  {{ nav_link('DAB_Impedence_Ground_Monitor', 'DAB Ground Monitor') }}
                   <li class="nav-item"><A class='nav-link' HREF=/sbnd/dcs/>Archiver Status</A></li>
+                  {{ nav_link('DriftHV_Heinzinger', 'Drift HV Heinzinger') }}
                 </ul>
               </li>
               <li class='dropdown nav-item'>
-              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>EPICS Browser<b class='caret'></b></a>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>DCS (expert)<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
-                  {{ nav_link('pvTree', 'SBND Online', connection='sbnd_epics') }}
-                  {{ nav_link('pvTree', 'SBND Test Stand', connection='sbn_epics') }}
+                  {{ nav_link('pvTree', 'EPICS PV Browser', connection='sbnd_epics') }}
+                  {{ nav_link('epics_last_value', 'DAQ Rack Status', connection='sbnd_epics', groups='daq') }}
+                  {{ nav_link('epics_last_value', 'Electronics Racks', connection='sbnd_epics', groups='slowcontrols-daq') }}
+                  {{ nav_link('epics_last_value', 'TPC Readout Power', connection='sbnd_epics', groups='tpc_readout_power') }}
+                  {{ nav_link('epics_last_value', 'Arapuca Power', connection='sbnd_epics', groups='arapuca_hv') }}
+                  {{ nav_link('es_alarms', 'Slow Control Alarms')}}
                 </ul>
               </li>
-              {{ nav_link('view_streams', 'Data Browser')}}
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>DCS (others)<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                  {{ nav_link('pvTree', 'SBND Test Stand Browser', connection='sbn_epics') }}
+                  {{ nav_link('DAB_Impedence_Ground_Monitor', 'DAB Ground Monitor') }}
+                  {{ nav_link('Impedence_Ground_Monitor_CSU', 'CSU Ground Monitor') }}
+                </ul>
+              </li>
+              <!-- {{ nav_link('view_streams', 'Data Browser')}} -->
             </ul>
           </div><!--/.navbar-collapse -->
         </nav>

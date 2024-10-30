@@ -44,6 +44,7 @@ export class FunctorController {
 
     // plot title
     var plot_title = fname.replace("{A}", nameA).replace("{B}", nameB);
+    console.log(plot_title);
     // make a new plotly scatter plot
     this.scatter = new FunctorScatter(target, plot_title, nameA, nameB, func); 
     this.scatter.draw();
@@ -110,7 +111,7 @@ export class FunctorController {
     var poll = new Data.D3DataPoll(this.link, this.step, []);
 
     // wrap with a buffer
-    this.buffer = new Data.D3DataBuffer(poll, this.max_data, [this.scatter.updateData.bind(this.scatter)]);
+    this.buffer = new Data.D3DataBuffer(poll, this.max_data, [this.scatter.updateData.bind(this.scatter), this.setTimeAxes.bind(this)]);
 
     // run it
     this.runBuffer();
@@ -216,6 +217,18 @@ export class FunctorController {
   }
 
   // ---------------------------------------------------------------------------
+  setTimeAxes() {
+//    if (this.is_live) {
+//      // let plotly set the x-range
+//      this.scatter.x_range = undefined;
+//    }
+//    else {
+//      // set it ourselves
+    this.scatter.x_range = [moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss"), 
+                                moment(this.start).tz("America/Chicago").format("YYYY-MM-DD HH:mm:ss")];
+ //   }
+  }
+  // ---------------------------------------------------------------------------
   downloadFormat() {
     // get the number of input streams controlled by this plot
     var n_data = this.link.accessors().length;
@@ -241,4 +254,3 @@ export class FunctorController {
     }
   }
 }
-
