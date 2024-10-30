@@ -301,6 +301,16 @@ export class PlotlyController {
 
       self.runBuffer();
     });
+
+    //loading the page it makes plots with a fixed time of 6 hours
+    var toggle_val = $(id_toggle).val();
+    if (toggle_val == "startWith6hour"){
+      var d = new Date();
+      d.setHours(d.getHours()-6);
+      self.start = d;
+      self.end = Date.now();
+      self.is_live = false;
+    }
     return this;
   }
   // ---------------------------------------------------------------------------

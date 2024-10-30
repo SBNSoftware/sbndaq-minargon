@@ -45,6 +45,12 @@ CRT_MAPS = {
 }
 CRTS = CRT_MAPS.keys() #crt refers to a WALL
 
+TIMING_METRICS = ["ETRIG_BES_diff", "ETRIG_RWM_diff", "ETRIG_FTRIG_diff", "BES_FTRIG_diff"]
+TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"], 
+                       ["ETRIG_RWM_diff", "ch4exists", "ch2exists"], 
+    ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
+    ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
+
 # Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
@@ -661,24 +667,14 @@ def Timing_Metrics():
 
 @app.route('/Timing_Differences')
 def Timing_Differences():
-    # get the config for this group from redis
-    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-    initial_datum = config["metric_list"][0]
-    instance_name = "SPECTDC_Streams_Timing"
-    channels = "undefined"
-    title = instance_name
-    metrics_to_plot = ["ETRIG_BES_diff", "ETRIG_RWM_diff", "ETRIG_FTRIG_diff", "BES_FTRIG_diff"]
-    corresponding_channels = [[4,1],[4,2],[4,3],[1,3]]
-
+    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
     render_args = {
-        'title': title,
-        'config': config,
-        'metric': initial_datum,
-        'eventmeta_key': EVENTMETA_KEY,
-        'channels': channels,
-        'dbname': "online",
-        'metrics_to_plot': metrics_to_plot,
-        'corresponding_channels': corresponding_channels
+      "config": config_timing,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS,
+      "metrics_sets": TIMING_METRICS_SETS
     }
     return render_template("sbnd/timing_differences.html",**render_args)
 
