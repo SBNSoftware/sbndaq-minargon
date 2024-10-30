@@ -99,7 +99,7 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
-		  {{ nav_link('TPC_status', 'Status') }}
+		              {{ nav_link('TPC_status', 'Status') }}
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Flanges<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
@@ -116,17 +116,31 @@
                       {% endfor %}
                     </ul>
                   </li>
-		  {{ nav_link('Purity', 'Purity') }}
+		              {{ nav_link('Purity', 'Purity') }}
                   {{ nav_link('channel_snapshot', 'Waveforms') }}
-	          {{ nav_link('TPC_group_select', 'Group Select') }}
-            	  {{ nav_link('NoiseCorr', 'Noise Correlation') }}
+	                {{ nav_link('TPC_group_select', 'Group Select') }}
+            	    {{ nav_link('NoiseCorr', 'Noise Correlation') }}
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Wire Bias<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('WireBias_E_Monitor', 'Cryo E') }}
+                      {{ nav_link('WireBias_W_Monitor', 'Cryo W') }}
+                    </ul>
+                  </li>
                 </ul>
               </li>
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('PMT_status', 'Status') }}
-                  <li class="dropdown-submenu bg-maroon nav-item">
+		              <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Beam Timing<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('PMT_beamtiming', 'BNB', beam_name='BNB') }}
+                      {{ nav_link('PMT_beamtiming', 'NUMI', beam_name='NUMI') }}
+                    </ul>
+                  </li>
+		              <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT Locations<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
                       {% for PMT, _  in PMTLOCs %}
@@ -136,13 +150,12 @@
                   </li>
                   {{ nav_link('PMT', 'Metrics') }}
                   {{ nav_link('PMT_snapshot', 'Waveforms') }}
-
                 </ul>
               </li>
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Side CRT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
-		  {{ nav_link('CRT_status', 'Side Status') }}
+            		  {{ nav_link('CRT_status', 'Side Status') }}
                   {{ nav_link('CRT_board', 'Side CRT') }} 
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
@@ -158,7 +171,7 @@
               <li class='dropdown nav-item'>
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Top CRT<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
-		  {{ nav_link('TopCRT_status', 'Top Status') }}
+		              {{ nav_link('TopCRT_status', 'Top Status') }}
                   {{ nav_link('CRT_board_top', 'Top CRT') }} 
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>CRT Locations<b class='caret'></b></a>
@@ -175,7 +188,7 @@
               <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Fragments<b class='caret'></b></a>
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('fragments_status', 'Fragments Status') }}
-		  {{ nav_link('PMT_fragments', 'PMT Fragments') }}
+		              {{ nav_link('PMT_fragments', 'PMT Fragments') }}
                   {{ nav_link('CRT_fragments', 'CRT Fragments') }}
                 </ul>
               </li>
@@ -188,6 +201,13 @@
                  {{ nav_link('Level_Monitor', 'Level Monitor') }}
                  {{ nav_link('icarus_cryo', 'CRYO', connection='epics') }}
                  {{ nav_link('cathodehv', 'CathodeHV', connection='epics') }}
+                  <li class="dropdown-submenu bg-maroon nav-item">
+                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Wire Bias<b class='caret'></b></a>
+                    <ul class="dropdown-menu bg-maroon">
+                      {{ nav_link('WireBias_E_Monitor', 'Cryo E') }}
+                      {{ nav_link('WireBias_W_Monitor', 'Cryo W') }}
+                    </ul>
+                  </li>
                   <li class="dropdown-submenu bg-maroon nav-item">
                     <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>TPC Power Supplies<b class='caret'></b></a>
                     <ul class="dropdown-menu bg-maroon">
