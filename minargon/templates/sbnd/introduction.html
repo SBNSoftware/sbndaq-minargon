@@ -144,7 +144,7 @@
     <th><span id="Trigger-Status"> </span></th>
   </tr>
   <tr>
-    <th style="width: 31%;"><a href="{{url_for('Timing_status')}}">Timing Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('Timing_Differences')}}">Timing Status:</a></th>
     <th><span id="Timing-Status"> </span></th>
   </tr>
   </table>
@@ -458,8 +458,8 @@ var TPC_ON = 1;
 
       if (DISCONNECTED_PLANE.size == 6) {
         TPC_ON = 0;
-        $("#TPC-Status").text("TPC DAQ disconnected from DQM");
-        $("#TPC-Status").css({"color": "red"});
+        $("#TPC-Status").text("Not OK");
+        $("#TPC-Status").css({"color": "orange"});
       } 
       else if (BAD_PLANES.size > 0) {
         let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
@@ -508,8 +508,8 @@ var crt_config = {{crt_config|tojson|safe}};
       }
 
       if (baseline_sum == 0){
-        $("#CRT-Status").text("CRT DAQ disconnected from DQM");
-        $("#CRT-Status").css({"color": "red"});
+        $("#CRT-Status").text("Not OK");
+        $("#CRT-Status").css({"color": "orange"});
       }
       else if (BAD_CRTS.size > 0) {
         let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
@@ -575,8 +575,8 @@ var pmt_config = {{pmt_config|tojson|safe}};
       }
 
       if (baseline_sum == 0){
-        $("#PMT-Status").text("PMT DAQ disconnected from DQM");
-        $("#PMT-Status").css({"color": "red"});
+        $("#PMT-Status").text("Not OK");
+        $("#PMT-Status").css({"color": "orange"});
       }
       else if (BAD_PMTS.size > 0) {
         let bad_pmts_str = "NOT OK. Bad boards: " + Array.from(BAD_PMTS).join(" ");
@@ -594,7 +594,6 @@ var pmt_config = {{pmt_config|tojson|safe}};
 {% endfor %}
 
 
-
 // check if metadata time is recent
 var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
 poll.add_callback(function(data) {
@@ -602,12 +601,13 @@ poll.add_callback(function(data) {
     var time = moment(new Date(parseInt(data.time)));
     $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
     var dqm_recent = is_recent(time, 120*1000);
+    var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
-      $("#TPC-Status").text("TPC DAQ disconnected from DQM");
+      $("#TPC-Status").text("Disconnected (" + delta + "s)");
       $("#TPC-Status").css({"color": "red"});
-      $("#CRT-Status").text("CRT DAQ disconnected from DQM");
+      $("#CRT-Status").text("Disconnected (" + delta + "s)");
       $("#CRT-Status").css({"color": "red"});
-      $("#PMT-Status").text("PMT DAQ disconnected from DQM");
+      $("#PMT-Status").text("Disconnected (" + delta + "s)");
       $("#PMT-Status").css({"color": "red"});
     }
 });
