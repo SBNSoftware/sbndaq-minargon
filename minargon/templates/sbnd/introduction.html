@@ -143,6 +143,10 @@
     <th style="width: 31%;"><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
     <th><span id="Trigger-Status"> </span></th>
   </tr>
+  <tr>
+    <th style="width: 31%;"><a href="{{url_for('Timing_status')}}">Timing Status:</a></th>
+    <th><span id="Timing-Status"> </span></th>
+  </tr>
   </table>
 </div>
 </div>
@@ -271,6 +275,9 @@ $("#PMT-Status").css({"color": "orange"});
 
 $("#Trigger-Status").text("need alarm limits");
 $("#Trigger-Status").css({"color": "orange"});
+
+$("#Timing-Status").text("need alarm limits");
+$("#Timing-Status").css({"color": "orange"});
 
 // Drift HV
 // current status
