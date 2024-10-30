@@ -76,6 +76,8 @@ PMT_BASELINE_ALARM_MAX = 12000
 
 TPC_RMS_ALARM_MAX = 15
 
+EVENTMETA_KEY = "eventmeta"
+
 @app.route('/introduction')
 def introduction():
     # drift hv
@@ -168,7 +170,7 @@ def introduction():
       "tpc_titles": TPC_TITLES,
       "tpc_planes": TPC_PLANES,
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
-      "eventmeta_key": False, #Art Event metadata
+      "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs,
       "vmon_nsamples": vmon_nsamples,
       "vmon_hi": vmon_n_hi,
@@ -195,7 +197,7 @@ def TPC_status():
       "tpc_titles": TPC_TITLES,
       "tpc_planes": TPC_PLANES,
       "tpc_rms_max": TPC_RMS_ALARM_MAX,
-      "eventmeta_key": "eventmeta"
+      "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/tpc_status.html', **render_args) 
 
@@ -216,7 +218,7 @@ def TPC_metrics_per_plane():
       "metric": "rms",
       "titles": TPC_TITLES,
       "tpc_planes": TPC_PLANES,
-      "eventmeta_key": "eventmeta"
+      "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/tpc_metrics_per_plane.html', **render_args)
 
@@ -354,7 +356,7 @@ def tpc_sunset_metrics():
     #     'view_ident': "",
     #     'config': config,
     #     'metric': metric,
-    #     'eventmeta_key': "None",
+    #     'eventmeta_key': EVENTMETA_KEY,
     #     'channels': channels,
     #     'hw_select': "undefined",
     #     'channel_map': "undefined",
@@ -412,7 +414,7 @@ def CRT_status():
       "crts": CRTS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
-      "eventmeta_key": False, #Art Event metadata
+      "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
     }
 
     return render_template('sbnd/crt_status.html', **render_args) 
@@ -484,7 +486,7 @@ def PMT_status():
       "rms_max": PMT_RMS_ALARM_MAX,
       "baseline_min": PMT_BASELINE_ALARM_MIN,
       "baseline_max": PMT_BASELINE_ALARM_MAX,
-      "eventmeta_key": "eventmetaPMT",
+      "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/pmt_status.html', **render_args)
 
@@ -522,7 +524,7 @@ def PTB_status():
 
     render_args = {
       "crts": CRTS,
-      "eventmeta_key": False, # TODO
+      "eventmeta_key": EVENTMETA_KEY, # TODO
     }
 
     return render_template('sbnd/trigger_status.html', **render_args) 
@@ -638,9 +640,61 @@ def MSUM_snapshot():
     }
     return render_template("sbnd/msum_snapshot.html", **template_args)
 
-@app.route('/Timing')
-def Timing():
-    return timeseries_view(request.args, "SPECTDC_Streams_Timing")
+@app.route('/Timing_Metrics')
+def Timing_Metrics():
+    # get the config for this group from redis
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    initial_datum = config["metric_list"][0]
+    instance_name = "SPECTDC_Streams_Timing"
+    channels = "undefined"
+    title = instance_name
+
+    render_args = {
+        'title': title,
+        'config': config,
+        'metric': initial_datum,
+        'eventmeta_key': EVENTMETA_KEY,
+        'channels': channels,
+        'dbname': "online",
+    }
+    return render_template("sbnd/timing_metrics.html",**render_args)
+
+@app.route('/Timing_Differences')
+def Timing_Differences():
+    # get the config for this group from redis
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    initial_datum = config["metric_list"][0]
+    instance_name = "SPECTDC_Streams_Timing"
+    channels = "undefined"
+    title = instance_name
+    metrics_to_plot = ["ETRIG_BES_diff", "ETRIG_RWM_diff", "ETRIG_FTRIG_diff", "BES_FTRIG_diff"]
+    corresponding_channels = [[4,1],[4,2],[4,3],[1,3]]
+
+    render_args = {
+        'title': title,
+        'config': config,
+        'metric': initial_datum,
+        'eventmeta_key': EVENTMETA_KEY,
+        'channels': channels,
+        'dbname': "online",
+        'metrics_to_plot': metrics_to_plot,
+        'corresponding_channels': corresponding_channels
+    }
+    return render_template("sbnd/timing_differences.html",**render_args)
+
+@app.route('/Timing_status')
+def Timing_status():
+
+    #render_args = {
+    #  "config": CRT_config_board,
+    #  "channels": CRT_boards, #channels mean BOARD here
+    #  "crts": CRTS,
+    #  "baseline_min": CRT_BASELINE_ALARM_MIN,
+    #  "baseline_max": CRT_BASELINE_ALARM_MAX,
+    #  "eventmeta_key": False, #Art Event metadata
+    #}
+
+    return render_template('sbnd/timing_status.html')#, **render_args) 
 
 
 @app.route('/purity')
