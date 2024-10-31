@@ -681,16 +681,18 @@ def Timing_Differences():
 @app.route('/Timing_status')
 def Timing_status():
 
-    #render_args = {
-    #  "config": CRT_config_board,
-    #  "channels": CRT_boards, #channels mean BOARD here
-    #  "crts": CRTS,
-    #  "baseline_min": CRT_BASELINE_ALARM_MIN,
-    #  "baseline_max": CRT_BASELINE_ALARM_MAX,
-    #  "eventmeta_key": False, #Art Event metadata
-    #}
+    #config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
 
-    return render_template('sbnd/timing_status.html')#, **render_args) 
+    render_args = {
+      "config": config,
+      "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
+      "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
+      "eventmeta_key": EVENTMETA_KEY,
+      "is_beam_on": False
+    }
+
+    return render_template('sbnd/timing_status.html', **render_args) 
 
 
 @app.route('/purity')
