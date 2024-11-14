@@ -463,7 +463,7 @@ def CRT_channel_snapshot():
 
     template_args = {
         'title': ("CRT channel %i Snapshot" % channel_no),
-        'channel_config': CRt_config_channel,
+        'channel_config': CRT_config_channel,
         'channel_no': channel_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
