@@ -405,10 +405,8 @@ else {
 
 
 // TPCs
-var DISCONNECTED_PLANE = new Set();
 var BAD_PLANES = new Set();
-var TPC_ON = 1;
-
+var TPC_ON = false;
 {% for tpc_plane in tpc_planes %}
   {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
   {% set tpc_title = tpc_titles[loop.index0] %}
@@ -418,35 +416,41 @@ var TPC_ON = 1;
   var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60000);
   var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
     function(data) {
+      TPC_ON = false;
+      var ch = {{tpc_channels}}
       var rms_data = data;
 
-      var plane_has_data = false;
       var plane_has_bad_rms = false;
 
       for (var i = 0; i < rms_data.length; i++) {
         var rms = rms_data[i].get_last()[1];
-        
-        if (rms > 0) {
-          plane_has_data = true; // Count channels with no data
+       
+        if (!TPC_ON && rms > 0) {
+          TPC_ON = true; 
         }
-        
+       
         // Skip the max rms requirement for noisy wires on west induction planes
-        var skip = false;
-        if (('{{ tpc_plane }}' === 'West-U' && i === 1531) || ('{{ tpc_plane }}' === 'West-V' && i === 756)) {
-            skip = true;
+        var skip1 = false;
+        if (ch[i] === 7169 || ch[i] === 8378) {
+            skip1 = true;
         }
 
-        if (!skip && rms > {{ tpc_rms_max }}) {
+        if (!skip1 && rms > {{ tpc_rms_max }}) {
             plane_has_bad_rms = true;
             break; // Exit the loop early since we found a bad RMS value
         }
-      }
 
-      if (!plane_has_data) {
-        DISCONNECTED_PLANE.add('{{ tpc_title }}');
-      }
-      else {
-        DISCONNECTED_PLANE.delete('{{ tpc_title }}');
+        // Skip the 0 rms requirement for wires connected to shorted FEM
+	var skip2 = false;
+	if ((ch[i]>6000 && ch[i]<6002) || (ch[i]>8000 && ch[i]<8002)) {
+            skip2 = true;
+        }
+
+	if (!skip2 && rms === 0) {
+            plane_has_bad_rms = true;
+            break; // Exit the loop early since we found zero RMS value
+        }
+
       }
 
       if (plane_has_bad_rms) {
@@ -455,16 +459,14 @@ var TPC_ON = 1;
       else {
         BAD_PLANES.delete('{{ tpc_title }}');
       }
-
-      if (DISCONNECTED_PLANE.size == 6) {
-        TPC_ON = 0;
-        $("#TPC-Status").text("Not OK");
+      if (!TPC_ON) {
+	$("#TPC-Status").text("NO DATA");
         $("#TPC-Status").css({"color": "orange"});
       } 
       else if (BAD_PLANES.size > 0) {
-        let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
+        let bad_planes_str = "NOT OK."+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
         $("#TPC-Status").html(bad_planes_str);
-        $("#TPC-Status").css({"color": "orange"});
+        $("#TPC-Status").css({"color": "red"});
       }
       else {
         $("#TPC-Status").text("OK");
