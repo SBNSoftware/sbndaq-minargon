@@ -419,7 +419,7 @@ var TPC_ON = false;
       TPC_ON = false;
       var ch = {{tpc_channels}}
       var rms_data = data;
-
+      var nch_zerorms = 0;
       var plane_has_bad_rms = false;
 
       for (var i = 0; i < rms_data.length; i++) {
@@ -441,26 +441,25 @@ var TPC_ON = false;
         }
 
         // Skip the 0 rms requirement for wires connected to shorted FEM
-	var skip2 = false;
-	if ((ch[i]>6000 && ch[i]<6002) || (ch[i]>8000 && ch[i]<8002)) {
+	      var skip2 = false;
+	      if ((ch[i]>3231 && ch[i]<3264) || (ch[i]>4159 && ch[i]<4192)) {
             skip2 = true;
         }
 
-	if (!skip2 && rms === 0) {
-            plane_has_bad_rms = true;
-            break; // Exit the loop early since we found zero RMS value
+	      if (!skip2 && rms === 0) {
+            nch_zerorms++;
         }
 
       }
 
-      if (plane_has_bad_rms) {
+      if (plane_has_bad_rms && nch_zerorms > 50) {
         BAD_PLANES.add('{{ tpc_title }}');
       }
       else {
         BAD_PLANES.delete('{{ tpc_title }}');
       }
       if (!TPC_ON) {
-	$("#TPC-Status").text("NO DATA");
+	      $("#TPC-Status").text("NO DATA");
         $("#TPC-Status").css({"color": "orange"});
       } 
       else if (BAD_PLANES.size > 0) {
