@@ -935,3 +935,9 @@ def Trigger_Board_Monitor():
     }
     return render_template('sbnd/trigger_board_monitor.html', **render_args)
 
+@app.route('/Software_Trigger')
+def Software_Trigger():
+    return timeseries_view(request.args, "BeamMetrics")
+
+
+
