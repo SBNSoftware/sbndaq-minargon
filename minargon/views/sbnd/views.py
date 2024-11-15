@@ -30,6 +30,12 @@ TPC_CHANNELS = [list(range(0, 1984)),
             list(range(9600, 11264))]
 TPC_PLANES = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
 TPC_TITLES = TPC_PLANES
+DEAD_CH = [4800, 4801, 4802, 4803, 4804, 4805, 10438, 10439, 10440, 10441, 10442, 10443, 3232, 3233, 3234, 3235, 3236, 3237, 3238, 3239, 3240, 3241,
+		3242, 3243, 3244, 3245, 3246, 3247, 3248, 3249, 3250, 3251, 3252, 3253, 3254, 3255, 3256, 3257, 3258, 3259, 3260, 3261, 3262, 3263,
+		4160, 4161, 4162, 4163, 4164, 4165, 4166, 4167, 4168, 4169, 4170, 4171, 4172, 4173, 4174, 4175, 4176, 4177, 4178, 4179, 4180, 4181, 
+		4182, 4183, 4184, 4185, 4186, 4187, 4188, 4189, 4190, 4191]
+SHORT_CH = [7169, 8378] 
+
 
 PMTS = ["PMT"]
 PMT_CHANNELS = [list(range(126))]
@@ -175,6 +181,8 @@ def introduction():
       "tpc_channels": TPC_CHANNELS,
       "tpc_titles": TPC_TITLES,
       "tpc_planes": TPC_PLANES,
+      "dead_chs": DEAD_CH,
+      "short_chs": SHORT_CH,
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs,
@@ -202,6 +210,8 @@ def TPC_status():
       "channels": TPC_CHANNELS,
       "tpc_titles": TPC_TITLES,
       "tpc_planes": TPC_PLANES,
+      "dead_chs": DEAD_CH,
+      "short_chs": SHORT_CH,
       "tpc_rms_max": TPC_RMS_ALARM_MAX,
       "eventmeta_key": EVENTMETA_KEY
     }
