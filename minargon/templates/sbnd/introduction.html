@@ -407,6 +407,8 @@ else {
 // TPCs
 var BAD_PLANES = new Set();
 var TPC_ON = false;
+var short_chs = {{ short_chs }};
+var dead_chs = {{ dead_chs }};
 {% for tpc_plane in tpc_planes %}
   {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
   {% set tpc_title = tpc_titles[loop.index0] %}
@@ -430,29 +432,21 @@ var TPC_ON = false;
         }
        
         // Skip the max rms requirement for noisy wires on west induction planes
-        var skip1 = false;
-        if (ch[i] === 7169 || ch[i] === 8378) {
-            skip1 = true;
-        }
-
+        var skip1 = short_chs.includes(ch[i]);
         if (!skip1 && rms > {{ tpc_rms_max }}) {
             plane_has_bad_rms = true;
             break; // Exit the loop early since we found a bad RMS value
         }
 
         // Skip the 0 rms requirement for wires connected to shorted FEM
-	      var skip2 = false;
-	      if ((ch[i]>3231 && ch[i]<3264) || (ch[i]>4159 && ch[i]<4192)) {
-            skip2 = true;
-        }
-
-	      if (!skip2 && rms === 0) {
+	var skip2 = dead_chs.includes(ch[i]);
+	if (!skip2 && rms === 0) {
             nch_zerorms++;
         }
 
       }
 
-      if (plane_has_bad_rms && nch_zerorms > 50) {
+      if (plane_has_bad_rms && nch_zerorms > 10) {
         BAD_PLANES.add('{{ tpc_title }}');
       }
       else {
