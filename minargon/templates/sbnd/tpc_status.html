@@ -95,6 +95,10 @@ import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
 import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 
+
+var short_chs = {{ short_chs }};
+var dead_chs = {{ dead_chs }};
+
 {% for tpc_plane in tpc_planes %}
 {% set channels = channels[loop.index0] %}
 {% set table_id = 'table_' ~ loop.index0 %}
@@ -104,21 +108,53 @@ var config_controller = new Config.GroupConfigController({{config|tojson|safe}},
 var data_link = config_controller.data_link(0, ["rms"], undefined, 1);
 var poll = new Data.D3DataPoll(data_link, 60000); // 1 minute
 var buffer = new Data.D3DataBuffer(poll, 1, [
-    function(data) { 
+    function(data) {
+	var TPC_ON = false;
         var ch = {{channels|tojson|safe}}
         var table = document.getElementById("{{ table_id }}");
         table.innerHTML = ""; // Clear table content
         var rms_data = data;
+        
         for (var i = 0; i < rms_data.length; i++) {
-            var rms = rms_data[i].get_last()[1];
-            if (rms > {{ tpc_rms_max }}) {
-                var color = rms < 150. ? "yellow" : "red";
-                table.innerHTML += `
-                    <tr>
-                        <td>${ch[i]}</td>
-                        <td style="background-color: ${color}">${rms.toFixed(2)}</td>
-                    </tr>`;
-            }
+        	if (!TPC_ON && rms > 0) {
+			TPC_ON = true;
+		}
+		var show = false;
+	        var rms = rms_data[i].get_last()[1];
+            	var color = rms === 0 ? "white" : rms < 150. ? "yellow" : "red";
+        	if (rms > {{ tpc_rms_max }} || rms === 0) {   // Show channels with high rms or 0 rms
+		          show = true;
+	          } 
+            	if (short_chs.includes(ch[i])) {   // Only show known high noise ch if > 150 or < 50
+                	if (rms > 50 && rms < 150){
+				show = false;
+		        }     
+                	else if (rms <= 50) {
+		        	show = true;
+		        	color = "green";
+		        }   
+	        }   
+            
+            	if (dead_chs.includes(ch[i])) {   // Only show non-connected ch if rms > 0
+            		if (rms > 0){
+		        	show = true;
+		        	color = "red";
+		        }     
+		        else {
+		        	show = false;
+		        }
+            	} 
+
+           	if (show) {
+                	table.innerHTML += `
+                    		<tr>
+                        		<td>${ch[i]}</td>
+                        	<td style="background-color: ${color}">${rms.toFixed(2)}</td>
+                   		 </tr>`;
+            	}
+        }
+	if (!TPC_ON) {
+            table.innerHTML = "";
         }
 }
 ]);

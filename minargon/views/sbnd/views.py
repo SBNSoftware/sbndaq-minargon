@@ -21,7 +21,44 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
-#Alarm limits
+# Channel mapping
+TPC_CHANNELS = [list(range(0, 1984)),
+            list(range(1984, 3968)),
+            list(range(3968, 5632)),
+            list(range(5632, 7616)),
+            list(range(7616, 9600)),
+            list(range(9600, 11264))]
+TPC_PLANES = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
+TPC_TITLES = TPC_PLANES
+DEAD_CH = [4800, 4801, 4802, 4803, 4804, 4805, 10438, 10439, 10440, 10441, 10442, 10443, 3232, 3233, 3234, 3235, 3236, 3237, 3238, 3239, 3240, 3241,
+		3242, 3243, 3244, 3245, 3246, 3247, 3248, 3249, 3250, 3251, 3252, 3253, 3254, 3255, 3256, 3257, 3258, 3259, 3260, 3261, 3262, 3263,
+		4160, 4161, 4162, 4163, 4164, 4165, 4166, 4167, 4168, 4169, 4170, 4171, 4172, 4173, 4174, 4175, 4176, 4177, 4178, 4179, 4180, 4181, 
+		4182, 4183, 4184, 4185, 4186, 4187, 4188, 4189, 4190, 4191]
+SHORT_CH = [7169, 8378] 
+
+
+PMTS = ["PMT"]
+PMT_CHANNELS = [list(range(126))]
+
+CRT_MAPS = {
+"North Wall": sorted([88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58]),
+"South Wall": sorted([60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173]),
+"East Wall": sorted([160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18]),
+"West Wall": sorted([174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207]),
+"Bottom Wall": sorted([82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101]),
+"Top-Low Wall": sorted([111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 145, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75]),
+"Top-High Wall": sorted([121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209])
+}
+CRTS = CRT_MAPS.keys() #crt refers to a WALL
+
+TIMING_METRICS = ["ETRIG_BES_diff", "ETRIG_RWM_diff", "ETRIG_FTRIG_diff", "BES_FTRIG_diff"]
+TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"], 
+                       ["ETRIG_RWM_diff", "ch4exists", "ch2exists"], 
+    ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
+    ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
+
+# Alarm limits
+
 DRIFTHV_ALARM_LIMITS = {
                 "vmon": [96.35, 96.4, 96.33, 96.42 ],
                 "imon": [89.13, 89.48, 88.88, 90.18],
@@ -43,7 +80,15 @@ IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
+PMT_RMS_ALARM_MIN = 1.2
+PMT_RMS_ALARM_MAX = 3.2
+
+PMT_BASELINE_ALARM_MIN = 14230
+PMT_BASELINE_ALARM_MAX = 14270
+
 TPC_RMS_ALARM_MAX = 15
+
+EVENTMETA_KEY = "eventmeta"
 
 @app.route('/introduction')
 def introduction():
@@ -100,55 +145,46 @@ def introduction():
         else:
             continue
 
-    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
-    #crts = config['instances'] #crt board list from fcl file
-
-    crt_maps = {
-        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58],
-        "South Wall": [60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173],
-        "East Wall": [160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18],
-        "West Wall": [174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
-        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101],
-        "Top-Low Wall": [111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75],
-        "Top-High Wall": [121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209]
-    }
-
-    crts = crt_maps.keys() #crt refers to a WALL
-    channels = [crt_maps[k] for k in crts]
+    # crts
+    crt_config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+    crt_channels = [CRT_MAPS[k] for k in CRTS]
 
     # tpcs
     group_name = "tpc_channel"
     tpc_config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
-    tpc_channels = [list(range(0, 1984)),
-                list(range(1984, 3968)),
-                list(range(3968, 5632)),
-                list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264))]
-    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
-    tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
+
+    # pmts
+    pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
     # event
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
-    #print("event_config", event_config)
-    #print("tpc_config", tpc_config)
+    
 
     render_args = {
-      "config": config,
-      "channels": channels, #channels mean BOARD here
-      "crts": crts,
-      "baseline_min": CRT_BASELINE_ALARM_MIN,
-      "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "crt_config": crt_config,
+      "crt_channels": crt_channels, #channels mean BOARD here
+      "crts": CRTS,
+      "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
+      "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+      "pmts": PMTS,
+      "pmt_config": pmt_config,
+      "pmt_channels": PMT_CHANNELS,
+      "pmt_rms_min": PMT_RMS_ALARM_MIN,
+      "pmt_rms_max": PMT_RMS_ALARM_MAX,
+      "pmt_baseline_min": PMT_BASELINE_ALARM_MIN,
+      "pmt_baseline_max": PMT_BASELINE_ALARM_MAX,
       "events": ["0"],
       "event_config": event_config,
       "event_channels": [[0]],
       "tpc_config": tpc_config,
-      "tpc_channels": tpc_channels,
-      "tpc_titles": tpc_titles,
-      "tpc_planes": tpc_planes,
+      "tpc_channels": TPC_CHANNELS,
+      "tpc_titles": TPC_TITLES,
+      "tpc_planes": TPC_PLANES,
+      "dead_chs": DEAD_CH,
+      "short_chs": SHORT_CH,
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
-      "eventmeta_key": False, #Art Event metadata
+      "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs,
       "vmon_nsamples": vmon_nsamples,
       "vmon_hi": vmon_n_hi,
@@ -168,22 +204,16 @@ def introduction():
 def TPC_status():
     group_name = "tpc_channel"
     config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
-    channels = [list(range(0, 1984)),
-                list(range(1984, 3968)),
-                list(range(3968, 5632)),
-                list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264))]
-    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
-    tpc_titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
 
     render_args = {
       "config": config,
-      "channels": channels,
-      "tpc_titles": tpc_titles,
-      "tpc_planes": tpc_planes,
+      "channels": TPC_CHANNELS,
+      "tpc_titles": TPC_TITLES,
+      "tpc_planes": TPC_PLANES,
+      "dead_chs": DEAD_CH,
+      "short_chs": SHORT_CH,
       "tpc_rms_max": TPC_RMS_ALARM_MAX,
-      "eventmeta_key": "eventmeta"
+      "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/tpc_status.html', **render_args) 
 
@@ -198,22 +228,13 @@ def TPC_metrics_per_plane():
     #flange_names = [["Flange: %s" % f for f in hardwaredb.channel_map(hw, channels)] for hw in tpc_plane_flanges]
     #titles = ["TPC %s-%s" % (hw.values[0], hw.values[1]) for hw in tpc_planes]
 
-    tpc_planes = ["East-U", "East-V", "East-Y", "West-U", "West-V", "West-Y"]
-    channels = [list(range(0, 1984)),
-                list(range(1984, 3968)),
-                list(range(3968, 5632)),
-                list(range(5632, 7616)),
-                list(range(7616, 9600)),
-                list(range(9600, 11264))]
-    titles = ["East U", "East V", "East Y", "West U", "West V", "West Y"]
-
     render_args = {
       "config": config,
-      "channels": channels,
+      "channels": TPC_CHANNELS,
       "metric": "rms",
-      "titles": titles,
-      "tpc_planes": tpc_planes,
-      "eventmeta_key": "eventmeta"
+      "titles": TPC_TITLES,
+      "tpc_planes": TPC_PLANES,
+      "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/tpc_metrics_per_plane.html', **render_args)
 
@@ -351,7 +372,7 @@ def tpc_sunset_metrics():
     #     'view_ident': "",
     #     'config': config,
     #     'metric': metric,
-    #     'eventmeta_key': "None",
+    #     'eventmeta_key': EVENTMETA_KEY,
     #     'channels': channels,
     #     'hw_select': "undefined",
     #     'channel_map': "undefined",
@@ -396,31 +417,20 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
+CRT_config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+CRT_config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+
 @app.route('/CRT_status')
 def CRT_status():
-    config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
-    #crts = config['instances'] #crt board list from fcl file
-
-    crt_maps = {
-        "North Wall": [88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58],
-        "South Wall": [60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173],
-        "East Wall": [160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18],
-        "West Wall": [174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207],
-        "Bottom Wall": [82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101],
-        "Top-Low Wall": [111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 108, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75],
-        "Top-High Wall": [121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209]
-    }
-
-    crts = crt_maps.keys() #crt refers to a WALL
-    channels = [crt_maps[k] for k in crts]
+    CRT_boards = [CRT_MAPS[k] for k in CRTS]
 
     render_args = {
-      "config": config,
-      "channels": channels, #channels mean BOARD here
-      "crts": crts,
+      "config": CRT_config_board,
+      "channels": CRT_boards, #channels mean BOARD here
+      "crts": CRTS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
-      "eventmeta_key": False, #Art Event metadata
+      "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
     }
 
     return render_template('sbnd/crt_status.html', **render_args) 
@@ -432,10 +442,6 @@ def CRT_board():
 @app.route('/CRT_board_snapshot')
 def CRT_board_snapshot():
     board_no = int(request.args.get("board_no", 0))
-    # get the config for this group from redis
-    config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
-    config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
-
     view_ind = {'board_no': board_no}
     view_ind_opts = {'board_no': list(range(20))}
 
@@ -444,8 +450,8 @@ def CRT_board_snapshot():
 
     template_args = {
         'title': ("CRT Board %i Snapshot" % board_no),
-        'board_config': config_board,
-        'channel_config': config_channel,
+        'board_config': CRT_config_board,
+        'channel_config': CRT_config_channel,
         'board_no': board_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -462,14 +468,12 @@ def CRT_channel():
 @app.route('/CRT_channel_snapshot')
 def CRT_channel_snapshot():
     channel_no = int(request.args.get("channel_no", 0))
-    config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
-
     view_ind = {'channel_no': channel_no}
     view_ind_opts = {'channel_no': list(range(20))}
 
     template_args = {
         'title': ("CRT channel %i Snapshot" % channel_no),
-        'channel_config': config_channel,
+        'channel_config': CRT_config_channel,
         'channel_no': channel_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -480,14 +484,27 @@ def CRT_channel_snapshot():
 # PMTs
 @app.route('/PMT_status')
 def PMT_status():
-    crts = [79,80]
+
+    # filter out disconnected channels
+    # disconnected_pmt_channels = []
+    # for i in range(len(channels)):
+    #   dc = [channel for channel in channels[i] if channel in disconnected_pmt_channels]
+    #   for j in dc:
+    #     channels[i].remove(j)
+
+    config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
     render_args = {
-      "crts": crts,
-      "eventmeta_key": False, # TODO
+      "config": config,
+      "channels": PMT_CHANNELS,
+      "pmts": PMTS,
+      "rms_min": PMT_RMS_ALARM_MIN,
+      "rms_max": PMT_RMS_ALARM_MAX,
+      "baseline_min": PMT_BASELINE_ALARM_MIN,
+      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "eventmeta_key": EVENTMETA_KEY
     }
-
-    return render_template('sbnd/pmt_status.html', **render_args) 
+    return render_template('sbnd/pmt_status.html', **render_args)
 
 
 @app.route('/PMT')
@@ -497,7 +514,6 @@ def PMT(hw_select=None, PMTLOC=None):
     if PMTLOC:
         hw_select = hardwaredb.HWSelector("pmt_placements", ["pmt_in_tpc_plane"], [PMTLOC])
    
-    #print(hw_select)
     args = dict(**request.args)
     args["data"] = "rms"
     args["stream"] = "fast"
@@ -505,18 +521,15 @@ def PMT(hw_select=None, PMTLOC=None):
 
 @app.route('/PMT_snapshot')
 def PMT_snapshot():
-    channel = request.args.get("PMT", 0, type=int)
-    group_name = "PMT"
-    # TODO: fix hardcode
-    pmt_range = list(range(360))
-    config = online_metrics.get_group_config("online", group_name, front_end_abort=True)
+    this_PMT = request.args.get("PMT", 0, type=int)
+    config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
     template_args = {
-      "channel": channel,
+      "channel": this_PMT,
       "config": config,
-      "pmt_range": pmt_range,
-      "view_ind": {"PMT": channel},
-      "view_ind_opts": {"PMT": pmt_range},
+      "pmt_range": PMT_CHANNELS,
+      "view_ind": {"PMT": this_PMT},
+      "view_ind_opts": {"PMT": PMT_CHANNELS},
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
 
@@ -526,8 +539,8 @@ def PTB_status():
     crts = [79,80]
 
     render_args = {
-      "crts": crts,
-      "eventmeta_key": False, # TODO
+      "crts": CRTS,
+      "eventmeta_key": EVENTMETA_KEY, # TODO
     }
 
     return render_template('sbnd/trigger_status.html', **render_args) 
@@ -643,9 +656,53 @@ def MSUM_snapshot():
     }
     return render_template("sbnd/msum_snapshot.html", **template_args)
 
-@app.route('/Timing')
-def Timing():
-    return timeseries_view(request.args, "SPECTDC_Streams_Timing")
+@app.route('/Timing_Metrics')
+def Timing_Metrics():
+    # get the config for this group from redis
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    initial_datum = config["metric_list"][0]
+    instance_name = "SPECTDC_Streams_Timing"
+    channels = "undefined"
+    title = instance_name
+
+    render_args = {
+        'title': title,
+        'config': config,
+        'metric': initial_datum,
+        'eventmeta_key': EVENTMETA_KEY,
+        'channels': channels,
+        'dbname': "online",
+    }
+    return render_template("sbnd/timing_metrics.html",**render_args)
+
+@app.route('/Timing_Differences')
+def Timing_Differences():
+    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    render_args = {
+      "config": config_timing,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS,
+      "metrics_sets": TIMING_METRICS_SETS
+    }
+    return render_template("sbnd/timing_differences.html",**render_args)
+
+@app.route('/Timing_status')
+def Timing_status():
+
+    #config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+
+    render_args = {
+      "config": config,
+      "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
+      "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
+      "eventmeta_key": EVENTMETA_KEY,
+      "is_beam_on": False
+    }
+
+    return render_template('sbnd/timing_status.html', **render_args) 
 
 
 @app.route('/purity')
@@ -877,4 +934,10 @@ def Trigger_Board_Monitor():
       "rows": rows
     }
     return render_template('sbnd/trigger_board_monitor.html', **render_args)
+
+@app.route('/Software_Trigger')
+def Software_Trigger():
+    return timeseries_view(request.args, "BeamMetrics")
+
+
 
