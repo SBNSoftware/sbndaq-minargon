@@ -1,0 +1,92 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}{{title}}{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+
+{% for this_metric in metrics %}
+<h3>{{this_metric}}</h3>
+<div class="row">
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-{{loop.index0}}"></div>
+    </div>
+       <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
+        <div class="card">
+            <div class="card-header">TimeSeries Options</div>
+            <div class="card-body">
+                <form class="form" role="form">
+                    {{ stream_options.time_range("start-{{loop.index0}}", "end-{{loop.index0}}", "toggle-{{loop.index0}}") }}
+                    {{ stream_options.download("download-{{loop.index0}}") }}
+	        </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-2-{{loop.index0}}"></div>
+    </div>
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-3-{{loop.index0}}"></div>
+    </div>
+</div>
+{% endfor %}
+
+</div>
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var config = {{config|tojson|safe}};
+var channels = undefined;
+
+{% for midx in metrics %}
+  var this_set = {{ metrics_sets[loop.index0]|tojson }};
+{
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, [this_set[0]], channels, 0, 50);
+var plotly = config_controller.addPlotlyController("time-scatter-{{loop.index0}}")
+   .timeRangeController("#start-{{loop.index0}}", "#end-{{loop.index0}}", "#toggle-{{loop.index0}}")
+   .downloadDataController("#download-{{loop.index0}}");
+var config_controller_2 = new Config.GroupConfigController(config, {{link_function}}, [this_set[1]], channels, 0, 50);
+var plotly_2 = config_controller_2.addPlotlyController("time-scatter-2-{{loop.index0}}")
+   .timeRangeController("#start-{{loop.index0}}", "#end-{{loop.index0}}", "#toggle-{{loop.index0}}")
+   .downloadDataController("#download-{{loop.index0}}");
+var config_controller_3 = new Config.GroupConfigController(config, {{link_function}}, [this_set[2]], channels, 0, 50);
+var plotly_3 = config_controller_3.addPlotlyController("time-scatter-3-{{loop.index0}}")
+   .timeRangeController("#start-{{loop.index0}}", "#end-{{loop.index0}}", "#toggle-{{loop.index0}}")
+   .downloadDataController("#download-{{loop.index0}}");
+
+config_controller.runAll();
+config_controller_2.runAll();
+config_controller_3.runAll();
+}
+{% endfor %}
+
+// setup polling for event/run/subrun/time
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}

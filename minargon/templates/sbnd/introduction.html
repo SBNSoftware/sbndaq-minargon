@@ -124,12 +124,9 @@
 </div>
 
 <div class="hcenter col-lg-5 col-md-5 col-sm-12" style="padding:0">
-  <h3 class="hcenter">Detector Status</h3>
+  <h3 class="hcenter">Detector Status </h3>
+  <h5>Run: <span id="run-number"></span>, Timestamp: <span id="timestamp"></span></h5>
   <table class="table table-striped">
-  <tr>
-    <th style="width: 31%;"><a href="{{url_for('event_display')}}">Event Status:</a></th>
-    <th><span id="Event-Status"> </span></th>
-  </tr>
   <tr>
     <th style="width: 31%;"><a href="{{url_for('TPC_status')}}">TPC Status:</a></th>
     <th><span id="TPC-Status"> </span></th>
@@ -145,6 +142,10 @@
   <tr>
     <th style="width: 31%;"><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
     <th><span id="Trigger-Status"> </span></th>
+  </tr>
+  <tr>
+    <th style="width: 31%;"><a href="{{url_for('Timing_Differences')}}">Timing Status:</a></th>
+    <th><span id="Timing-Status"> </span></th>
   </tr>
   </table>
 </div>
@@ -270,10 +271,13 @@ poll_ignition_ping.run();
 
 // Placeholders for detector status until we have a real status criteria
 $("#PMT-Status").text("need alarm limits");
-$("#PMT-Status").css({"color": "black"});
+$("#PMT-Status").css({"color": "orange"});
 
 $("#Trigger-Status").text("need alarm limits");
-$("#Trigger-Status").css({"color": "black"});
+$("#Trigger-Status").css({"color": "orange"});
+
+$("#Timing-Status").text("need alarm limits");
+$("#Timing-Status").css({"color": "orange"});
 
 // Drift HV
 // current status
@@ -401,165 +405,209 @@ else {
 
 
 // TPCs
-var DISCONNECTED_PLANE = new Set();
 var BAD_PLANES = new Set();
-var TPC_ON = 1;
-
+var TPC_ON = false;
+var short_chs = {{ short_chs }};
+var dead_chs = {{ dead_chs }};
 {% for tpc_plane in tpc_planes %}
-{% set tpc_channels = tpc_channels[loop.index0]|tojson %}
-{% set tpc_title = tpc_titles[loop.index0] %}
-{
-var tpc_config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{tpc_channels}}, 0, 25, "", undefined, "");
-var tpc_data_link = tpc_config_controller.data_link(0, ["rms"], undefined, 1);
-var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60000);
-var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
-  function(data) {
-    var rms_data = data;
+  {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
+  {% set tpc_title = tpc_titles[loop.index0] %}
+  {
+  var tpc_config_controller = new Config.GroupConfigController({{tpc_config|tojson|safe}}, undefined, ["rms"], {{tpc_channels}}, 0, 25, "", undefined, "");
+  var tpc_data_link = tpc_config_controller.data_link(0, ["rms"], undefined, 1);
+  var tpc_poll = new Data.D3DataPoll(tpc_data_link, 60000);
+  var tpc_buffer = new Data.D3DataBuffer(tpc_poll, 1, [
+    function(data) {
+      TPC_ON = false;
+      var ch = {{tpc_channels}}
+      var rms_data = data;
+      var nch_zerorms = 0;
+      var plane_has_bad_rms = false;
 
-    var plane_has_data = false;
-    var plane_has_bad_rms = false;
+      for (var i = 0; i < rms_data.length; i++) {
+        var rms = rms_data[i].get_last()[1];
+       
+        if (!TPC_ON && rms > 0) {
+          TPC_ON = true; 
+        }
+       
+        // Skip the max rms requirement for noisy wires on west induction planes
+        var skip1 = short_chs.includes(ch[i]);
+        if (!skip1 && rms > {{ tpc_rms_max }}) {
+            plane_has_bad_rms = true;
+            break; // Exit the loop early since we found a bad RMS value
+        }
 
-    for (var i = 0; i < rms_data.length; i++) {
-      var rms = rms_data[i].get_last()[1];
-      
-      if (rms > 0) {
-        plane_has_data = true; // Count channels with no data
+        // Skip the 0 rms requirement for wires connected to shorted FEM
+	var skip2 = dead_chs.includes(ch[i]);
+	if (!skip2 && rms === 0) {
+            nch_zerorms++;
+        }
+
       }
-      
-      // Skip the max rms requirement for noisy wires on west induction planes
-      var skip = false;
-      if (('{{ tpc_plane }}' === 'West-U' && i === 1531) || ('{{ tpc_plane }}' === 'West-V' && i === 756)) {
-          skip = true;
+
+      if (plane_has_bad_rms && nch_zerorms > 10) {
+        BAD_PLANES.add('{{ tpc_title }}');
       }
-
-      if (!skip && rms > {{ tpc_rms_max }}) {
-          plane_has_bad_rms = true;
-          break; // Exit the loop early since we found a bad RMS value
+      else {
+        BAD_PLANES.delete('{{ tpc_title }}');
       }
+      if (!TPC_ON) {
+	      $("#TPC-Status").text("NO DATA");
+        $("#TPC-Status").css({"color": "orange"});
+      } 
+      else if (BAD_PLANES.size > 0) {
+        let bad_planes_str = "NOT OK."+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
+        $("#TPC-Status").html(bad_planes_str);
+        $("#TPC-Status").css({"color": "red"});
+      }
+      else {
+        $("#TPC-Status").text("OK");
+        $("#TPC-Status").css({"color": "green"});
+      }  
     }
-
-    if (!plane_has_data) {
-      DISCONNECTED_PLANE.add('{{ tpc_title }}');
-    }
-    else {
-      DISCONNECTED_PLANE.delete('{{ tpc_title }}');
-    }
-
-    if (plane_has_bad_rms) {
-      BAD_PLANES.add('{{ tpc_title }}');
-    }
-    else {
-      BAD_PLANES.delete('{{ tpc_title }}');
-    }
-
-    if (DISCONNECTED_PLANE.size == 6) {
-      TPC_ON = 0;
-      $("#TPC-Status").text("TPC DAQ disconnected from DQM");
-      $("#TPC-Status").css({"color": "orange"});
-    } 
-    else if (BAD_PLANES.size > 0) {
-      let bad_planes_str = "NOT OK. "+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
-      $("#TPC-Status").html(bad_planes_str);
-      $("#TPC-Status").css({"color": "orange"});
-    }
-    else {
-      $("#TPC-Status").text("OK");
-      $("#TPC-Status").css({"color": "green"});
-    }  
+  ]);
+  tpc_buffer.start();
   }
-]);
-tpc_buffer.start();
-}
-{% endfor %}
-
-// Events
-var broken = 0;
-var event_config = {{event_config|tojson|safe}};
-
-{% for event in events %}
-{% set event_channels = event_channels[loop.index0]|tojson %}
-{
-
-var event_config_controller = new Config.GroupConfigController(event_config, undefined, ["broken"], {{event_channels}}, 0, 25, "", undefined, undefined);
-
-var event_data_link = event_config_controller.data_link(0, ["broken"], undefined, 1);
-var event_poll = new Data.D3DataPoll(event_data_link, 60*1000 /* 1 minute */);
-var event_buffer = new Data.D3DataBuffer(event_poll, 1, [
-  function(data) {
-    
-    var event_channels = {{event_channels}};
-    var broken_data = data;
-    var broken = broken_data[0].get_last()[1];
-
-    if (broken == 1){
-      $("#Event-Status").text("Not OK -- check event display");
-      $("#Event-Status").css({"color": "red"});
-    }
-    else {
-      $("#Event-Status").text("OK");
-      $("#Event-Status").css({"color": "green"});
-    }
-  }
-]);
-event_buffer.start();
-}
 {% endfor %}
 
 
 //CRTs
-
 var baseline_sum = 0;
 var BAD_CRTS = new Set();
-var crt_config = {{config|tojson|safe}};
+var crt_config = {{crt_config|tojson|safe}};
 
 {% for crt in crts %}
-{% set crt_channels = channels[loop.index0]|tojson %}
-{
+  {% set crt_channels = crt_channels[loop.index0]|tojson %}
+  {
+  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "", undefined, undefined);
+  var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
+  var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
+  var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
+    function(data) {
+      
+      var crt_channels = {{crt_channels}};
+      var baseline_data = data;
 
-var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "", undefined, undefined);
+      for (var i = 0; i < crt_channels.length; i++) {
+        if (baseline_data[i].size > 0) {
+          var baseline = baseline_data[i].get_last()[1];
+          baseline_sum += baseline;
+        }
 
-var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
-var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
-var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
-  function(data) {
-    
-    var crt_channels = {{crt_channels}};
-    var baseline_data = data;
-
-    for (var i = 0; i < crt_channels.length; i++) {
-
-      if (baseline_data[i].size > 0) {
-        var baseline = baseline_data[i].get_last()[1];
-        baseline_sum += baseline;
+        if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRTS.add(channel_str);
+        }
       }
 
-
-      if ( (baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) )
-      {
-        var channel_str = String(crt_channels[i]);
-        BAD_CRTS.add(channel_str);
+      if (baseline_sum == 0){
+        $("#CRT-Status").text("Not OK");
+        $("#CRT-Status").css({"color": "orange"});
       }
-
+      else if (BAD_CRTS.size > 0) {
+        let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
+        $("#CRT-Status").html(bad_crts_str);
+        $("#CRT-Status").css({"color": "orange"});
+      }
+      else {
+        $("#CRT-Status").text("OK");
+        $("#CRT-Status").css({"color": "green"});
+      }
     }
-
-    if (baseline_sum == 0){
-      $("#CRT-Status").text("CRT DAQ disconnected from DQM");
-      $("#CRT-Status").css({"color": "orange"});
-    }
-    else if (BAD_CRTS.size > 0) {
-      let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
-      $("#CRT-Status").html(bad_crts_str);
-      $("#CRT-Status").css({"color": "red"});
-    }
-    else {
-      $("#CRT-Status").text("OK");
-      $("#CRT-Status").css({"color": "green"});
-    }
+  ]);
+  crt_buffer.start();
   }
-]);
-crt_buffer.start();
-}
 {% endfor %}
+
+//PMTs
+var baseline_sum = 0;
+var BAD_PMTS = new Set();
+var pmt_config = {{pmt_config|tojson|safe}};
+
+{% for pmt in pmts %}
+  {% set pmt_channels = pmt_channels[loop.index0]|tojson %}
+  {
+  var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefined, ["rms", "baseline"], {{pmt_channels}}, 0, 25, "", undefined, undefined);
+  var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+  var pmt_poll = new Data.D3DataPoll(pmt_data_link, 60*1000 /* 1 minute */);
+  var pmt_buffer = new Data.D3DataBuffer(pmt_poll, 1, [
+    function(data) {
+      var badPMTs = [];
+      var pmt_channels = {{pmt_channels}};
+      var rms_data = data.slice(0, pmt_channels.length);
+      var baseline_data = data.slice(pmt_channels.length);
+
+      var baselines = [];
+      var rmss = [];
+      var baseline_sum = 0;
+
+      for (var i = 0; i < pmt_channels.length; i++) {
+      
+        var this_baseline_data = baseline_data[i];
+        var baseline = 0.;
+        for (var j = 0; j < this_baseline_data.size; j++) {
+          var baseline = baseline + this_baseline_data.get(j)[1]/this_baseline_data.size ;
+        }
+
+        var this_rms_data = rms_data[i];
+        var rms = 0.;
+        for (var j = 0; j < this_rms_data.size; j++) { 
+          rms = rms + this_rms_data.get(j)[1] / this_rms_data.size;
+        }
+            
+  
+        baselines.push(baseline);
+        rmss.push(rms);
+        baseline_sum += baseline;
+
+        var bad = (this_rms_data.size > 0) && ( (baseline < {{pmt_baseline_min}}) || (baseline > {{pmt_baseline_max}}) || (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}));
+        
+        if (bad)  {
+          badPMTs.push(i);
+        }
+      }
+
+      if (baseline_sum == 0){
+        $("#PMT-Status").text("Not OK");
+        $("#PMT-Status").css({"color": "orange"});
+      }
+      else if (BAD_PMTS.size > 0) {
+        let bad_pmts_str = "NOT OK. Bad boards: " + Array.from(BAD_PMTS).join(" ");
+        $("#PMT-Status").html(bad_pmts_str);
+        $("#PMT-Status").css({"color": "orange"});
+      }
+      else {
+        $("#PMT-Status").text("OK");
+        $("#PMT-Status").css({"color": "green"});
+      }
+    }
+  ]);
+  pmt_buffer.start();
+  }
+{% endfor %}
+
+
+// check if metadata time is recent
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+    var dqm_recent = is_recent(time, 120*1000);
+    var delta = (time_delta(time) / 1000.).toFixed(0);
+    if (!dqm_recent) {
+      $("#TPC-Status").text("Disconnected (" + delta + "s)");
+      $("#TPC-Status").css({"color": "red"});
+      $("#CRT-Status").text("Disconnected (" + delta + "s)");
+      $("#CRT-Status").css({"color": "red"});
+      $("#PMT-Status").text("Disconnected (" + delta + "s)");
+      $("#PMT-Status").css({"color": "red"});
+    }
+});
+poll.run();
+
 </script> 
 <meta http-equiv="refresh" content="30">
 {%endblock%}

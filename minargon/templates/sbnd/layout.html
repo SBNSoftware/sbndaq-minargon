@@ -101,11 +101,11 @@
                 <ul class='dropdown-menu bg-maroon'>
                   {{ nav_link('TPC_status', 'Status') }}
                   {{ nav_link('TPC_metrics_per_plane', 'Metrics per plane') }}
-                  {{ nav_link('TPC_rms_by_board_view', 'Electronics View - RMS') }}
                   {{ nav_link('event_display', 'Event Display') }}
+                  {{ nav_link('TPC_rms_by_board_view', 'Electronics View - RMS') }}
                   {{ nav_link('wireplane_view', 'Metrics', data='rms') }}
+                  {{ nav_link('channel_snapshot', 'Waveforms') }}
                   {{ nav_link('tpc_sunset_metrics', 'Sunset Metrics') }}
-                  {{ nav_link('channel_snapshot', 'Waveform') }}
                 </ul>
               </li>
 
@@ -129,7 +129,7 @@
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>PMT<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
-									<!-- {{ nav_link('PMT_status', 'Status') }} -->
+									{{ nav_link('PMT_status', 'Status') }}
 									{{ nav_link('PMT', 'Metrics') }}
 									{{ nav_link('PMT_snapshot', 'Waveforms') }}
 								</ul>
@@ -153,7 +153,9 @@
               <li class='dropdown nav-item'>
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Timing<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
-									{{ nav_link('Timing', 'TDC') }}
+									{{ nav_link('Timing_status', 'Status') }}
+                  {{ nav_link('Timing_Metrics', 'Timing Metrics') }}
+                  {{ nav_link('Timing_Differences', 'Timing Differences') }}
 								</ul>
 						  </li>
 
@@ -198,6 +200,12 @@
                   {{ nav_link('Impedence_Ground_Monitor_CSU', 'CSU Ground Monitor') }}
                 </ul>
               </li>
+              <li class='dropdown nav-item'>
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Software Trigger<b class='caret'></b></a>
+                  <ul class='dropdown-menu bg-maroon'>
+                    {{ nav_link('Software_Trigger', 'Software Trigger') }}
+                  </ul>
+                </li>
               <!-- {{ nav_link('view_streams', 'Data Browser')}} -->
             </ul>
           </div><!--/.navbar-collapse -->
