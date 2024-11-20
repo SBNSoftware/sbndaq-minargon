@@ -57,6 +57,13 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
+TRIGGER_TDC_METRICS = ["TDC_HLT_FLASH", "TDC_HLT_EVENT", "TDC_HLT_T1", "TDC_LLT_BES"]
+TRIGGER_TDC_METRICS_SETS = [["TDC_HLT_FLASH", "NUMBER_TDC_FLASH", "NUMBER_PTB_FLASH"], 
+                            ["TDC_HLT_EVENT", "NUMBER_TDC_EVENT", "NUMBER_PTB_EVENT"], 
+                            ["TDC_HLT_T1", "NUMBER_TDC_T1", "NUMBER_PTB_T1"],
+                            ["TDC_LLT_BES", "NUMBER_TDC_BES", "NUMBER_PTB_BES"]]
+
+
 # Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
@@ -572,7 +579,17 @@ def Beam_CRT_Diff():
 
 @app.route('/PTB_TDC_Diff')
 def PTB_TDC_Diff():
-    return timeseries_view(request.args, "PTB_TDC_DIFF")
+    #return timeseries_view(request.args, "PTB_TDC_DIFF")
+    config_trigger = online_metrics.get_group_config("online", "PTB_TDC_DIFF", front_end_abort=True)
+    render_args = {
+      "config": config_trigger,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TRIGGER_TDC_METRICS,
+      "metrics_sets": TRIGGER_TDC_METRICS_SETS
+    }
+    return render_template("sbnd/timing_differences.html",**render_args)
 
 """ #TODO: group the LLT_TDCs together?
 @app.route('/LLT27_TDC_1')
