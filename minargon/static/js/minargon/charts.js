@@ -281,15 +281,23 @@ export class TimeSeriesScatter {
 // Class managing a list of time series that plots a histogram (in
 // plotly) of the most recent values across that time series 
 export class Histogram {
-    // n_data: the number of time series to be used
     // target: the id of the div to be drawn in (without the '#')
     // layout: the layout of the plotly histogram as defined in plotly
     //         NOTE: this variable is passed directly to the
     //         Plotly.newPlot() function 
-    constructor(n_data, target, layout) {
-        this.data = new Array(n_data);
+    constructor(target, layout, include_history, split_channels) {
+        this.data = [];
         this.target = target;
-        this.draw(layout);
+        this.layout = layout;
+        this.draw(this.layout);
+        this._trace_names = [];
+
+        // Optional parameters
+        this.include_history = include_history;
+        if (this.include_history === undefined) this.include_history = false;
+
+        this.split_channels = split_channels;
+        if (this.split_channels === undefined) this.split_channels = false;
     }
    
     // Internal function: draws the histogram for the first time
@@ -302,13 +310,32 @@ export class Histogram {
         Plotly.relayout(this.target, layout);
     }
 
+    set trace_names(names) {
+      this._trace_names = names;
+      this.draw(this.layout);
+    }
+
     // Internal function: get the "trace" used to draw the Plotly plot
     trace() {
-        var ret = [{
+        var ret = [];
+        if (this.split_channels) {
+          for (var i = 0; i < this.data.length; i ++) {
+            ret.push({
+              x: this.data[i],
+              type: "histogram",
+            });
+            if (this._trace_names.length > i) {
+              ret[i].name = this._trace_names[i];
+            }
+          }
+        }
+        else {
+          ret.push({
             x: this.data,
             type: "histogram",
-        }];
-        return ret;
+          });
+       }
+       return ret;
     }
 
     // update the data used in a plotly histogram
@@ -317,15 +344,36 @@ export class Histogram {
     // NOTE: this function is intented to be used as a listener for a 
     //       D3DataBuffer class
     updateData(data) {
-        for (var i = 0; i < this.data.length; i ++) {
-            if (data[i].size > 0) {
-              this.data[i] = data[i].get_last()[1];
+        this.data = [];
+        for (var i = 0; i < data.length; i ++) {
+            this.data.push([]);
+
+            if (this.include_history) {
+                for (var j = 0; j < data[i].size; j ++) {
+                    this.data[i].push(data[i].get(j)[1]);
+                }
             }
             else {
-              this.data[i] = 0;
+                if (data[i].size > 0) {
+                  this.data[i].push(data[i].get_last()[1]);
+                }
+                else {
+                  this.data[i].push(0);
+                }
             }
         }
-        this.redraw();
+        if (!this.split_channels) this.data = this.data.flat();
+
+        this.draw(this.layout);
+    }
+
+    set title(title) {
+      this._title = title;
+      if (this.is_drawn) {
+        var layout = {};
+        layout["title"] = this._title;
+        Plotly.relayout(this.target, layout);
+      }
     }
 
     // Internal function: redraw the plot after changing the data 

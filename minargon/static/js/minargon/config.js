@@ -1,5 +1,6 @@
 import * as DataLink from "./DataLink.js";
 import * as TimeSeriesControllers from "./timeseries.js";
+import * as HistogramControllers from "./histogram.js";
 import * as GroupDataControllers from "./group_data.js";
 import * as Data from "./Data.js";
 import {throw_custom_error} from "./error.js";
@@ -520,6 +521,14 @@ export class GroupConfigController {
     var data_link = this.data_link(this.stream_index, this.metrics, this.instances, this.instance_skip);
     var data_titles = this.data_titles(this.instance_skip);
     var controller = new TimeSeriesControllers.PlotlyController(target, data_link, data_titles, this.processMetricConfig());
+    this.controllers.push(controller);
+    return controller;
+  }
+
+  addTimeSeriesHistoController(target, title, split_channels) {
+    var data_link = this.data_link(this.stream_index, this.metrics, this.instances, this.instance_skip);
+    var data_titles = this.data_titles(this.instance_skip);
+    var controller = new HistogramControllers.HistController(target, data_link, data_titles, this.processMetricConfig(), title, true, split_channels);
     this.controllers.push(controller);
     return controller;
   }
