@@ -60,6 +60,17 @@
         </div>
     </div>
 </div>
+
+<div class="row">
+    <div class="col-lg-6 col-md-12 order-1" style="padding:0">
+        <div id="histogram-history"></div>
+    </div>
+    <div class="col-lg-6 col-md-12 order-2" style="padding:0">
+        <div id="histogram-history-split"></div>
+    </div>
+</div>
+
+
 </div>
 {%endblock%}
 {% block script %}
@@ -110,6 +121,12 @@ var cubism = config_controller.addCubismController("#timeseries", 25)
 var plotly = config_controller.addPlotlyController("time-scatter")
    .timeRangeController("#start", "#end", "#toggle")
    .downloadDataController("#download");
+
+var histo_history = config_controller.addTimeSeriesHistoController("histogram-history", "{{title}}", false)
+   .timeRangeController("#start", "#end", "#toggle");
+
+var histo_history_split = config_controller.addTimeSeriesHistoController("histogram-history-split", "Split {{title}}", true)
+   .timeRangeController("#start", "#end", "#toggle");
 
 // start the controllers
 if ((channels && channels.length > 0) || (config.instances && config.instances.length > 0)) {
