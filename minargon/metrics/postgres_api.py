@@ -59,7 +59,7 @@ class PostgresConnectionError:
         self.err = err
         self.name = name
         self.msg = str(err)
-        if isinstance(err, psycopg2.Error):
+        if isinstance(err, psycopg2.Error) and err.cursor is not None:
             self.msg += "\nError occured while executing query:\n\n%s" % err.cursor.query
         return self
 
