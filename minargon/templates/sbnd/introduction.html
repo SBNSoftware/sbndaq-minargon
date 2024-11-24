@@ -592,16 +592,35 @@ var pmt_config = {{pmt_config|tojson|safe}};
 // check if metadata time is recent
 var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
 poll.add_callback(function(data) {
-    $("#run-number").html(data.run);
+    var run = data.run;
+    //$("#run-number").html(data.run);
     var time = moment(new Date(parseInt(data.time)));
-    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
-    var dqm_recent = is_recent(time, 120*1000);
+    //$("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+    var dqm_recent = is_recent(time, 300*1000);
     var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
       $("#TPC-Status").text("Disconnected (" + delta + "s)");
       $("#TPC-Status").css({"color": "red"});
       $("#CRT-Status").text("Disconnected (" + delta + "s)");
       $("#CRT-Status").css({"color": "red"});
+    }
+});
+poll.run();
+
+// check if PMT metadata time is recent
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmetaPMT/run,subrun,event,time");
+poll.add_callback(function(data) {
+    var PMTrun = data.run;
+    var PMTtime = moment(new Date(parseInt(data.time)));
+    //if (PMTtime > time) {
+    //  run = PMTrun;
+    //  time = PMTtime;
+    //}
+    $("#run-number").html(data.run);
+    $("#timestamp").html(PMTtime.format("MM/DD HH:mm:ss"));
+    var dqm_recent = is_recent(time, 300*1000);
+    var delta = (time_delta(time) / 1000.).toFixed(0);
+    if (!dqm_recent) {
       $("#PMT-Status").text("Disconnected (" + delta + "s)");
       $("#PMT-Status").css({"color": "red"});
     }
