@@ -537,7 +537,7 @@ export class GroupDataHistoController {
   makeHistogram() {
     var n_data = this.nData();
     var layout = this.layoutHistogram();
-    var histogram =  new Chart.Histogram(n_data, this.target, layout);
+    var histogram =  new Chart.Histogram(this.target, layout);
     this.listeners.push(histogram.updateData.bind(histogram));
     this.listeners.push(this.updateTitleTime.bind(this));
     this.histogram = histogram;
