@@ -88,6 +88,10 @@ var buffer = new Data.D3DataBuffer(poll, 5, [
     var rmss = [];
  
     for (var i = 0; i < channels.length; i++) {
+
+      if ( i >= 120) { // only 120 channels, the rest above are clock channels
+        continue;
+      }
     
       var this_baseline_data = baseline_data[i];
       var baseline = 0.;

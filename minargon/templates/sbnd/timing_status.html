@@ -1,7 +1,7 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 
 {% extends "layout.html" | front_ended %}
-{% block title %}PMT Alarms{% endblock %}
+{% block title %}Timing Alarms{% endblock %}
 {% block body %}
 {{ super() }}
 <div class="container">
@@ -35,10 +35,11 @@
 
 
   <div class="row">
-    <div class="col-lg-4 col-md-4" style="padding:0">
+    <div class="col-lg-4 col-md-4" style="padding:0" style="float: left">
       <h3>
+        Channel Existence
       </h3>
-      <table class="table table-striped" id="pmt">
+      <table class="table table-striped" id="channel_metrics">
        <thead>
         <tr>
           <th> Metric Name </th>
@@ -55,10 +56,24 @@
         </tr>
         {%endfor%}
 
-
       </table>
     </div>
+
+
+    <div class="col-lg-5 col-md-5 col-sm-12" style="padding:10">
+      <h3>
+        Difference Metrics
+      </h3>
+      <table class="table table-striped" id="difference_metrics">
+        <thead>
+         <tr>
+           <th> Metric Name </th>
+           <th> Metric Value </th>
+         </tr>
+         </thead>
+    </div>
   </div>
+
   <br>
 
 
