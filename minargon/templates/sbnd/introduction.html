@@ -425,10 +425,10 @@ var dead_chs = {{ dead_chs }};
       var plane_has_bad_rms = false;
 
       for (var i = 0; i < rms_data.length; i++) {
-        var rms = rms_data[i].get_last()[1];
+        var rms = rms_data[i].get_last()[1]; //get the last value of rms for channel i
        
         if (!TPC_ON && rms > 0) {
-          TPC_ON = true; 
+          TPC_ON = true; //if any channel has data, the TPC is on
         }
        
         // Skip the max rms requirement for noisy wires on west induction planes
@@ -444,7 +444,7 @@ var dead_chs = {{ dead_chs }};
             nch_zerorms++;
         }
 
-      }
+      }//end for over channel RMS values
 
       if (plane_has_bad_rms && nch_zerorms > 10) {
         BAD_PLANES.add('{{ tpc_title }}');
@@ -564,7 +564,7 @@ var pmt_config = {{pmt_config|tojson|safe}};
 
         var bad = (this_rms_data.size > 0) && ( (baseline < {{pmt_baseline_min}}) || (baseline > {{pmt_baseline_max}}) || (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}));
         
-        if (bad)  {
+        if (bad && i < 120)  { // only 120 channels, the rest above are clock channels
           badPMTs.push(i);
         }
       }
