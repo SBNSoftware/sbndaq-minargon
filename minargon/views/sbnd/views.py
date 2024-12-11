@@ -715,7 +715,8 @@ def Matt_Test_Histogram():
       "metrics": ["rms","baseline"],
       "title": "tpc_channel",
       "include_timeseries": True,
-      "include_histos": True
+      "include_histos": True,
+      "one_channel": False
     }
     return render_template('sbnd/histogram.html',**render_args)
 
@@ -979,7 +980,8 @@ def Software_Trigger():
       "metrics": ["flash_pe","flash_ts"],
       "title": "Software Trigger",
       "include_timeseries": True,
-      "include_histos": True
+      "include_histos": True,
+      "one_channel": True
     }
     return render_template('sbnd/histogram.html',**render_args)
 
