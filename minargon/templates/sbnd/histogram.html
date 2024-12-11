@@ -27,13 +27,20 @@
     <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
       <div id ="histogram-history-{{loop.index0}}"></div>
     </div>
+    {% if one_channel==false %}
     <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
       <div id ="histogram-history-split-{{loop.index0}}"></div>
     </div>
+    {% endif %}
+    {% if include_timeseries==true %}
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="timeseries-{{loop.index0}}"></div>
+    </div>
+{% endif %}
 </div>
 {% endif %}
 
-{% if include_timeseries==true %}
+{% if include_timeseries==true and (include_histos==false or (include_histos==true and one_channel==false)) %}
 <div class="row">
     <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
       <div id ="timeseries-{{loop.index0}}"></div>
@@ -76,8 +83,11 @@ var config_controller = new Config.GroupConfigController(config, {{link_function
 var histo_history = config_controller.addTimeSeriesHistoController("histogram-history-{{loop.index0}}", "{{title}}", false)
    .timeRangeController("#start", "#end", "#toggle");
 
+{% if one_channel==false %}
 var histo_history_split = config_controller.addTimeSeriesHistoController("histogram-history-split-{{loop.index0}}", "Split {{title}}", true)
    .timeRangeController("#start", "#end", "#toggle");
+{% endif %}
+
 {% endif %}
 
 
