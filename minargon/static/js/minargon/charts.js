@@ -285,7 +285,7 @@ export class Histogram {
     // layout: the layout of the plotly histogram as defined in plotly
     //         NOTE: this variable is passed directly to the
     //         Plotly.newPlot() function 
-    constructor(target, layout, include_history, split_channels) {
+    constructor(target, layout, include_history, split_channels, nbinsx) {
         this.data = [];
         this.target = target;
         this.layout = layout;
@@ -298,6 +298,9 @@ export class Histogram {
 
         this.split_channels = split_channels;
         if (this.split_channels === undefined) this.split_channels = false;
+
+        this.nbinsx = nbinsx;
+        if (this.nbinsx === undefined) this.nbinsx = 50;
     }
    
     // Internal function: draws the histogram for the first time
@@ -323,6 +326,7 @@ export class Histogram {
             ret.push({
               x: this.data[i],
               type: "histogram",
+              nbinsx: this.nbinsx // Ensure the number of x bins is set to 6
             });
             if (this._trace_names.length > i) {
               ret[i].name = this._trace_names[i];
@@ -333,6 +337,7 @@ export class Histogram {
           ret.push({
             x: this.data,
             type: "histogram",
+            nbinsx: this.nbinsx // Ensure the number of x bins is set to 6
           });
        }
        return ret;
