@@ -46,7 +46,7 @@
 </div>
 
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-  <h3 class="hcenter"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status</a></h3>
+  <h3 class="hcenter"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status ( <span id="ignition-last-update"></span> )</a></h3>
   <table class="table table-striped">
     <tr>
       <th style="width: 31%;"> Status:</a></th>
@@ -107,10 +107,6 @@
   <tr>
 	  <th>Redis DB memory usage: </th>
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
-	</tr>
-	<tr>
-	  <th>Cryo DB: </th>
-	  <th><span id="ignition-ping"></span></th>
 	</tr>
 	<tr>
 	  <th>DQM Archiver: </th>
@@ -244,14 +240,18 @@ var poll_ignition_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_ignition");
 poll_ignition_ping.add_callback(function(data) {
     var delta_ignition = time_delta(data[1]*1000.);
     var delta_str_ignition = " (" + String(delta_ignition) + "s)";
-    var spanid = "#ignition-ping";
-    if (data[0] == "True") {
+    var spanid = "#ignition-last-update";
+    $(spanid).text("Last update: " + delta_str_ignition);
+    if (delta_ignition < 60) {
       $(spanid).css({"color": "green"})
-      $(spanid).text("Connected" + delta_str_ignition);
     }
-    else {
-      $(spanid).css({"color": "red"})
-      $(spanid).text("disconneted" + delta_str_ignition);
+    if (delta_ignition > 60) {
+      if (delta_ignition < 120) {
+        $(spanid).css({"color": "orange"})
+      }
+      else {
+        $(spanid).css({"color": "red"})
+      }
     }
 
 });
