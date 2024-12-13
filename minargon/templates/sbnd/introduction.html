@@ -109,12 +109,12 @@
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
 	</tr>
 	<tr>
-	  <th>Redis DB connection: </th>
-	  <th><span id="redis-ping"></span></th>
+	  <th>Cryo DB: </th>
+	  <th><span id="ignition-ping"></span></th>
 	</tr>
 	<tr>
-	  <th>Cryo DB connection: </th>
-	  <th><span id="ignition-ping"></span></th>
+	  <th>DQM Archiver: </th>
+	  <th><span id="archiver-ping"></span></th>
 	</tr>
   <tr>
     <th>DCS Archiver: </th>
@@ -215,21 +215,6 @@ var data_link_om = new Data.D3DataLink(new DataLink.SingleStreamLink($SCRIPT_ROO
 update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
 
 
-var poll_redis_ping = new Poll.Poll($SCRIPT_ROOT + "/online/ping_redis");
-poll_redis_ping.add_callback(function(data) {
-    var spanid = "#redis-ping";
-    if (data == "True") {
-      $(spanid).css({"color": "green"})
-      $(spanid).text("ON");
-    }
-    else {
-      $(spanid).css({"color": "red"})
-      $(spanid).text("OFF");
-    }
-
-});
-poll_redis_ping.run();
-
 var poll_redis_mem_gb = new Poll.Poll($SCRIPT_ROOT + "/online/total_memory_usage");
 poll_redis_mem_gb.add_callback(function(data) {
     if (!data || !data.val) return;
@@ -254,20 +239,40 @@ poll_redis_mem_frac.add_callback(function(data) {
 });
 poll_redis_mem_frac.run();
 
+
 var poll_ignition_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_ignition");
 poll_ignition_ping.add_callback(function(data) {
+    var delta_ignition = time_delta(data[1]*1000.);
+    var delta_str_ignition = " (" + String(delta_ignition) + "s)";
     var spanid = "#ignition-ping";
-    if (data == "True") {
+    if (data[0] == "True") {
       $(spanid).css({"color": "green"})
-      $(spanid).text("ON");
+      $(spanid).text("Connected" + delta_str_ignition);
     }
     else {
       $(spanid).css({"color": "red"})
-      $(spanid).text("OFF");
+      $(spanid).text("disconneted" + delta_str_ignition);
     }
 
 });
 poll_ignition_ping.run();
+
+var poll_archiver_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_archiver");
+poll_archiver_ping.add_callback(function(data) {
+    var delta_archiver = time_delta(data[1]*1000.);
+    var delta_str_archiver = " (" + String(delta_archiver) + "s)";
+    var spanid = "#archiver-ping";
+    if (data[0] == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("Connected" + delta_str_archiver);
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("disconneted" + delta_str_archiver);
+    }
+
+});
+poll_archiver_ping.run();
 
 // Placeholders for detector status until we have a real status criteria
 $("#PMT-Status").text("need alarm limits");
