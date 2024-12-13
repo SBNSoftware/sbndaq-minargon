@@ -22,35 +22,30 @@
 {% for this_metric in metrics %}
 <h3>{{this_metric}}</h3>
 
-{% if include_histos==true %}
 <div class="row">
     <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
       <div id ="histogram-history-{{loop.index0}}"></div>
     </div>
-    {% if one_channel==false %}
-    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
-      <div id ="histogram-history-split-{{loop.index0}}"></div>
-    </div>
-    {% endif %}
-    {% if include_timeseries==true %}
-    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
-      <div id ="timeseries-{{loop.index0}}"></div>
-    </div>
-{% endif %}
-</div>
-{% endif %}
-
-{% if include_timeseries==true and (include_histos==false or (include_histos==true and one_channel==false)) %}
-<div class="row">
     <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
       <div id ="timeseries-{{loop.index0}}"></div>
     </div>
 </div>
-{% endif %}
 
 {% endfor %}
 
 <div class="row">
+
+  <div class="col-lg-6 col-md-12 col-sm-12 vcenter order-2 hcenter">
+  <div class="card">
+      <div class="card-header">Display Options</div>
+      <div class="card-body">
+          <form class="form" role="form">
+            {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
+          </form>
+      </div>
+    </div>
+  </div>
+
   <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
     <div class="card">
         <div class="card-header">TimeSeries Options</div>
@@ -77,7 +72,8 @@ var channels = undefined;
 
 {% for metric in metrics %}
 var metric = {{ metric|tojson }};
-var config_controller = new Config.GroupConfigController(config, {{link_function}}, [metric], channels, 0, 50);
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, [metric], channels, 0, 50)
+    .streamController("#form-stream"); 
 
 {% if include_histos==true %}
 var histo_history = config_controller.addTimeSeriesHistoController("histogram-history-{{loop.index0}}", "{{title}}", false, 50)
