@@ -972,6 +972,7 @@ def Software_Trigger():
     #return timeseries_view(request.args, "BeamMetrics")
 
     config = online_metrics.get_group_config("online", "BeamMetrics", front_end_abort=True)
+    config['streams'] = ['fast', 'archiving']
     render_args = {
       "config": config,
       "eventmeta_key": EVENTMETA_KEY,
@@ -983,7 +984,7 @@ def Software_Trigger():
       "include_histos": True,
       "one_channel": True
     }
-    return render_template('sbnd/histogram.html',**render_args)
+    return render_template('sbnd/beam_metrics.html',**render_args)
 
 
 
