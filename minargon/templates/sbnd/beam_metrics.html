@@ -80,7 +80,7 @@ var metric = {{ metric|tojson }};
 var config_controller = new Config.GroupConfigController(config, {{link_function}}, [metric], channels, 0, 50);
 
 {% if include_histos==true %}
-var histo_history = config_controller.addTimeSeriesHistoController("histogram-history-{{loop.index0}}", "{{title}}", false)
+var histo_history = config_controller.addTimeSeriesHistoController("histogram-history-{{loop.index0}}", "{{title}}", false, 50)
    .timeRangeController("#start", "#end", "#toggle");
 
 {% if one_channel==false %}
