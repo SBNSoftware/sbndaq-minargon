@@ -860,7 +860,22 @@ def ping_ignition():
     pong = False
     if (tstamp > 0):
         pong = True
-    return jsonify(str(pong))
+    return jsonify([str(pong), tstamp])
+
+@app.route('/ping_archiver')
+def ping_archiver():
+    database = "sbnd_ignition"
+    pv = "te-8101a"
+    current_time = datetime.now()
+    this_month = current_time.month
+    month_2digit = str(this_month).zfill(2)
+    tstamp = 0
+    this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+    tstamp = this_dbrow[0][2]
+    pong = False
+    if (tstamp > 0):
+        pong = True
+    return jsonify([str(pong), tstamp])
 
 # @app.route('/cryo_stream')
 # def cryo_stream():
