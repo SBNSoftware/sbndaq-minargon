@@ -58,7 +58,9 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
 NEW_TIMING_METRICS = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
-NEW_TIMING_METRICS_SETS = [[0,1,2,3,4,5,6,7,8],[0,3,4,8],[3,4,8]] #beam, offbeam, crossing muons
+NEW_TIMING_METRICS_SETS_NUMBERS = [[0,1,2,3,4,5,6,7,8],[0,3,4,8],[3,4,8]] #beam, offbeam, crossing muons
+NEW_TIMING_METRICS_SETS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
+                           ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
 
 # Alarm limits
 
@@ -691,18 +693,18 @@ def Timing_Differences():
     }
     return render_template("sbnd/timing_differences.html",**render_args)
 
-#@app.route('/Matt_Test_Timing')
-#def Matt_Test_Timing():
-#    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-#    render_args = {
-#      "config": config_timing,
-#      "eventmeta_key": EVENTMETA_KEY,
-#      "channels": "undefined",
-#      "link_function": "undefined",
-#      "metrics": NEW_TIMING_METRICS,
-#      "metrics_sets": NEW_TIMING_METRICS_SETS
-#    }
-#    return render_template('sbnd/matt_test_timing.html',**render_args)
+@app.route('/Matt_Test_Timing')
+def Matt_Test_Timing():
+    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    render_args = {
+      "config": config_timing,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics":  NEW_TIMING_METRICS,
+      "metrics_sets": NEW_TIMING_METRICS_SETS
+    }
+    return render_template('sbnd/matt_test_timing.html',**render_args)
 
 @app.route('/Matt_Test_Histogram')
 def Matt_Test_Histogram():

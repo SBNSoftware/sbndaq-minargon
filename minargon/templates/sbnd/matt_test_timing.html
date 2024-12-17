@@ -1,0 +1,81 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}{{title}}{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+
+{% for set in metric_sets%}
+{% set outer_loop = loop %}
+{% for this_metric in set %}
+<h3>{{this_metric}}</h3>
+<div class="row">
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="time-scatter-{{outer_loop.index0}}-{{loop.index0}}"></div>
+    </div>
+       <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
+        <div class="card">
+            <div class="card-header">TimeSeries Options</div>
+            <div class="card-body">
+                <form class="form" role="form">
+                    {{ stream_options.time_range("start-{{outer_loop.index0}}-{{loop.index0}}", "end-{{outer_loop.index0}}-{{loop.index0}}", "toggle-{{outer_loop.index0}}-{{loop.index0}}") }}
+                    {{ stream_options.download("download-{{outer_loop.index0}}-{{loop.index0}}") }}
+	        </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+<hr>
+<hr>
+{% endfor %}
+
+</div>
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var config = {{config|tojson|safe}};
+var channels = undefined;
+
+{% for set in metrics_sets %}
+{% set outer_loop = loop %}
+{% for this_metric in set %}
+var this_metric = {{ this_metric|tojson }};
+{
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, [this_metric], channels, 0, 50);
+var plotly = config_controller.addPlotlyController("time-scatter-{{outer_loop.index0}}-{{loop.index0}}")
+   .timeRangeController("#start-{{outer_loop.index0}}-{{loop.index0}}", "#end-{{outer_loop.index0}}-{{loop.index0}}", "#toggle-{{outer_loop.index0}}-{{loop.index0}}")
+   .downloadDataController("#download-{{outer_loop.index0}}-{{loop.index0}}");
+config_controller.runAll();
+}
+{% endfor %}
+{% endfor %}
+
+// setup polling for event/run/subrun/time
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}
