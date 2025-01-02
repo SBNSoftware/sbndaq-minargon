@@ -114,11 +114,24 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         var table = document.getElementById("{{ table_id }}");
         table.innerHTML = ""; // Clear table content
         var rms_data = data;
-        
+
+	for (var i = 0; i < rms_data.length; i++) {
+        	var rms = rms_data[i].get_last()[1];
+        	if (rms > 0) {
+            		TPC_ON = true;
+            		break;
+        	}
+    	}
+
+
         for (var i = 0; i < rms_data.length; i++) {
-        	if (!TPC_ON && rms > 0) {
-			TPC_ON = true;
-		}
+
+		// If detector is off, skip building the table
+        	if (!TPC_ON) {
+                	break;
+        	}
+		
+		// Build table
 		var show = false;
 	        var rms = rms_data[i].get_last()[1];
             	var color = rms === 0 ? "white" : rms < 150. ? "yellow" : "red";
@@ -152,9 +165,6 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
                         	<td style="background-color: ${color}">${rms.toFixed(2)}</td>
                    		 </tr>`;
             	}
-        }
-	if (!TPC_ON) {
-            table.innerHTML = "";
         }
 }
 ]);
