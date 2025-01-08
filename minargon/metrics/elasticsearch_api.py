@@ -127,7 +127,7 @@ def prep_alarms(hits, source_cols, component_depth):
 def _get_pv_categs(pv_path, component_depth):
     """Get components of pv path assuming the pv name has a single / in it """
     pv_path = _pv_path_clean(pv_path)
-    components = pv_path.split("state:/SBND/")[1].split("/")
+    components = pv_path.split("state:/SBNDDCS/")[1].split("/")
     pv = "/".join(components[-2:])
     components = components[:-2]
     while len(components) < component_depth:
