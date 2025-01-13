@@ -29,11 +29,12 @@ export class HistController {
   //         be drawn
   // links: the DataLink object which will be used to get data to plot
   // metric_config: The metric configuration for the associated plot
-  constructor(target, link, titles, metric_config, plot_title, include_history, split_channels) {
+  constructor(target, link, titles, metric_config, plot_title, include_history, split_channels, nbinsx) {
     this.link = link;
     this.target = target;
     this.max_data = 1000;
     this.trace_names = titles;
+    this.nbinsx = nbinsx;
 
     // optional parameters default to false
     this.include_history = include_history;
@@ -42,11 +43,14 @@ export class HistController {
     this.split_channels = split_channels;
     if (this.split_channels === undefined) this.split_channels = false;
 
+    this.nbinsx = nbinsx;
+    if (this.nbinsx === undefined) this.nbinsx = 50;
+
     this.plot_title = plot_title;
 
     // make a new plotly scatter plot
     var layout = this.layoutHistogram();
-    this.histogram =  new Chart.Histogram(this.target, layout, this.include_history, this.split_channels);
+    this.histogram =  new Chart.Histogram(this.target, layout, this.include_history, this.split_channels, this.nbinsx);
 
     if (this.trace_names) this.histogram.trace_names = this.trace_names;
 
@@ -75,7 +79,8 @@ export class HistController {
       title: titleize(title),
       xaxis: {
         title: metric_name,
-      }
+      },
+      nbinsx: this.nbinsx
     };
 
     return ret;
