@@ -987,7 +987,7 @@ def Software_Trigger():
     #return timeseries_view(request.args, "BeamMetrics")
 
     config = online_metrics.get_group_config("online", "BeamMetrics", front_end_abort=True)
-    config['streams'] = ['fast', 'archiving']
+    config['streams'] = ['fast', 'slow', 'flash', 'archiving']
     render_args = {
       "config": config,
       "eventmeta_key": EVENTMETA_KEY,
