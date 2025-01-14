@@ -160,7 +160,7 @@ def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     }
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{MONTH} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{MONTH} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%value%'
@@ -195,7 +195,7 @@ def get_ignition_last_value_pv(connection, month, group, pv):
     database = connection[1]["name"]
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -234,7 +234,7 @@ def get_ignition_2hr_value_pv(connection, month, group, pv):
     #print("stop", stop)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -280,7 +280,7 @@ def cryo_ps_series(connection, month, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{:02d} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -324,7 +324,7 @@ def cryo_ps_step(connection, month, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -389,7 +389,7 @@ def drifthv_ps_series(connection, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{:02d} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
@@ -435,7 +435,7 @@ def drifthv_ps_step(connection, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2024_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_2025_{:02d} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
