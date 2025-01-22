@@ -170,14 +170,7 @@
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Timing<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
 									{{ nav_link('Timing_status', 'Status') }}
-                  <li class="dropdown-submenu bg-maroon nav-item">
-                    <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Timing Metrics<b class='caret'></b></a>
-                    <ul class="dropdown-menu bg-maroon">
-                      {{ nav_link('Timing_Metric_View_Beam', 'Beam') }}
-                      {{ nav_link('Timing_Metric_View_OffBeam', 'Off Beam') }}
-                      {{ nav_link('Timing_Metric_View_CrossingMuons', 'Crossing Muons') }}
-                    </ul>
-                  </li>
+                  {{ nav_link('Timing_Metric_View', 'Metrics') }}
                   {{ nav_link('Timing_Differences', 'Timing Differences') }}
 								</ul>
 						  </li>
