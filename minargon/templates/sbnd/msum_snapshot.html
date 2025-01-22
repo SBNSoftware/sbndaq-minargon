@@ -8,20 +8,6 @@
 <div class="row">
     {% include 'data_header.html' | front_ended %}
 </div>
-<div class="row">
-    <div class="col-md-4">
-        <div class="card hcenter">
-            <div class="card-header">Display Options</div>
-            <div class="card-body">
-                <form class="form" role="form">
-                    {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
-                    {{ stream_options.height_option([25, 40, 60, 80, 100], 25, "form-height") }}
-	        </form>
-            </div>
-        </div>
-    </div><!--
-    --><div class="col-md-8" style="padding:0" id="timeseries"></div>
-</div>
     <div class="row">
     <div class="col-md-12" style="padding:0" id="waveform-holder">
         <div id="waveform"></div>
@@ -43,9 +29,9 @@ draw.draw_waveform('waveform', {MSUM: {{channel}} }, "waveform", "MSUM Waveform"
 
 var config = {{config|tojson|safe}};
 
-var config_controller = new Config.GroupConfigController(config, undefined, undefined, [{{channel}}], 0)
-    .metricController("#form-metric")
-    .streamController("#form-stream"); 
+//var config_controller = new Config.GroupConfigController(config, undefined, undefined, [{{channel}}], 0)
+//    .metricController("#form-metric")
+//    .streamController("#form-stream"); 
 
 // build cubism controller
 var cubism = config_controller.addCubismController("#timeseries", 25)
