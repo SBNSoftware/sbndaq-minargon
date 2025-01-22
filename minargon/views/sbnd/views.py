@@ -57,8 +57,9 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
-NEW_TIMING_METRICS = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
-NEW_TIMING_METRICS_SETS = [[0,1,2,3,4,5,6,7,8],[0,3,4,8],[3,4,8]] #beam, offbeam, crossing muons
+TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
+TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
+TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
 
 # Alarm limits
 
@@ -693,19 +694,6 @@ def Timing_Differences():
     }
     return render_template("sbnd/timing_differences.html",**render_args)
 
-#@app.route('/Matt_Test_Timing')
-#def Matt_Test_Timing():
-#    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-#    render_args = {
-#      "config": config_timing,
-#      "eventmeta_key": EVENTMETA_KEY,
-#      "channels": "undefined",
-#      "link_function": "undefined",
-#      "metrics": NEW_TIMING_METRICS,
-#      "metrics_sets": NEW_TIMING_METRICS_SETS
-#    }
-#    return render_template('sbnd/matt_test_timing.html',**render_args)
-
 @app.route('/Matt_Test_Histogram')
 def Matt_Test_Histogram():
     config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
@@ -1002,10 +990,8 @@ def Trigger_Board_Monitor():
 
 @app.route('/Software_Trigger')
 def Software_Trigger():
-    #return timeseries_view(request.args, "BeamMetrics")
-
     config = online_metrics.get_group_config("online", "BeamMetrics", front_end_abort=True)
-    config['streams'] = ['fast', 'slow', 'flash', 'archiving']
+    config['streams'] = ['archiving', 'flash']
     render_args = {
       "config": config,
       "eventmeta_key": EVENTMETA_KEY,
@@ -1018,6 +1004,65 @@ def Software_Trigger():
       "one_channel": True
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
+
+
+@app.route('/Timing_Metric_View_Beam')
+def Timing_Metric_View_Beam():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    config['streams'] = ['archiving']
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_BEAM,
+      "title": "Timing Metrics",
+      "include_timeseries": True,
+      "include_histos": False,
+      "one_channel": True
+    }
+    return render_template('sbnd/timing_metrics_beam.html',**render_args)
+
+@app.route('/Timing_Metric_View_OffBeam')
+def Timing_Metric_View_OffBeam():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    config['streams'] = ['archiving']
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_OFFBEAM,
+      "title": "Timing Metrics",
+      "include_timeseries": True,
+      "include_histos": False,
+      "one_channel": True
+    }
+    return render_template('sbnd/timing_metrics_offbeam.html',**render_args)
+
+
+@app.route('/Timing_Metric_View_CrossingMuons')
+def Timing_Metric_View_CrossingMuons():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    config['streams'] = ['archiving']
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_CROSSING_MUONS,
+      "title": "Timing Metrics",
+      "include_timeseries": True,
+      "include_histos": False,
+      "one_channel": True
+    }
+    return render_template('sbnd/timing_metrics_crossing_muons.html',**render_args)
+
+
+
+
+
+
 
 
 
