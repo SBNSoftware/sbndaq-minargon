@@ -99,18 +99,20 @@ def introduction():
     database = "sbnd_ignition"
     pv_lists = ["scheme", "vsp", "vmon", "isp", "imon"] 
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
     bad_drifthv_pvs = []
     for idx_pv, pv in enumerate(pv_lists):
-        this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
+        this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "drifthv", pv)
         if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
             continue
         bad_drifthv_pvs.append(pv)
     
     # alarms in the past 2 hours
     # vmon
-    vmon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, month_2digit, "drifthv", "vmon")
+    vmon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, year, month_2digit, "drifthv", "vmon")
     vmon_nsamples = len(vmon_dbrows)
     vmon_n_hi = 0
     vmon_n_hihi = 0
@@ -130,7 +132,7 @@ def introduction():
             continue
 
     # imon
-    imon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, month_2digit, "drifthv", "imon")
+    imon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, year, month_2digit, "drifthv", "imon")
     imon_nsamples = len(imon_dbrows)
     imon_n_hi = 0
     imon_n_hihi = 0
@@ -822,6 +824,8 @@ def cryo_monitor():
 		"cryo_top": ["te-8003a"]}
     dbrows = []
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     current_timestamp = time.mktime(current_time.timetuple())
     month_2digit = str(this_month).zfill(2)
@@ -829,7 +833,7 @@ def cryo_monitor():
     for k in pv_lists.keys():
         this_list = pv_lists[k]
         for pv in this_list:
-            this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+            this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "", pv)
             try:
                 formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
                 formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
@@ -852,10 +856,12 @@ def ping_ignition():
     database = "sbnd_ignition"
     pv = "te-8101a"
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
     tstamp = 0
-    this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+    this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "", pv)
     tstamp = this_dbrow[0][2]
     pong = False
     if (tstamp > 0):
@@ -867,10 +873,12 @@ def ping_archiver():
     database = "sbnd_ignition"
     pv = "te-8101a"
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
     tstamp = 0
-    this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+    this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "", pv)
     tstamp = this_dbrow[0][2]
     pong = False
     if (tstamp > 0):
@@ -895,7 +903,14 @@ def cryo_stream(pv):
 #
 #    # print config
     database = "sbnd_ignition"
-    month = "02"
+
+    current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+
     # render_args = {
     #   "pv": pv, 
 #      "IDs": IDs,
@@ -913,7 +928,8 @@ def cryo_stream(pv):
     render_args = {
       "configs": configs,
       "database": database,
-      "month": month,
+      "year": year,
+      "month": month_2digit,
       "pv": pv
     }
     return render_template('sbnd/cryo_stream.html', **render_args)
@@ -929,11 +945,13 @@ def DriftHV_Heinzinger():
 
     dbrows = []
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     current_timestamp = time.mktime(current_time.timetuple())
     month_2digit = str(this_month).zfill(2)
     for pv in pv_lists:
-        this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
+        this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "drifthv", pv)
         try:
             formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
             formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
