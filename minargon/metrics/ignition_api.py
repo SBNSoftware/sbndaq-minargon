@@ -408,7 +408,7 @@ def drifthv_ps_series(connection, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
