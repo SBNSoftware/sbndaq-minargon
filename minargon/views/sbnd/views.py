@@ -1018,7 +1018,7 @@ def Timing_Metric_View_Beam():
       "metrics": TIMING_METRICS_BEAM,
       "title": "Timing Metrics",
       "include_timeseries": True,
-      "include_histos": True,
+      "include_histos": False,
       "one_channel": True
     }
     return render_template('sbnd/timing_metrics_beam.html',**render_args)
@@ -1035,7 +1035,7 @@ def Timing_Metric_View_OffBeam():
       "metrics": TIMING_METRICS_OFFBEAM,
       "title": "Timing Metrics",
       "include_timeseries": True,
-      "include_histos": True,
+      "include_histos": False,
       "one_channel": True
     }
     return render_template('sbnd/timing_metrics_offbeam.html',**render_args)
@@ -1053,7 +1053,7 @@ def Timing_Metric_View_CrossingMuons():
       "metrics": TIMING_METRICS_CROSSING_MUONS,
       "title": "Timing Metrics",
       "include_timeseries": True,
-      "include_histos": True,
+      "include_histos": False,
       "one_channel": True
     }
     return render_template('sbnd/timing_metrics_crossing_muons.html',**render_args)
