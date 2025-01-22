@@ -19,48 +19,70 @@
 {% endif %}
 
 <h1> {{title}} </h1>
-{% for this_metric in metrics %}
-<h3>{{this_metric}}</h3>
 
-<div class="row">
-    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
-      <div id ="histogram-history-{{loop.index0}}"></div>
-    </div>
-    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
-      <div id ="timeseries-{{loop.index0}}"></div>
-    </div>
-</div>
-
-{% endfor %}
-
-<div class="row">
-
-  <div class="col-lg-6 col-md-12 col-sm-12 vcenter order-2 hcenter">
+<div class="container">
+<h3>Beam</h3>
+<div class="col-lg-8 col-md-8 col-sm-6 vcenter order-2 hcenter">
   <div class="card">
-      <div class="card-header">Display Options</div>
-      <div class="card-body">
-          <form class="form" role="form">
-            {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
-          </form>
-      </div>
+    <div class="card-header">TimeSeries Options</div>
+    <div class="card-body">
+      <form class="form" role="form">
+          {{ stream_options.time_range("start", "end", "toggle") }}
+          {{ stream_options.download("download") }}
+      </form>
     </div>
   </div>
-
-  <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
-    <div class="card">
-        <div class="card-header">TimeSeries Options</div>
-        <div class="card-body">
-            <form class="form" role="form">
-                {{ stream_options.time_range("start", "end", "toggle") }}
-                {{ stream_options.download("download") }}
-      </form>
-        </div>
-    </div>
+</div>
+{% for this_metric in metrics[0] %}
+{% if loop.index0 % 2 == 0 %}
+  <div class="row">
+{% endif %}
+      <div class="col-lg-6 col-md-6 order-1" style="padding:0">
+        <div id ="timeseries-0-{{loop.index0}}"></div>
+      </div>
+    {% if loop.index0 % 2 == 1 %}
+  </div>
+{% endif %}
+{% endfor %}
 </div>
 
+<br>
+
+<div class="container">
+<h3>Off Beam</h3>
+<br>
+{% for this_metric in metrics[1] %}
+{% if loop.index0 % 2 == 0 %}
+  <div class="row">
+{% endif %}
+      <div class="col-lg-6 col-md-6 order-1" style="padding:0">
+        <div id ="timeseries-1-{{loop.index0}}"></div>
+      </div>
+    {% if loop.index0 % 2 == 1 %}
+  </div>
+{% endif %}
+{% endfor %}
 </div>
 
+<br>
+<div class="container">
+<h3>Crossing Muons</h3>
+<br>
+{% for this_metric in metrics[2] %}
+{% if loop.index0 % 2 == 0 %}
+  <div class="row">
+{% endif %}
+      <div class="col-lg-6 col-md-6 order-1" style="padding:0">
+        <div id ="timeseries-2-{{loop.index0}}"></div>
+      </div>
+    {% if loop.index0 % 2 == 1 %}
+  </div>
+{% endif %}
+{% endfor %}
 </div>
+<br>
+
+
 {%endblock%}
 {% block script %}
 <script defer type="module">
@@ -70,31 +92,20 @@ import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 var config = {{config|tojson|safe}};
 var channels = undefined;
 
-{% for metric in metrics %}
-var metric = {{ metric|tojson }};
-var config_controller = new Config.GroupConfigController(config, {{link_function}}, [metric], channels, 0, 50)
-    .streamController("#form-stream"); 
+{% for i in range(3) %}
+  {% for metric in metrics[i] %}
+  var metric = {{ metric|tojson }};
+  var config_controller = new Config.GroupConfigController(config, {{link_function}}, [metric], [{{i}}], 0, 10)
+      .streamController("#form-stream"); 
 
-{% if include_histos==true %}
-var histo_history = config_controller.addTimeSeriesHistoController("histogram-history-{{loop.index0}}", "{{title}}", false, 50)
-   .timeRangeController("#start", "#end", "#toggle");
+  var plotly = config_controller.addPlotlyController("timeseries-{{i}}-{{loop.index0}}")
+     .timeRangeController("#start", "#end", "#toggle")
+     .downloadDataController("#download");
 
-{% if one_channel==false %}
-var histo_history_split = config_controller.addTimeSeriesHistoController("histogram-history-split-{{loop.index0}}", "Split {{title}}", true)
-   .timeRangeController("#start", "#end", "#toggle");
-{% endif %}
-
-{% endif %}
-
-
-{% if include_timeseries==true %}
-var plotly = config_controller.addPlotlyController("timeseries-{{loop.index0}}")
-   .timeRangeController("#start", "#end", "#toggle")
-   .downloadDataController("#download");
-{% endif %}
-
-config_controller.runAll();
+  config_controller.runAll();
+  {% endfor %}
 {% endfor %}
+
 
 // setup polling for event/run/subrun/time
 {% if eventmeta_key %}
