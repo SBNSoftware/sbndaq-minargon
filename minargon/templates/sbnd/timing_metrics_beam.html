@@ -1,0 +1,113 @@
+{% import "stream_options_macro.html" | common as stream_options %}
+
+{% extends "layout.html" | front_ended %}
+{% block title %}{{title}}{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+    <th>Timestamp: <span id="timestamp"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+
+<h1> {{title}} </h1>
+{% for this_metric in metrics %}
+<h3>{{this_metric}}</h3>
+
+<div class="row">
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="histogram-history-{{loop.index0}}"></div>
+    </div>
+    <div class="col-lg-6 col-md-6 order-1 vcenter" style="padding:0">
+      <div id ="timeseries-{{loop.index0}}"></div>
+    </div>
+</div>
+
+{% endfor %}
+
+<div class="row">
+
+  <div class="col-lg-6 col-md-12 col-sm-12 vcenter order-2 hcenter">
+  <div class="card">
+      <div class="card-header">Display Options</div>
+      <div class="card-body">
+          <form class="form" role="form">
+            {{ stream_options.stream_option(config.streams, config.streams[0], "form-stream") }}
+          </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-md-8 col-sm-12 vcenter order-2 hcenter">
+    <div class="card">
+        <div class="card-header">TimeSeries Options</div>
+        <div class="card-body">
+            <form class="form" role="form">
+                {{ stream_options.time_range("start", "end", "toggle") }}
+                {{ stream_options.download("download") }}
+      </form>
+        </div>
+    </div>
+</div>
+
+</div>
+
+</div>
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var config = {{config|tojson|safe}};
+var channels = undefined;
+
+{% for metric in metrics %}
+var metric = {{ metric|tojson }};
+var config_controller = new Config.GroupConfigController(config, {{link_function}}, [metric], channels, 0, 50)
+    .streamController("#form-stream"); 
+
+{% if include_histos==true %}
+var histo_history = config_controller.addTimeSeriesHistoController("histogram-history-{{loop.index0}}", "{{title}}", false, 50)
+   .timeRangeController("#start", "#end", "#toggle");
+
+{% if one_channel==false %}
+var histo_history_split = config_controller.addTimeSeriesHistoController("histogram-history-split-{{loop.index0}}", "Split {{title}}", true)
+   .timeRangeController("#start", "#end", "#toggle");
+{% endif %}
+
+{% endif %}
+
+
+{% if include_timeseries==true %}
+var plotly = config_controller.addPlotlyController("timeseries-{{loop.index0}}")
+   .timeRangeController("#start", "#end", "#toggle")
+   .downloadDataController("#download");
+{% endif %}
+
+config_controller.runAll();
+{% endfor %}
+
+// setup polling for event/run/subrun/time
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}
