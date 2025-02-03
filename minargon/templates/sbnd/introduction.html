@@ -451,7 +451,7 @@ var dead_chs = {{ dead_chs }};
 
       }//end for over channel RMS values
 
-      if (plane_has_bad_rms && nch_zerorms > 10) {
+      if (plane_has_bad_rms || nch_zerorms > 10) {
         BAD_PLANES.add('{{ tpc_title }}');
       }
       else {
