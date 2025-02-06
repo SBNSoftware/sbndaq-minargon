@@ -508,7 +508,7 @@ var crt_config = {{crt_config|tojson|safe}};
       }
 
       if (baseline_sum == 0){
-        $("#CRT-Status").text("Not OK");
+        $("#CRT-Status").text("NO DATA");
         $("#CRT-Status").css({"color": "orange"});
       }
       else if (BAD_CRTS.size > 0) {
@@ -575,7 +575,7 @@ var pmt_config = {{pmt_config|tojson|safe}};
       }
 
       if (baseline_sum == 0){
-        $("#PMT-Status").text("Not OK");
+        $("#PMT-Status").text("NO DATA");
         $("#PMT-Status").css({"color": "orange"});
       }
       else if (BAD_PMTS.size > 0) {
@@ -605,9 +605,9 @@ poll.add_callback(function(data) {
     var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
       $("#TPC-Status").text("Disconnected (" + delta + "s)");
-      $("#TPC-Status").css({"color": "red"});
+      $("#TPC-Status").css({"color": "orange"});
       $("#CRT-Status").text("Disconnected (" + delta + "s)");
-      $("#CRT-Status").css({"color": "red"});
+      $("#CRT-Status").css({"color": "orange"});
     }
 });
 poll.run();
@@ -627,7 +627,7 @@ poll.add_callback(function(data) {
     var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
       $("#PMT-Status").text("Disconnected (" + delta + "s)");
-      $("#PMT-Status").css({"color": "red"});
+      $("#PMT-Status").css({"color": "orange"});
     }
 });
 poll.run();
