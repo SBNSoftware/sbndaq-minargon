@@ -31,7 +31,104 @@
     <br>
     E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
     <br>
+    <br>
+    <br>
+
+    <!-- configurable audible alarm -->
+    <!-- {% set detector_value = 60 %} Get this value from the detector -->
+     {% set detector_value = 5 %} <!-- HV status, initialized to stupid value -->
+    <p>High Voltage Status: <span id="displayValue">{{ detector_value }}</span>; Alarm HV > 0</p>
+    <span id="detectorValue" data-value="{{ detector_value }}" style="display: none;"></span>
+
+    <button onclick="testAlarm()">Test Alarm</button>
+    <br>
+    <button onclick="disableAlarm()">Disable Alarm</button>
+    <br>
+    <span id="lastDisabledTime"></span>  <!-- Display last disabled time -->
+    <br>
+    <button onclick="resetAlarm()">Issue Acknowledged</button>
+    
+    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio>
+
+    <script>
+        let alarmTriggered = false;
+        let alarmDisabled = localStorage.getItem("alarmDisabled") === "true";
+        const DISABLE_DURATION =  60 * 60 * 1000; // 1 hour in milliseconds
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return "Never";
+            const date = new Date(parseInt(timestamp));
+            return date.toLocaleString(); // Convert to readable format
+        }
+
+        function updateLastDisabledTime() {
+            const lastDisabled = localStorage.getItem("disableTimestamp");
+            document.getElementById("lastDisabledTime").innerText = lastDisabled 
+                ? `Last disabled: ${formatTimestamp(lastDisabled)}`
+                : "Last disabled: Never";
+        }
+
+        function checkAutoReset() {
+            const disableTimestamp = localStorage.getItem("disableTimestamp");
+            if (disableTimestamp) {
+                const currentTime = new Date().getTime();
+                if (currentTime - disableTimestamp > DISABLE_DURATION) {
+                    resetAlarm();
+                    console.log("Alarm auto-reset after 1 hour");
+                }
+            }
+        }
+
+        function testAlarm() {
+          let alarmSound = document.getElementById("alarmSound");
+          alarmSound.play()
+            .then(() => console.log("Test alarm playing!"))
+            .catch(error => console.log("Error playing test alarm:", error));
+        }
+
+        function checkAlarm() {
+            checkAutoReset();
+            let detectorValue = parseInt(document.getElementById("detectorValue").getAttribute("data-value"));
+
+            if (detectorValue > 0 && !alarmTriggered && !alarmDisabled) {
+                document.getElementById("alarmSound").play();
+                alarmTriggered = true;
+            } 
+            
+        }
+
+        function disableAlarm() {
+            document.getElementById("alarmSound").pause();
+            alarmTriggered = false;
+            alarmDisabled = true;  // Prevent alarm from playing again
+            const timestamp = new Date().getTime();
+            localStorage.setItem("alarmDisabled", "true");
+            localStorage.setItem("disableTimestamp", timestamp);
+            updateLastDisabledTime();
+        }
+
+        function resetAlarm() {
+            alarmTriggered = false;
+            alarmDisabled = false;
+            localStorage.setItem("alarmDisabled", "false");
+            localStorage.removeItem("disableTimestamp");
+            updateLastDisabledTime();
+        }
+
+        function updateDisplay() {
+        let newValue = document.getElementById("detectorValue").getAttribute("data-value");
+        document.getElementById("displayValue").innerText = newValue;
+      }
+
+        setInterval(checkAlarm, 1000);  // Check every second
+        updateLastDisabledTime(); // Update time on page load
+        updateDisplay();
+        </script>
+
+
 </div>
+
+<!-- <audio src="static/audio/0096.wav" autoplay></audio> -->
 
 <div class="col-lg-3 col-md-3 col-sm-8" style="padding:0">
     <h5>Online Monitoring Wikis</h5>
@@ -295,6 +392,7 @@ var HV_status = 0;
 if (BAD_DRIFTHVS.size > 0) {
   HV_status = 1;
 }
+
 //vmon log
 var vmon_status = 0;
 $("#VMon-Nsamples").html({{vmon_nsamples}});
@@ -408,6 +506,10 @@ else {
   $("#DriftHV-Status").css({"color": "green"});
 }
 
+//For audible alarm
+document.getElementById("detectorValue").setAttribute("data-value", HV_status);
+updateDisplay();
+
 
 // TPCs
 var BAD_PLANES = new Set();
@@ -451,7 +553,7 @@ var dead_chs = {{ dead_chs }};
 
       }//end for over channel RMS values
 
-      if (plane_has_bad_rms || nch_zerorms > 10) {
+      if (plane_has_bad_rms && nch_zerorms > 10) {
         BAD_PLANES.add('{{ tpc_title }}');
       }
       else {
