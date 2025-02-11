@@ -695,6 +695,49 @@ var pmt_config = {{pmt_config|tojson|safe}};
   }
 {% endfor %}
 
+// Timing
+var timing_config = {{timing_config|tojson|safe}};
+var timing_metrics = {{timing_metrics|tojson|safe}};
+var timing_channels = undefined;
+var bad_timing = [];
+
+{% for i in range(3) %}
+  {
+  {% for metric in timing_metrics[i] %}
+  {
+
+  var metric = {{ metric|tojson }};
+  var config_controller = new Config.GroupConfigController(timing_config, undefined, [metric], [{{i}}], 0, 10)
+  var data_link = config_controller.data_link(0, [metric], undefined, 1);
+
+  var poll = new Data.D3DataPoll(data_link, 10*60*1000 /* 10 minutes */);
+  var buffer = new Data.D3DataBuffer(poll, 5, [ // last parameter is number of events to use
+    function(data) {
+      var timing_data = data;
+      for (var i = 0; i < timing_data.length; i++) {
+	      var timing = timing_data[i].get_last()[1];
+        if (timing < {{timing_alarms_min[i]}} || timing > {{timing_alarms_max[i]}}) {
+          bad_timing.push(i);
+        }
+      }
+    }
+  ]);
+  buffer.start();
+  }
+  {% endfor %}
+}
+{% endfor %}
+
+if (bad_timing.length > 0) {
+  let bad_timing_str = "NOT OK. Bad channels: " + Array.from(bad_timing).join(" ");
+  $("#Timing-Status").html(bad_timing_str);
+  $("#Timing-Status").css({"color": "orange"});
+}
+else {
+  $("#Timing-Status").text("OK");
+  $("#Timing-Status").css({"color": "green"});
+}
+
 
 // check if metadata time is recent
 var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
