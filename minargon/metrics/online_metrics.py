@@ -826,7 +826,11 @@ def build_link_tree(rconnect):
     
     # index by group, the metric, then instance
     for group, config, this_members, in zip(groups, configs, members):
-        config = json.loads(config)
+        try:
+            config = json.loads(config)
+        except:
+            continue
+
         tree_dict["nodes"].append({
             "expanded": False,
             "text": group,

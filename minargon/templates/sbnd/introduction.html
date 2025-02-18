@@ -36,7 +36,7 @@
 
     <!-- configurable audible alarm -->
     <!-- {% set detector_value = 60 %} Get this value from the detector -->
-     {% set detector_value = 5 %} <!-- HV status, initialized to stupid value -->
+     {% set detector_value = -1 %} <!-- HV status, initialized to stupid value -->
     <p>High Voltage Status: <span id="displayValue">{{ detector_value }}</span>; Alarm HV > 0</p>
     <span id="detectorValue" data-value="{{ detector_value }}" style="display: none;"></span>
 
