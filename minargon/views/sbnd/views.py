@@ -21,7 +21,8 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
-# Channel mapping
+# Channel mappings
+
 TPC_CHANNELS = [list(range(0, 1984)),
             list(range(1984, 3968)),
             list(range(3968, 5632)),
@@ -95,6 +96,38 @@ PMT_BASELINE_ALARM_MAX = 14270
 
 TPC_RMS_ALARM_MAX = 15
 
+TIMING_BEAM_nCRTT1_MIN = 0.5
+TIMING_BEAM_nCRTT1_MAX = 1.5
+TIMING_BEAM_nBES_MIN = 0.5
+TIMING_BEAM_nBES_MAX = 1.5
+TIMING_BEAM_nRWM_MIN = 0.5
+TIMING_BEAM_nRWM_MAX = 1.5
+TIMING_BEAM_nFTRIG_MIN = 0
+TIMING_BEAM_nFTRIG_MAX = 30
+TIMING_BEAM_nETRIG_MIN = 0.5
+TIMING_BEAM_nETRIG_MAX = 1.5
+TIMING_BEAM_RWM_BES_diff_MIN = 333
+TIMING_BEAM_RWM_BES_diff_MAX = 335
+TIMING_BEAM_ETRIG_BES_diff_MIN = 331
+TIMING_BEAM_ETRIG_BES_diff_MAX = 333
+TIMING_BEAM_FTRIG_ETRIG_diff_MIN = -1.5
+TIMING_BEAM_FTRIG_ETRIG_diff_MAX = 1.5
+TIMING_OFFBEAM_nCRTT1_MIN = 0.5
+TIMING_OFFBEAM_nCRTT1_MAX = 1.5
+TIMING_OFFBEAM_nFTRIG_MIN = 0
+TIMING_OFFBEAM_nFTRIG_MAX = 30
+TIMING_OFFBEAM_nETRIG_MIN = 0.5
+TIMING_OFFBEAM_nETRIG_MAX = 1.5
+TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN = -1.5
+TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX = 1.5
+TIMING_CROSSING_MUON_nFTRIG_MIN = 0
+TIMING_CROSSING_MUON_nFTRIG_MAX = 20
+TIMING_CROSSING_MUON_nETRIG_MIN = 0.5
+TIMING_CROSSING_MUON_nETRIG_MAX = 1.5
+TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN = 0
+TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX = 1.5
+
+
 EVENTMETA_KEY = "eventmeta"
 
 @app.route('/introduction')
@@ -165,10 +198,13 @@ def introduction():
     # pmts
     pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
+    # timing
+    timing_config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    timing_config['streams'] = ['archiving']
+    
     # event
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
-    
 
     render_args = {
       "crt_config": crt_config,
@@ -204,7 +240,15 @@ def introduction():
       "imon_hi": imon_n_hi,
       "imon_hihi": imon_n_hihi,
       "imon_lo": imon_n_lo,
-      "imon_lolo": imon_n_lolo
+      "imon_lolo": imon_n_lolo,
+      "timing_config": timing_config,
+      "timing_metrics": TIMING_METRICS_STREAMS,
+      "timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
+                            TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
+                            TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
+      "timing_alarms_max": [TIMING_BEAM_nCRTT1_MAX, TIMING_BEAM_nBES_MAX, TIMING_BEAM_nRWM_MAX, TIMING_BEAM_nFTRIG_MAX, TIMING_BEAM_nETRIG_MAX, TIMING_BEAM_RWM_BES_diff_MAX, TIMING_BEAM_ETRIG_BES_diff_MAX, TIMING_BEAM_FTRIG_ETRIG_diff_MAX,
+                            TIMING_OFFBEAM_nCRTT1_MAX, TIMING_OFFBEAM_nFTRIG_MAX, TIMING_OFFBEAM_nETRIG_MAX, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX,
+                            TIMING_CROSSING_MUON_nFTRIG_MAX, TIMING_CROSSING_MUON_nETRIG_MAX, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX]
     }
 
     return render_template('sbnd/introduction.html', **render_args)
@@ -713,22 +757,6 @@ def Matt_Test_Histogram():
     }
     return render_template('sbnd/histogram.html',**render_args)
 
-@app.route('/Timing_status')
-def Timing_status():
-
-    #config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
-    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-
-    render_args = {
-      "config": config,
-      "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
-      "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
-      "eventmeta_key": EVENTMETA_KEY,
-      "is_beam_on": False
-    }
-
-    return render_template('sbnd/timing_status.html', **render_args) 
-
 
 @app.route('/purity')
 def purity():
@@ -991,6 +1019,7 @@ def Trigger_Board_Monitor():
     }
     return render_template('sbnd/trigger_board_monitor.html', **render_args)
 
+
 @app.route('/Software_Trigger')
 def Software_Trigger():
     config = online_metrics.get_group_config("online", "BeamMetrics", front_end_abort=True)
@@ -1007,6 +1036,24 @@ def Software_Trigger():
       "one_channel": True
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
+
+
+@app.route('/Timing_status')
+def Timing_status():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    print(config)
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+    #   "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
+    #   "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
+    #   "is_beam_on": False
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_STREAMS,
+      "title": "Timing Metrics",
+    }
+    return render_template('sbnd/timing_status.html', **render_args) 
 
 
 @app.route('/Timing_Metric_View')
