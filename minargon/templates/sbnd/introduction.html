@@ -36,9 +36,14 @@
 
     <!-- configurable audible alarm -->
     <!-- {% set detector_value = 60 %} Get this value from the detector -->
-     {% set detector_value = 5 %} <!-- HV status, initialized to stupid value -->
-    <p>High Voltage Status: <span id="displayValue">{{ detector_value }}</span>; Alarm HV > 0</p>
-    <span id="detectorValue" data-value="{{ detector_value }}" style="display: none;"></span>
+     {% set HV_value = -1 %} <!-- HV status, initialized to stupid value -->
+     {% set TPC_value = -1 %}
+
+    <p>High Voltage Status: <span id="HVDisplayValue">{{ HV_value }}</span>; Alarm HV > 0</p>
+    <span id="HVValue" HV-value="{{ HV_value }}" style="display: none;"></span>
+
+    <p>TPC Status: <span id="TPCDisplayValue">{{ TPC_value }}</span>; Alarm TPC Status > 0</p>
+    <span id="TPCValue" TPC-value="{{ TPC_value }}" style="display: none;"></span>
 
     <button onclick="testAlarm()">Test Alarm</button>
     <br>
@@ -88,9 +93,10 @@
 
         function checkAlarm() {
             checkAutoReset();
-            let detectorValue = parseInt(document.getElementById("detectorValue").getAttribute("data-value"));
+            let HVValue = parseInt(document.getElementById("HVValue").getAttribute("HV-value"));
+            let TPCValue = parseInt(document.getElementById("TPCValue").getAttribute("TPC-value"));
 
-            if (detectorValue > 0 && !alarmTriggered && !alarmDisabled) {
+            if ((HVValue > 0 || TPCValue > 0 ) && !alarmTriggered && !alarmDisabled) {
                 document.getElementById("alarmSound").play();
                 alarmTriggered = true;
             } 
@@ -116,8 +122,10 @@
         }
 
         function updateDisplay() {
-        let newValue = document.getElementById("detectorValue").getAttribute("data-value");
-        document.getElementById("displayValue").innerText = newValue;
+        let newHVValue = document.getElementById("HVValue").getAttribute("HV-value");
+        let newTPCValue = document.getElementById("TPCValue").getAttribute("TPC-value");
+        document.getElementById("HVDisplayValue").innerText = newHVValue;
+        document.getElementById("TPCDisplayValue").innerText = newTPCValue;
       }
 
         setInterval(checkAlarm, 1000);  // Check every second
@@ -507,7 +515,8 @@ else {
 }
 
 //For audible alarm
-document.getElementById("detectorValue").setAttribute("data-value", HV_status);
+
+document.getElementById("HVValue").setAttribute("HV-value", HV_status);
 updateDisplay();
 
 
@@ -516,6 +525,7 @@ var BAD_PLANES = new Set();
 var TPC_ON = false;
 var short_chs = {{ short_chs }};
 var dead_chs = {{ dead_chs }};
+var TPC_status = 0;
 {% for tpc_plane in tpc_planes %}
   {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
   {% set tpc_title = tpc_titles[loop.index0] %}
@@ -577,6 +587,11 @@ var dead_chs = {{ dead_chs }};
   tpc_buffer.start();
   }
 {% endfor %}
+
+//For audible alarm
+if (TPC_ON) {TPC_status = BAD_PLANES.size;} //else TPC_status = 0;
+document.getElementById("TPCValue").setAttribute("TPC-value", TPC_status);
+updateDisplay();
 
 
 //CRTs
