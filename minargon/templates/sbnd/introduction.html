@@ -331,7 +331,7 @@ poll_redis_mem_frac.add_callback(function(data) {
     $(spanid).text((data.val * 100).toFixed(2));
 
     spanid = "#redis-mem";
-    if (data.val > 0.80) {     $(spanid).css({"color": "red"});
+    if (data.val > 0.85) {     $(spanid).css({"color": "red"});
     }
     else {
       $(spanid).css({"color": "green"});
