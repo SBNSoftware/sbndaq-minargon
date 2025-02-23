@@ -30,6 +30,7 @@ from .checkStatus import messageString
 import six
 from six.moves import range
 
+HV_start_time = None  # Global variable to store the start time
 
 # error class for connection
 class IgnitionConnectionError:
@@ -150,6 +151,26 @@ def is_valid_connection(connection_name):
 
 #--------------------
 # make the db query and return the data
+@app.route('/set_HV_start_time', methods=['POST'])
+def set_HV_start_time():
+    global HV_start_time  # Access the global variable
+    data = request.get_json()
+    HV_start_time = data.get('HV_start_time')  # Update the global value -- equal to the last time the HV audible alarm was reset.
+    print(f"Received start time from localStorage: {HV_start_time}")
+    app.config['HV_start_time'] = HV_start_time # Store it in the Flask app's config (application-wide storage)
+    return jsonify({"status": "success", "start_time": HV_start_time})
+
+@app.route('/get_HV_start_time', methods=['GET'])
+def get_HV_start_time():
+    # Retrieve the stored HV reset time from Flask's config
+    hv_time = app.config.get('HV_start_time', None)
+
+    if hv_time is None:
+        return jsonify({"status": "error", "message": "No HV start time recorded"}), 404
+
+    return jsonify({"status": "success", "HV_start_time": hv_time})
+
+
 def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     query_builder = {
         "YEAR": config["year_name"],
@@ -218,16 +239,23 @@ def get_ignition_last_value_pv(connection, year, month, group, pv):
 
 @ignition_route
 def get_ignition_2hr_value_pv(connection, year, month, group, pv):
+    HV_start_time = app.config.get('HV_start_time', None)
+    print("HV_Start_Time: ",HV_start_time)
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start = int(stop_t)-7200000
-    LATEST_RAMP = 1720020000000
-    if (start < LATEST_RAMP):
-        start = LATEST_RAMP
+    # Two hours in milliseconds
+    start_2hr = int(stop_t) - 7200000
+
+    # Use the most recent time: either start_2hr or HV_start_time
+    if HV_start_time and HV_start_time > start_2hr:
+        start = str(HV_start_time)
+    else:
+        start = str(start_2hr)
+
     start = str(start)
     stop = str(int(stop_t))
     #print("start", start)
