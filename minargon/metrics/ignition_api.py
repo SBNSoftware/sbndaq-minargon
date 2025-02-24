@@ -247,19 +247,20 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    # Two hours in milliseconds
     start_2hr = int(stop_t) - 7200000
-
     # Use the most recent time: either start_2hr or HV_start_time
     if HV_start_time and HV_start_time > start_2hr:
-        start = str(HV_start_time)
+        start = HV_start_time
     else:
-        start = str(start_2hr)
+        start = start_2hr
 
+    awindow = (stop_t - start)
+    awindow_hr = awindow/1e3/60/60
+    awindow_min = (awindow - awindow_hr*1e3*60*60)/1e3/60
+
+    awindow = str(int(awindow_hr))+"hr "+str(int(awindow_min))+"min"
     start = str(start)
     stop = str(int(stop_t))
-    #print("start", start)
-    #print("stop", stop)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
@@ -281,7 +282,7 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
 #        except:
 #            time = row[2]
         formatted.append((row[0], row[1], row[2]))
-    return formatted
+    return formatted, awindow
 
 
 

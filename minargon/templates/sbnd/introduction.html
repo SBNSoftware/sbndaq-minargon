@@ -175,9 +175,9 @@
                 const hvTimeDisplay = document.getElementById("lastHVResetTime");
 
                 if (data.status === "success" && data.HV_start_time) {
-                    hvTimeDisplay.innerText = `Last HV reset: ${formatTimestamp(data.HV_start_time)}`;
+                    hvTimeDisplay.innerText = `Last clicked: ${formatTimestamp(data.HV_start_time)}`;
                 } else {
-                    hvTimeDisplay.innerText = "Last HV reset: Never";
+                    hvTimeDisplay.innerText = "Last clicked: Never";
                 }
             })
             .catch(error => {
@@ -228,7 +228,7 @@
       <th><span id="DriftHV-Status"> </span></th>
     </tr>
     <tr>
-      <th style="width: 41%;"> VMon 2-hr alarm log:</a></th>
+      <th style="width: 41%;"> VMon alarms during past <span id="vmon_awindow"></span></a></th>
       <th> # of samples: <span id="VMon-Nsamples"> </span>
       <table>
       <tbody style="font-size: 12px";>
@@ -248,7 +248,7 @@
       </th>
     </tr>
     <tr>
-      <th style="width: 41%;"> IMon 2-hr alarm log:</a></th>
+      <th style="width: 41%;"> IMon alarms during past <span id="imon_awindow"></span></a></th>
       <th> # of samples: <span id="IMon-Nsamples"> </span>
       <table>
       <tbody style="font-size: 12px";>
@@ -474,6 +474,9 @@ if (BAD_DRIFTHVS.size > 0) {
   HV_status = 1;
 }
 
+let awindow_str = "{{awindow}}";
+$("#vmon_awindow").html(awindow_str);
+$("#imon_awindow").html(awindow_str);
 //vmon log
 var vmon_status = 0;
 $("#VMon-Nsamples").html({{vmon_nsamples}});

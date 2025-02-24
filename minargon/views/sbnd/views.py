@@ -149,7 +149,7 @@ def introduction():
     
     # alarms in the past 2 hours
     # vmon
-    vmon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, year, month_2digit, "drifthv", "vmon")
+    vmon_dbrows, awindow = ignition_api.get_ignition_2hr_value_pv(database, year, month_2digit, "drifthv", "vmon")
     vmon_nsamples = len(vmon_dbrows)
     vmon_n_hi = 0
     vmon_n_hihi = 0
@@ -169,7 +169,8 @@ def introduction():
             continue
 
     # imon
-    imon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, year, month_2digit, "drifthv", "imon")
+    imon_dbrows, awindow = ignition_api.get_ignition_2hr_value_pv(database, year, month_2digit, "drifthv", "imon")
+    print("awindow", awindow)
     imon_nsamples = len(imon_dbrows)
     imon_n_hi = 0
     imon_n_hihi = 0
@@ -231,6 +232,7 @@ def introduction():
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs,
+      "awindow": awindow,
       "vmon_nsamples": vmon_nsamples,
       "vmon_hi": vmon_n_hi,
       "vmon_hihi": vmon_n_hihi,
