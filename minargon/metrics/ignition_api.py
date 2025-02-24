@@ -255,8 +255,8 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
         start = start_2hr
 
     awindow = (stop_t - start)
-    awindow_hr = awindow/1e3/60/60
-    awindow_min = (awindow - awindow_hr*1e3*60*60)/1e3/60
+    awindow_hr = awindow/1e3/60//60
+    awindow_min = (awindow - awindow_hr*1e3*60*60)/1e3//60
 
     awindow = str(int(awindow_hr))+"hr "+str(int(awindow_min))+"min"
     start = str(start)
