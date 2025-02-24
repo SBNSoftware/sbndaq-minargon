@@ -104,7 +104,7 @@
                     resetAlarm();
                     console.log("Alarm auto-reset after 1 hour");
                 }
-            }
+              }
         }
 
         function testAlarm() {
@@ -167,6 +167,25 @@
           updateLastHVTime();
         }
 
+        function resetHVPoll2Hr() {
+          const timestamp = new Date().getTime();
+          const twoHoursAgo = timestamp - 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+          localStorage.setItem("HVResetTime", twoHoursAgo);
+          // Send to Flask via POST request
+          fetch('/set_HV_start_time', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ HV_start_time: twoHoursAgo })
+              }).then(response => {
+                  if (response.ok) {
+                      console.log('Start time sent successfully');
+                  } else {
+                      console.error('Error sending start time');
+                  }
+              });
+          updateLastHVTime();
+        }
+
         function updateLastHVTime() {
     // Fetch the global HV reset time from Flask
         fetch('/get_HV_start_time')
@@ -175,7 +194,7 @@
                 const hvTimeDisplay = document.getElementById("lastHVResetTime");
 
                 if (data.status === "success" && data.HV_start_time) {
-                    hvTimeDisplay.innerText = `Last clicked: ${formatTimestamp(data.HV_start_time)}`;
+                    hvTimeDisplay.innerText = `HV Poll Window Manual Start Time: ${formatTimestamp(data.HV_start_time)}`;
                 } else {
                     hvTimeDisplay.innerText = "Last clicked: Never";
                 }
@@ -270,6 +289,8 @@
     <button onclick="resetHVPoll()">Reset HV Poll Window</button>
     <br>
     <span id="lastHVResetTime"></span>  <!-- Display last reset time -->
+    <br>
+    <button onclick="resetHVPoll2Hr()">2 Hour HV Poll Window</button>
   </table>
 </div>
 
