@@ -156,7 +156,7 @@ def set_HV_start_time():
     global HV_start_time  # Access the global variable
     data = request.get_json()
     HV_start_time = data.get('HV_start_time')  # Update the global value -- equal to the last time the HV audible alarm was reset.
-    print(f"Received start time from localStorage: {HV_start_time}")
+    #print(f"Received start time from localStorage: {HV_start_time}")
     app.config['HV_start_time'] = HV_start_time # Store it in the Flask app's config (application-wide storage)
     return jsonify({"status": "success", "start_time": HV_start_time})
 
