@@ -77,7 +77,6 @@ postgres_instances = app.config['POSTGRES_INSTANCES']
 
 def make_connection(connection_name, config):
     key = config["ignition_secret_key"]
-    print(key)
     database_name = config["name"]
     host = config["host"]
     port = config["port"]
