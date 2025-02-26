@@ -15,7 +15,7 @@ import simplejson as json
 from psycopg2.extras import RealDictCursor
 from minargon.tools import parseiso, parseiso_or_int, stream_args
 from minargon import app
-from flask import jsonify, request, render_template, abort, g
+from flask import jsonify, request, render_template, abort, g, session
 from datetime import datetime, timedelta # needed for testing only
 import time
 import calendar
@@ -29,8 +29,6 @@ from .checkStatus import transferString
 from .checkStatus import messageString
 import six
 from six.moves import range
-
-HV_start_time = None  # Global variable to store the start time
 
 # error class for connection
 class IgnitionConnectionError:
@@ -151,25 +149,22 @@ def is_valid_connection(connection_name):
 
 #--------------------
 # make the db query and return the data
-@app.route('/set_HV_start_time', methods=['POST'])
-def set_HV_start_time():
-    global HV_start_time  # Access the global variable
+@app.route('/set_user_HV_start_time', methods=['POST'])
+def set_user_HV_start_time():
+    """
+    Store the user's HV reset time in their session.
+    """
     data = request.get_json()
-    HV_start_time = data.get('HV_start_time')  # Update the global value -- equal to the last time the HV audible alarm was reset.
-    #print(f"Received start time from localStorage: {HV_start_time}")
-    app.config['HV_start_time'] = HV_start_time # Store it in the Flask app's config (application-wide storage)
-    return jsonify({"status": "success", "start_time": HV_start_time})
+    HV_start_time = data.get('HV_start_time')
 
-@app.route('/get_HV_start_time', methods=['GET'])
-def get_HV_start_time():
-    # Retrieve the stored HV reset time from Flask's config
-    hv_time = app.config.get('HV_start_time', None)
+    if not HV_start_time:
+        return jsonify({"status": "error", "message": "Missing HV_start_time"}), 400
 
-    if hv_time is None:
-        return jsonify({"status": "error", "message": "No HV start time recorded"}), 404
+    # Store the user's specific HV reset time in their session
+    session['HV_start_time'] = HV_start_time
+    #print(f"User-specific HV start time set: {HV_start_time}")
 
-    return jsonify({"status": "success", "HV_start_time": hv_time})
-
+    return jsonify({"status": "success", "HV_start_time": HV_start_time})
 
 def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     query_builder = {
@@ -239,10 +234,11 @@ def get_ignition_last_value_pv(connection, year, month, group, pv):
 
 @ignition_route
 def get_ignition_2hr_value_pv(connection, year, month, group, pv):
-    HV_start_time = app.config.get('HV_start_time', None)
-    print("HV_Start_Time: ",HV_start_time)
     cursor = connection[0].cursor()
     database = connection[1]["name"]
+
+    HV_start_time = session.get('HV_start_time', None)
+    #print("HV_Start_Time: ",HV_start_time)
 
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms

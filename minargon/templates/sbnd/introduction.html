@@ -149,30 +149,45 @@
             setIsAlarmDisabled();
         }
 
-        function resetHVPoll() {
-          const timestamp = new Date().getTime();
-          localStorage.setItem("HVResetTime", timestamp);
-          // Send to Flask via POST request
-          fetch('/set_HV_start_time', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ HV_start_time: timestamp })
-              }).then(response => {
-                  if (response.ok) {
-                      console.log('Start time sent successfully');
-                  } else {
-                      console.error('Error sending start time');
-                  }
-              });
-          updateLastHVTime();
-        }
+        // Store and send the user's HV reset time
+    function resetHVPoll() {
+        const timestamp = new Date().getTime();
+
+        // Store the time locally in the user's browser
+        localStorage.setItem("HVResetTime", timestamp);
+        console.log("Sending HV reset time:", timestamp); // Debugging log
+
+        // Send user-specific HV start time to Flask to store in session
+        fetch('/set_user_HV_start_time', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ HV_start_time: timestamp })
+          })
+          .then(response => {
+              console.log("Fetch response status:", response.status);
+              return response.json();
+          })
+          .then(data => {
+              console.log("Server response:", data);
+              if (response.ok) {
+                  console.log('User-specific HV poll reset time sent successfully');
+                  updateLastHVTime();
+              } else {
+                  console.error('Error sending HV poll reset time');
+              }
+          })
+          .catch(error => {
+              console.error('Fetch error:', error);
+          });
+        updateLastHVTime();
+       }
 
         function resetHVPoll2Hr() {
           const timestamp = new Date().getTime();
           const twoHoursAgo = timestamp - 2 * 60 * 60 * 1000; // 2 hours in milliseconds
           localStorage.setItem("HVResetTime", twoHoursAgo);
           // Send to Flask via POST request
-          fetch('/set_HV_start_time', {
+          fetch('/set_user_HV_start_time', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ HV_start_time: twoHoursAgo })
@@ -183,26 +198,20 @@
                       console.error('Error sending start time');
                   }
               });
-          updateLastHVTime();
+              updateLastHVTime();
+        }
+
+        function formatTimestamp(timestamp) {
+          if (!timestamp) return "Never";
+          const date = new Date(parseInt(timestamp));
+          return date.toLocaleString(); // Convert to a human-readable format
         }
 
         function updateLastHVTime() {
-    // Fetch the global HV reset time from Flask
-        fetch('/get_HV_start_time')
-            .then(response => response.json())
-            .then(data => {
-                const hvTimeDisplay = document.getElementById("lastHVResetTime");
-
-                if (data.status === "success" && data.HV_start_time) {
-                    hvTimeDisplay.innerText = `HV Poll Window Manual Start Time: ${formatTimestamp(data.HV_start_time)}`;
-                } else {
-                    hvTimeDisplay.innerText = "Last clicked: Never";
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching HV reset time:", error);
-                document.getElementById("lastHVResetTime").innerText = "Error loading HV reset time";
-            });
+          const lastReset = localStorage.getItem("HVResetTime");
+          document.getElementById("lastHVResetTime").innerText = lastReset
+          ? `Last HV reset: ${formatTimestamp(lastReset)}`
+          : "Last HV reset: Never";
         }
 
         function updateDisplay() {
@@ -220,7 +229,7 @@
       setIsAlarmDisabled();
       updateDisplay();
       });
-        </script>
+  </script>
 
 
 </div>
