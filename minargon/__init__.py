@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 from flask.app import Flask
 from simplejson import JSONEncoder, JSONDecoder
+import secrets
 
 import os
 
@@ -41,6 +42,8 @@ class ReverseProxied(object):
         return self.app(environ, start_response)
 
 app = Flask(__name__)
+
+app.secret_key = secrets.token_hex(32) # Required for session management
 
 app.config.from_envvar('MINARGON_SETTINGS', silent=False)
 
