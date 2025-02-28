@@ -21,7 +21,8 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
-# Channel mapping
+# Channel mappings
+
 TPC_CHANNELS = [list(range(0, 1984)),
             list(range(1984, 3968)),
             list(range(3968, 5632)),
@@ -34,7 +35,7 @@ DEAD_CH = [4800, 4801, 4802, 4803, 4804, 4805, 10438, 10439, 10440, 10441, 10442
 		3242, 3243, 3244, 3245, 3246, 3247, 3248, 3249, 3250, 3251, 3252, 3253, 3254, 3255, 3256, 3257, 3258, 3259, 3260, 3261, 3262, 3263,
 		4160, 4161, 4162, 4163, 4164, 4165, 4166, 4167, 4168, 4169, 4170, 4171, 4172, 4173, 4174, 4175, 4176, 4177, 4178, 4179, 4180, 4181, 
 		4182, 4183, 4184, 4185, 4186, 4187, 4188, 4189, 4190, 4191]
-SHORT_CH = [7169, 8378] 
+SHORT_CH = [7169, 8378, 5060] 
 
 
 PMTS = ["PMT"]
@@ -57,8 +58,12 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
-NEW_TIMING_METRICS = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
-NEW_TIMING_METRICS_SETS = [[0,1,2,3,4,5,6,7,8],[0,3,4,8],[3,4,8]] #beam, offbeam, crossing muons
+TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
+                          ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
+                          ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
+TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
+TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
+TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
 
 # Alarm limits
 
@@ -90,6 +95,38 @@ PMT_BASELINE_ALARM_MIN = 14230
 PMT_BASELINE_ALARM_MAX = 14270
 
 TPC_RMS_ALARM_MAX = 15
+
+TIMING_BEAM_nCRTT1_MIN = 0.5
+TIMING_BEAM_nCRTT1_MAX = 1.5
+TIMING_BEAM_nBES_MIN = 0.5
+TIMING_BEAM_nBES_MAX = 1.5
+TIMING_BEAM_nRWM_MIN = 0.5
+TIMING_BEAM_nRWM_MAX = 1.5
+TIMING_BEAM_nFTRIG_MIN = 0
+TIMING_BEAM_nFTRIG_MAX = 30
+TIMING_BEAM_nETRIG_MIN = 0.5
+TIMING_BEAM_nETRIG_MAX = 1.5
+TIMING_BEAM_RWM_BES_diff_MIN = 333
+TIMING_BEAM_RWM_BES_diff_MAX = 335
+TIMING_BEAM_ETRIG_BES_diff_MIN = 331
+TIMING_BEAM_ETRIG_BES_diff_MAX = 333
+TIMING_BEAM_FTRIG_ETRIG_diff_MIN = -1.5
+TIMING_BEAM_FTRIG_ETRIG_diff_MAX = 1.5
+TIMING_OFFBEAM_nCRTT1_MIN = 0.5
+TIMING_OFFBEAM_nCRTT1_MAX = 1.5
+TIMING_OFFBEAM_nFTRIG_MIN = 0
+TIMING_OFFBEAM_nFTRIG_MAX = 30
+TIMING_OFFBEAM_nETRIG_MIN = 0.5
+TIMING_OFFBEAM_nETRIG_MAX = 1.5
+TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN = -1.5
+TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX = 1.5
+TIMING_CROSSING_MUON_nFTRIG_MIN = 0
+TIMING_CROSSING_MUON_nFTRIG_MAX = 20
+TIMING_CROSSING_MUON_nETRIG_MIN = 0.5
+TIMING_CROSSING_MUON_nETRIG_MAX = 1.5
+TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN = 0
+TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX = 1.5
+
 
 EVENTMETA_KEY = "eventmeta"
 
@@ -161,10 +198,13 @@ def introduction():
     # pmts
     pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
+    # timing
+    timing_config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    timing_config['streams'] = ['archiving']
+    
     # event
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
-    
 
     render_args = {
       "crt_config": crt_config,
@@ -200,7 +240,15 @@ def introduction():
       "imon_hi": imon_n_hi,
       "imon_hihi": imon_n_hihi,
       "imon_lo": imon_n_lo,
-      "imon_lolo": imon_n_lolo
+      "imon_lolo": imon_n_lolo,
+      "timing_config": timing_config,
+      "timing_metrics": TIMING_METRICS_STREAMS,
+      "timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
+                            TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
+                            TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
+      "timing_alarms_max": [TIMING_BEAM_nCRTT1_MAX, TIMING_BEAM_nBES_MAX, TIMING_BEAM_nRWM_MAX, TIMING_BEAM_nFTRIG_MAX, TIMING_BEAM_nETRIG_MAX, TIMING_BEAM_RWM_BES_diff_MAX, TIMING_BEAM_ETRIG_BES_diff_MAX, TIMING_BEAM_FTRIG_ETRIG_diff_MAX,
+                            TIMING_OFFBEAM_nCRTT1_MAX, TIMING_OFFBEAM_nFTRIG_MAX, TIMING_OFFBEAM_nETRIG_MAX, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX,
+                            TIMING_CROSSING_MUON_nFTRIG_MAX, TIMING_CROSSING_MUON_nETRIG_MAX, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX]
     }
 
     return render_template('sbnd/introduction.html', **render_args)
@@ -701,19 +749,6 @@ def Timing_Differences():
     }
     return render_template("sbnd/timing_differences.html",**render_args)
 
-#@app.route('/Matt_Test_Timing')
-#def Matt_Test_Timing():
-#    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-#    render_args = {
-#      "config": config_timing,
-#      "eventmeta_key": EVENTMETA_KEY,
-#      "channels": "undefined",
-#      "link_function": "undefined",
-#      "metrics": NEW_TIMING_METRICS,
-#      "metrics_sets": NEW_TIMING_METRICS_SETS
-#    }
-#    return render_template('sbnd/matt_test_timing.html',**render_args)
-
 @app.route('/Matt_Test_Histogram')
 def Matt_Test_Histogram():
     config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
@@ -729,22 +764,6 @@ def Matt_Test_Histogram():
       "one_channel": False
     }
     return render_template('sbnd/histogram.html',**render_args)
-
-@app.route('/Timing_status')
-def Timing_status():
-
-    #config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
-    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-
-    render_args = {
-      "config": config,
-      "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
-      "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
-      "eventmeta_key": EVENTMETA_KEY,
-      "is_beam_on": False
-    }
-
-    return render_template('sbnd/timing_status.html', **render_args) 
 
 
 @app.route('/purity')
@@ -1008,12 +1027,11 @@ def Trigger_Board_Monitor():
     }
     return render_template('sbnd/trigger_board_monitor.html', **render_args)
 
+
 @app.route('/Software_Trigger')
 def Software_Trigger():
-    #return timeseries_view(request.args, "BeamMetrics")
-
     config = online_metrics.get_group_config("online", "BeamMetrics", front_end_abort=True)
-    config['streams'] = ['fast', 'slow', 'flash', 'archiving']
+    config['streams'] = ['archiving', 'flash']
     render_args = {
       "config": config,
       "eventmeta_key": EVENTMETA_KEY,
@@ -1026,6 +1044,47 @@ def Software_Trigger():
       "one_channel": True
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
+
+
+@app.route('/Timing_status')
+def Timing_status():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    print(config)
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+    #   "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
+    #   "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
+    #   "is_beam_on": False
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_STREAMS,
+      "title": "Timing Metrics",
+    }
+    return render_template('sbnd/timing_status.html', **render_args) 
+
+
+@app.route('/Timing_Metric_View')
+def Timing_Metric_View():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    config['streams'] = ['archiving']
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_STREAMS,
+      "title": "Timing Metrics",
+      "include_timeseries": True,
+      "include_histos": False,
+      "one_channel": True
+    }
+    return render_template('sbnd/timing_metrics.html',**render_args)
+
+
+
+
+
 
 
 

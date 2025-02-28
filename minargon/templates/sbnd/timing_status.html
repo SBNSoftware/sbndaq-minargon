@@ -1,10 +1,17 @@
 {% import "stream_options_macro.html" | common as stream_options %}
-
 {% extends "layout.html" | front_ended %}
 {% block title %}Timing Alarms{% endblock %}
 {% block body %}
 {{ super() }}
+
 <div class="container">
+<div class="row">
+<h1 class="hcenter">
+  Timing Status
+</h1>
+</div>
+
+<br>
 
 {% if eventmeta_key %}
 <div class="row">
@@ -19,101 +26,120 @@
 </div>
 {% endif %}
 
-<div class="row">
-    <h4 class="hcenter">
-    Beam on: {{is_beam_on}}
-    <br>
-    {% if is_beam_on == true %}
-    We require all 5 channels to be active.
-    {% else %}
-    We require ch0, ch3, ch4 to be active.
-    {% endif %}
-    </h4>
-    </div>
-    <br>
-    <br>
+<br>
 
-
+<div class="container">
   <div class="row">
-    <div class="col-lg-4 col-md-4" style="padding:0" style="float: left">
-      <h3>
-        Channel Existence
-      </h3>
-      <table class="table table-striped" id="channel_metrics">
-       <thead>
-        <tr>
-          <th> Metric Name </th>
-          <th> Trigger Channel</th>
-          <th> Metric Value </th>
-        </tr>
-        </thead>
 
-        {%for metric in timing_channel_metrics%}
-        <tr>
-          <th> {{metric}}</th>
-          <th> {{timing_channel_names[loop.index0]}} </th>
-          <th><span id="timing_metric-{{loop.index0}}"></span></th>
-        </tr>
-        {%endfor%}
-
-      </table>
+    <div class="col-lg-4">
+      <div class="container">
+        <div class="row">
+          <h3>Beam</h3>
+        </div>
+        <div class="row">
+          <table class="table table-striped" id="channel_metrics_0">
+            <thead>
+              <tr>
+                <th>Metric Name</th>
+                <th>Metric Value</th>
+              </tr>
+            </thead>
+            {% for this_metric in metrics[0] %}
+            <tr>
+              <th>{{ this_metric }}</th>
+              <th><span id="timeseries-0-{{ loop.index0 }}"></span></th>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
     </div>
 
-
-    <div class="col-lg-5 col-md-5 col-sm-12" style="padding:10">
-      <h3>
-        Difference Metrics
-      </h3>
-      <table class="table table-striped" id="difference_metrics">
-        <thead>
-         <tr>
-           <th> Metric Name </th>
-           <th> Metric Value </th>
-         </tr>
-         </thead>
+    <div class="col-lg-4">
+      <div class="container">
+        <div class="row">
+          <h3>Off Beam</h3>
+        </div>
+        <div class="row">
+          <table class="table table-striped" id="channel_metrics_1">
+            <thead>
+              <tr>
+                <th>Metric Name</th>
+                <th>Metric Value</th>
+              </tr>
+            </thead>
+            {% for this_metric in metrics[1] %}
+            <tr>
+              <th>{{ this_metric }}</th>
+              <th><span id="timeseries-1-{{ loop.index0 }}"></span></th>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
     </div>
+   <div class="col-lg-4">
+      <div class="container">
+        <div class="row">
+          <h3>Crossing Muon</h3>
+        </div>
+        <div class="row">
+          <table class="table table-striped" id="channel_metrics_2">
+            <thead>
+              <tr>
+                <th>Metric Name</th>
+                <th>Metric Value</th>
+              </tr>
+            </thead>
+            {% for this_metric in metrics[2] %}
+            <tr>
+              <th>{{ this_metric }}</th>
+              <th><span id="timeseries-2-{{ loop.index0 }}"></span></th>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
-
-  <br>
-
+</div>
 
 {%endblock%}
 {% block script %}
 <script defer type="module">
 import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
 import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as DataLink from "{{ url_for('static', filename='js/minargon/DataLink.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 
 var config = {{config|tojson|safe}};
+var channels = undefined;
 
-var timing_channel_metrics = {{timing_channel_metrics|tojson}};
-{% for metric in timing_channel_metrics %}
-{
-  var metric = {{metric|tojson}};
+{% for i in range(3) %}
+  {
+  {% for metric in metrics[i] %}
+  {
 
-// Setup the config
-var config_controller = new Config.GroupConfigController(config, undefined, [timing_channel_metrics[{{loop.index0}}]], undefined, 0, 25);
+  var metric = {{ metric|tojson }};
+  var config_controller = new Config.GroupConfigController(config, undefined, [metric], [{{i}}], 0, 10)
+  var data_link = config_controller.data_link(0, [metric], undefined, 1);
 
-// Use the config to get the DataLink
-var data_link = config_controller.data_link(0, [timing_channel_metrics[{{loop.index0}}]], undefined, 1);
-
-// Turn that DataLink into a DataBuffer
-var poll = new Data.D3DataPoll(data_link, 60*1000*5*60 /* 1 minute */);
-var buffer = new Data.D3DataBuffer(poll, 1, [ // last parameter is number of events to use
-  function(data) {
-
-    var baseline_data = data.slice(0,1); //slice between 0 and the number of "channels" (pmts, crt boards). Here there is only 1 channel.
-    var this_baseline_data = baseline_data[0]; //Get the data at the i channel with i=0
-    var baseline = this_baseline_data.get_last()[1]; //Get the last value of the data
-    $("#timing_metric-{{loop.index0}}").html(baseline); //Update the html with the last value of the data
-
+  var poll = new Data.D3DataPoll(data_link, 10*60*1000 /* 10 minutes */);
+  var buffer = new Data.D3DataBuffer(poll, 5, [ // last parameter is number of events to use
+    function(data) {
+      var timing_data = data;
+      for (var i = 0; i < timing_data.length; i++) {
+	      var timing = timing_data[i].get_last()[1];
+        $("#timeseries-{{i}}-{{loop.index0}}").html(timing.toFixed(2)); //Update the html with the last value of the data
+      }
+    }
+  ]);
+  buffer.start();
   }
-]);
-buffer.start();
-  }// end metric for loop
   {% endfor %}
-
-
+}
+{% endfor %}
 
 {% if eventmeta_key %}
 var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
@@ -128,6 +154,7 @@ poll.run();
 {% endif %}
 
 </script>
+</div>
 {% endblock %}
 
 
