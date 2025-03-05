@@ -15,7 +15,7 @@ import simplejson as json
 from psycopg2.extras import RealDictCursor
 from minargon.tools import parseiso, parseiso_or_int, stream_args
 from minargon import app
-from flask import jsonify, request, render_template, abort, g
+from flask import jsonify, request, render_template, abort, g, session
 from datetime import datetime, timedelta # needed for testing only
 import time
 import calendar
@@ -29,7 +29,6 @@ from .checkStatus import transferString
 from .checkStatus import messageString
 import six
 from six.moves import range
-
 
 # error class for connection
 class IgnitionConnectionError:
@@ -150,6 +149,23 @@ def is_valid_connection(connection_name):
 
 #--------------------
 # make the db query and return the data
+@app.route('/set_user_HV_start_time', methods=['POST'])
+def set_user_HV_start_time():
+    """
+    Store the user's HV reset time in their session.
+    """
+    data = request.get_json()
+    HV_start_time = data.get('HV_start_time')
+
+    if not HV_start_time:
+        return jsonify({"status": "error", "message": "Missing HV_start_time"}), 400
+
+    # Store the user's specific HV reset time in their session
+    session['HV_start_time'] = HV_start_time
+    #print(f"User-specific HV start time set: {HV_start_time}")
+
+    return jsonify({"status": "success", "HV_start_time": HV_start_time})
+
 def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     query_builder = {
         "YEAR": config["year_name"],
@@ -221,17 +237,26 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
+    HV_start_time = session.get('HV_start_time', None)
+    #print("HV_Start_Time: ",HV_start_time)
+
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start = int(stop_t)-7200000
-    LATEST_RAMP = 1720020000000
-    if (start < LATEST_RAMP):
-        start = LATEST_RAMP
+    start_2hr = int(stop_t) - 7200000
+    # Use the most recent time: either start_2hr or HV_start_time
+    if HV_start_time and HV_start_time > start_2hr:
+        start = HV_start_time
+    else:
+        start = start_2hr
+
+    awindow = (stop_t - start)
+    awindow_hr = awindow/1e3/60//60
+    awindow_min = (awindow - awindow_hr*1e3*60*60)/1e3//60
+
+    awindow = str(int(awindow_hr))+"hr "+str(int(awindow_min))+"min"
     start = str(start)
     stop = str(int(stop_t))
-    #print("start", start)
-    #print("stop", stop)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
@@ -253,7 +278,7 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
 #        except:
 #            time = row[2]
         formatted.append((row[0], row[1], row[2]))
-    return formatted
+    return formatted, awindow
 
 
 
