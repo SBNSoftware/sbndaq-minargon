@@ -58,6 +58,13 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
+TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
+                          ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
+                          ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
+TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
+TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
+TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
+
 TRIGGER_TDC_METRICS = ["TDC_HLT_FLASH", "TDC_HLT_EVENT", "TDC_HLT_T1", "TDC_LLT_BES"]
 TRIGGER_TDC_METRICS_SETS = [["TDC_HLT_FLASH", "NUMBER_TDC_FLASH", "NUMBER_PTB_FLASH"], 
                             ["TDC_HLT_EVENT", "NUMBER_TDC_EVENT", "NUMBER_PTB_EVENT"], 
