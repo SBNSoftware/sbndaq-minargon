@@ -1,5 +1,6 @@
 import * as DataLink from "./DataLink.js";
 import * as TimeSeriesControllers from "./timeseries.js";
+import * as HistogramControllers from "./histogram.js";
 import * as GroupDataControllers from "./group_data.js";
 import * as Data from "./Data.js";
 import {throw_custom_error} from "./error.js";
@@ -147,7 +148,7 @@ export class GroupConfigController {
   //        return a URL string that the user will navigate to. If
   //        nothing is passed, then nothing will happen when the user
   //        clicks on a strip chart
-  constructor(config, href, metrics, instances, stream_index, max_n_instances, hw_select, channel_map, text_meta) {
+  constructor(config, href, metrics, instances, stream_index, max_n_instances, hw_select, channel_map, text_meta, nbinsx) {
     this.config = config;
     this.href = href;
 
@@ -193,6 +194,8 @@ export class GroupConfigController {
       this.channel_is_mapped = true;
     }
     this.text_meta = text_meta;
+
+    if (nbinsx === undefined) this.nbinsx = 50;
 
     var self = this;
     // sort the instances by the channel map
@@ -520,6 +523,14 @@ export class GroupConfigController {
     var data_link = this.data_link(this.stream_index, this.metrics, this.instances, this.instance_skip);
     var data_titles = this.data_titles(this.instance_skip);
     var controller = new TimeSeriesControllers.PlotlyController(target, data_link, data_titles, this.processMetricConfig());
+    this.controllers.push(controller);
+    return controller;
+  }
+
+  addTimeSeriesHistoController(target, title, split_channels, nbinsx) {
+    var data_link = this.data_link(this.stream_index, this.metrics, this.instances, this.instance_skip);
+    var data_titles = this.data_titles(this.instance_skip);
+    var controller = new HistogramControllers.HistController(target, data_link, data_titles, this.processMetricConfig(), title, true, split_channels, nbinsx);
     this.controllers.push(controller);
     return controller;
   }

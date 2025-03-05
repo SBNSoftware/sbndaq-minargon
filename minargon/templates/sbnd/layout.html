@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/cat.ico') }}">
     <head>
         {% block head %}
         <meta charset="UTF-8">
@@ -139,13 +140,28 @@
 				   <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
 				   <ul class='dropdown-menu bg-maroon'>  
 				  		{{ nav_link('PTB_status', 'Status') }}
-				  		{{ nav_link('LLT_rates', 'LLT') }}
-              {{ nav_link('HLT_rates', 'HLT') }}
-              {{ nav_link ('Beam_Light_Diff', 'Beam Light Difference')}}
-              {{ nav_link ('Beam_CRT_Diff', 'Beam CRT Difference')}}
-              {{ nav_link ('PTB_TDC_Diff', 'PTB TDC Difference')}}
-              {{ nav_link('MSUM_snapshot', 'MSUM Waveforms') }}
-              {{ nav_link('PTB_snapshot', 'PTB Waveforms') }}
+              <li class="dropdown-submenu bg-maroon nav-item">
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger Rates<b class='caret'></b></a>
+                <ul class="dropdown-menu bg-maroon">
+				  		    {{ nav_link('LLT_rates', 'LLT') }}
+                  {{ nav_link('HLT_rates', 'HLT') }}
+                </ul>
+              </li>
+              <li class="dropdown-submenu bg-maroon nav-item">
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Difference Metrics<b class='caret'></b></a>
+                <ul class="dropdown-menu bg-maroon">
+                  {{ nav_link ('Beam_Light_Diff', 'Beam Light Difference')}}
+                  {{ nav_link ('Beam_CRT_Diff', 'Beam CRT Difference')}}
+                  {{ nav_link ('PTB_TDC_Diff', 'PTB TDC Difference')}}
+                </ul>
+              </li>
+              <li class="dropdown-submenu bg-maroon nav-item">
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Waveforms<b class='caret'></b></a>
+                <ul class="dropdown-menu bg-maroon">
+                  {{ nav_link('MSUM_snapshot', 'MSUM') }}
+                  {{ nav_link('PTB_snapshot', 'PTB') }}
+                </ul>
+              </li>
               {{ nav_link('Trigger_Board_Monitor', 'Trigger Board') }}
             </ul>
           </li>
@@ -154,7 +170,7 @@
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Timing<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
 									{{ nav_link('Timing_status', 'Status') }}
-                  {{ nav_link('Timing_Metrics', 'Timing Metrics') }}
+                  {{ nav_link('Timing_Metric_View', 'Metrics') }}
                   {{ nav_link('Timing_Differences', 'Timing Differences') }}
 								</ul>
 						  </li>
