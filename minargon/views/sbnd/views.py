@@ -63,6 +63,9 @@ TRIGGER_TDC_METRICS_SETS = [["TDC_HLT_FLASH", "NUMBER_TDC_FLASH", "NUMBER_PTB_FL
                             ["TDC_HLT_T1", "NUMBER_TDC_T1", "NUMBER_PTB_T1"],
                             ["TDC_LLT_BES", "NUMBER_TDC_BES", "NUMBER_PTB_BES"]]
 
+TRIGGER_CRT_METRICS = ["BEAM_HLT_T1RESET", "OFFBEAM_HLT_T1RESET"]
+TRIGGER_CRT_METRICS_SETS = [["BEAM_HLT_T1RESET", "NUMBER_BEAM_T1RESET", "NUMBER_BEAM_HLT"],
+			    ["OFFBEAM_HLT_T1RESET", "NUMBER_OFFBEAM_T1RESET", "NUMBER_OFFBEAM_HLT"]] 
 
 # Alarm limits
 
@@ -575,7 +578,17 @@ def Beam_Light_Diff():
 
 @app.route('/Beam_CRT_Diff')
 def Beam_CRT_Diff():
-    return timeseries_view(request.args, "BEAM_CRT_DIFF")
+    #return timeseries_view(request.args, "BEAM_CRT_DIFF")
+    config_trigger = online_metrics.get_group_config("online", "PTB_CRT_DIFF", front_end_abort=True)
+    render_args = {
+      "config": config_trigger,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TRIGGER_CRT_METRICS,
+      "metrics_sets": TRIGGER_CRT_METRICS_SETS
+    }
+    return render_template("sbnd/timing_differences.html",**render_args)
 
 @app.route('/PTB_TDC_Diff')
 def PTB_TDC_Diff():
