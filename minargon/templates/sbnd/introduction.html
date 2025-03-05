@@ -31,7 +31,210 @@
     <br>
     E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
     <br>
+    <br>
+    <br>
+
+    <!-- configurable audible alarm -->
+    <!-- {% set detector_value = 60 %} Get this value from the detector -->
+     {% set HV_value = -1 %} <!-- HV status, initialized to stupid value -->
+     {% set TPC_value = -1 %}
+
+    <p>High Voltage Status: <span id="HVDisplayValue">{{ HV_value }}</span>; Alarm HV > 0</p>
+    <span id="HVValue" HV-value="{{ HV_value }}" style="display: none;"></span>
+
+    <p>TPC Status: <span id="TPCDisplayValue">{{ TPC_value }}</span>; Alarm TPC Status > 0</p>
+    <span id="TPCValue" TPC-value="{{ TPC_value }}" style="display: none;"></span>
+    <span id="isAlarmDisabled"></span> 
+    <br>
+    <button onclick="testAlarm()">Test Alarm</button>
+    <br>
+    <button onclick="disableAlarm()">Issue Acknowledged - Disable Alarm</button>
+    <br>
+    <span id="lastDisabledTime"></span>  <!-- Display last disabled time -->
+    <br>
+    <button onclick="resetAlarm()">Issue Resolved - Reset Alarm</button>
+    <br>
+    <span id="lastResetTime"></span>  <!-- Display last reset time -->
+    
+    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio>
+
+    <script>
+        let alarmTriggered = false;
+        let alarmDisabled = localStorage.getItem("alarmDisabled") === "true";
+        const DISABLE_DURATION =  60 * 60 * 1000; // 1 hour in milliseconds
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return "Never";
+            const date = new Date(parseInt(timestamp));
+            return date.toLocaleString(); // Convert to readable format
+        }
+
+        function setIsAlarmDisabled() {
+          const lastDisabled = localStorage.getItem("disableTimestamp");
+          const alarmStatus = document.getElementById("isAlarmDisabled");
+
+         if (lastDisabled) {
+          alarmStatus.innerText = "Alarm Disabled";
+          alarmStatus.style.color = "red"; // Set text color to red
+          } else {
+          alarmStatus.innerText = "Alarm Active";
+          alarmStatus.style.color = "green"; // Set text color to green
+          }
+        }
+
+        function updateLastDisabledTime() {
+            const lastDisabled = localStorage.getItem("disableTimestamp");
+            document.getElementById("lastDisabledTime").innerText = lastDisabled 
+                ? `Last disabled: ${formatTimestamp(lastDisabled)}`
+                : "Last disabled: Never";
+        }
+
+        function updateLastResetTime() {
+            const lastReset = localStorage.getItem("resetTimestamp");
+            document.getElementById("lastResetTime").innerText = lastReset
+                ? `Last reset: ${formatTimestamp(lastReset)}`
+                : "Last reset: Never";
+        }
+
+        function checkAutoReset() {
+            const disableTimestamp = localStorage.getItem("disableTimestamp");
+            if (disableTimestamp) {
+                const currentTime = new Date().getTime();
+                if (currentTime - disableTimestamp > DISABLE_DURATION) {
+                    resetAlarm();
+                    console.log("Alarm auto-reset after 1 hour");
+                }
+              }
+        }
+
+        function testAlarm() {
+          let alarmSound = document.getElementById("alarmSound");
+          alarmSound.play()
+            .then(() => console.log("Test alarm playing!"))
+            .catch(error => console.log("Error playing test alarm:", error));
+        }
+
+        function checkAlarm() {
+            checkAutoReset();
+            let HVValue = parseInt(document.getElementById("HVValue").getAttribute("HV-value"));
+            let TPCValue = parseInt(document.getElementById("TPCValue").getAttribute("TPC-value"));
+
+            if ((HVValue > 0 || TPCValue > 0 ) && !alarmTriggered && !alarmDisabled) {
+                document.getElementById("alarmSound").play();
+                alarmTriggered = true;
+            } 
+            
+        }
+
+        function disableAlarm() {
+            document.getElementById("alarmSound").pause();
+            alarmTriggered = false;
+            alarmDisabled = true;  // Prevent alarm from playing again
+            const timestamp = new Date().getTime();
+            localStorage.setItem("alarmDisabled", "true");
+            localStorage.setItem("disableTimestamp", timestamp);
+            updateLastDisabledTime();
+            setIsAlarmDisabled();
+        }
+
+        function resetAlarm() {
+            alarmTriggered = false;
+            alarmDisabled = false;
+            const timestamp = new Date().getTime();
+            localStorage.setItem("alarmDisabled", "false");
+            localStorage.removeItem("disableTimestamp");
+            localStorage.setItem("resetTimestamp", timestamp);
+            updateLastDisabledTime();
+            updateLastResetTime();
+            setIsAlarmDisabled();
+        }
+
+        // Store and send the user's HV reset time
+    function resetHVPoll() {
+        const timestamp = new Date().getTime();
+
+        // Store the time locally in the user's browser
+        localStorage.setItem("HVResetTime", timestamp);
+        console.log("Sending HV reset time:", timestamp); // Debugging log
+
+        // Send user-specific HV start time to Flask to store in session
+        fetch('/set_user_HV_start_time', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ HV_start_time: timestamp })
+          })
+          .then(response => {
+              console.log("Fetch response status:", response.status);
+              return response.json();
+          })
+          .then(data => {
+              console.log("Server response:", data);
+              if (response.ok) {
+                  console.log('User-specific HV poll reset time sent successfully');
+                  updateLastHVTime();
+              } else {
+                  console.error('Error sending HV poll reset time');
+              }
+          })
+          .catch(error => {
+              console.error('Fetch error:', error);
+          });
+        updateLastHVTime();
+       }
+
+        function resetHVPoll2Hr() {
+          const timestamp = new Date().getTime();
+          const twoHoursAgo = timestamp - 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+          localStorage.setItem("HVResetTime", twoHoursAgo);
+          // Send to Flask via POST request
+          fetch('/set_user_HV_start_time', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ HV_start_time: twoHoursAgo })
+              }).then(response => {
+                  if (response.ok) {
+                      console.log('Start time sent successfully');
+                  } else {
+                      console.error('Error sending start time');
+                  }
+              });
+              updateLastHVTime();
+        }
+
+        function formatTimestamp(timestamp) {
+          if (!timestamp) return "Never";
+          const date = new Date(parseInt(timestamp));
+          return date.toLocaleString(); // Convert to a human-readable format
+        }
+
+        function updateLastHVTime() {
+          const lastReset = localStorage.getItem("HVResetTime");
+          document.getElementById("lastHVResetTime").innerText = lastReset
+          ? `Last HV reset: ${formatTimestamp(lastReset)}`
+          : "Last HV reset: Never";
+        }
+
+        function updateDisplay() {
+        let newHVValue = document.getElementById("HVValue").getAttribute("HV-value");
+        let newTPCValue = document.getElementById("TPCValue").getAttribute("TPC-value");
+        document.getElementById("HVDisplayValue").innerText = newHVValue;
+        document.getElementById("TPCDisplayValue").innerText = newTPCValue;
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+      setInterval(checkAlarm, 1000);  // Check every second
+      updateLastDisabledTime(); // Update time on page load
+      updateLastResetTime(); // Update time on page load
+      updateLastHVTime();    // Ensure server-side HV reset time is displayed
+      setIsAlarmDisabled();
+      updateDisplay();
+      });
+  </script>
+
+
 </div>
+
+<!-- <audio src="static/audio/0096.wav" autoplay></audio> -->
 
 <div class="col-lg-3 col-md-3 col-sm-8" style="padding:0">
     <h5>Online Monitoring Wikis</h5>
@@ -46,14 +249,14 @@
 </div>
 
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
-  <h3 class="hcenter"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status</a></h3>
+  <h3 class="hcenter"> <a href="{{url_for('DriftHV_Heinzinger')}}">Drift HV Status ( <span id="ignition-last-update"></span> )</a></h3>
   <table class="table table-striped">
     <tr>
       <th style="width: 31%;"> Status:</a></th>
       <th><span id="DriftHV-Status"> </span></th>
     </tr>
     <tr>
-      <th style="width: 41%;"> VMon 2-hr alarm log:</a></th>
+      <th style="width: 41%;"> VMon alarms during past <span id="vmon_awindow"></span></a></th>
       <th> # of samples: <span id="VMon-Nsamples"> </span>
       <table>
       <tbody style="font-size: 12px";>
@@ -73,7 +276,7 @@
       </th>
     </tr>
     <tr>
-      <th style="width: 41%;"> IMon 2-hr alarm log:</a></th>
+      <th style="width: 41%;"> IMon alarms during past <span id="imon_awindow"></span></a></th>
       <th> # of samples: <span id="IMon-Nsamples"> </span>
       <table>
       <tbody style="font-size: 12px";>
@@ -92,6 +295,11 @@
       </table>
       </th>
     </tr>
+    <button onclick="resetHVPoll()">Reset HV Poll Window</button>
+    <br>
+    <span id="lastHVResetTime"></span>  <!-- Display last reset time -->
+    <br>
+    <button onclick="resetHVPoll2Hr()">2 Hour HV Poll Window</button>
   </table>
 </div>
 
@@ -109,12 +317,8 @@
 	  <th><span id="redis-mem"><span id="redis-mem-GB"> </span>GB / <span id="redis-mem-percent"> </span>%</span></th>
 	</tr>
 	<tr>
-	  <th>Redis DB connection: </th>
-	  <th><span id="redis-ping"></span></th>
-	</tr>
-	<tr>
-	  <th>Cryo DB connection: </th>
-	  <th><span id="ignition-ping"></span></th>
+	  <th>DQM Archiver: </th>
+	  <th><span id="archiver-ping"></span></th>
 	</tr>
   <tr>
     <th>DCS Archiver: </th>
@@ -144,7 +348,7 @@
     <th><span id="Trigger-Status"> </span></th>
   </tr>
   <tr>
-    <th style="width: 31%;"><a href="{{url_for('Timing_Differences')}}">Timing Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('Timing_status')}}">Timing Status:</a></th>
     <th><span id="Timing-Status"> </span></th>
   </tr>
   </table>
@@ -215,21 +419,6 @@ var data_link_om = new Data.D3DataLink(new DataLink.SingleStreamLink($SCRIPT_ROO
 update_is_recent(data_link_om, "#OM-status", 120 * 1000 /* ms*/);
 
 
-var poll_redis_ping = new Poll.Poll($SCRIPT_ROOT + "/online/ping_redis");
-poll_redis_ping.add_callback(function(data) {
-    var spanid = "#redis-ping";
-    if (data == "True") {
-      $(spanid).css({"color": "green"})
-      $(spanid).text("ON");
-    }
-    else {
-      $(spanid).css({"color": "red"})
-      $(spanid).text("OFF");
-    }
-
-});
-poll_redis_ping.run();
-
 var poll_redis_mem_gb = new Poll.Poll($SCRIPT_ROOT + "/online/total_memory_usage");
 poll_redis_mem_gb.add_callback(function(data) {
     if (!data || !data.val) return;
@@ -245,7 +434,7 @@ poll_redis_mem_frac.add_callback(function(data) {
     $(spanid).text((data.val * 100).toFixed(2));
 
     spanid = "#redis-mem";
-    if (data.val > 0.80) {     $(spanid).css({"color": "red"});
+    if (data.val > 0.85) {     $(spanid).css({"color": "red"});
     }
     else {
       $(spanid).css({"color": "green"});
@@ -254,20 +443,44 @@ poll_redis_mem_frac.add_callback(function(data) {
 });
 poll_redis_mem_frac.run();
 
+
 var poll_ignition_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_ignition");
 poll_ignition_ping.add_callback(function(data) {
-    var spanid = "#ignition-ping";
-    if (data == "True") {
+    var delta_ignition = time_delta(data[1]*1000.);
+    var delta_str_ignition = " (" + String(delta_ignition) + "s)";
+    var spanid = "#ignition-last-update";
+    $(spanid).text("Last update: " + delta_str_ignition);
+    if (delta_ignition < 60) {
       $(spanid).css({"color": "green"})
-      $(spanid).text("ON");
     }
-    else {
-      $(spanid).css({"color": "red"})
-      $(spanid).text("OFF");
+    if (delta_ignition > 60) {
+      if (delta_ignition < 120) {
+        $(spanid).css({"color": "orange"})
+      }
+      else {
+        $(spanid).css({"color": "red"})
+      }
     }
 
 });
 poll_ignition_ping.run();
+
+var poll_archiver_ping = new Poll.Poll($SCRIPT_ROOT + "/ping_archiver");
+poll_archiver_ping.add_callback(function(data) {
+    var delta_archiver = time_delta(data[1]*1000.);
+    var delta_str_archiver = " (" + String(delta_archiver) + "s)";
+    var spanid = "#archiver-ping";
+    if (data[0] == "True") {
+      $(spanid).css({"color": "green"})
+      $(spanid).text("Connected" + delta_str_archiver);
+    }
+    else {
+      $(spanid).css({"color": "red"})
+      $(spanid).text("disconneted" + delta_str_archiver);
+    }
+
+});
+poll_archiver_ping.run();
 
 // Placeholders for detector status until we have a real status criteria
 $("#PMT-Status").text("need alarm limits");
@@ -290,6 +503,10 @@ var HV_status = 0;
 if (BAD_DRIFTHVS.size > 0) {
   HV_status = 1;
 }
+
+let awindow_str = "{{awindow}}";
+$("#vmon_awindow").html(awindow_str);
+$("#imon_awindow").html(awindow_str);
 //vmon log
 var vmon_status = 0;
 $("#VMon-Nsamples").html({{vmon_nsamples}});
@@ -403,12 +620,18 @@ else {
   $("#DriftHV-Status").css({"color": "green"});
 }
 
+//For audible alarm
+
+document.getElementById("HVValue").setAttribute("HV-value", HV_status);
+updateDisplay();
+
 
 // TPCs
 var BAD_PLANES = new Set();
 var TPC_ON = false;
 var short_chs = {{ short_chs }};
 var dead_chs = {{ dead_chs }};
+var TPC_status = 0;
 {% for tpc_plane in tpc_planes %}
   {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
   {% set tpc_title = tpc_titles[loop.index0] %}
@@ -425,10 +648,10 @@ var dead_chs = {{ dead_chs }};
       var plane_has_bad_rms = false;
 
       for (var i = 0; i < rms_data.length; i++) {
-        var rms = rms_data[i].get_last()[1];
+        var rms = rms_data[i].get_last()[1]; //get the last value of rms for channel i
        
         if (!TPC_ON && rms > 0) {
-          TPC_ON = true; 
+          TPC_ON = true; //if any channel has data, the TPC is on
         }
        
         // Skip the max rms requirement for noisy wires on west induction planes
@@ -444,9 +667,9 @@ var dead_chs = {{ dead_chs }};
             nch_zerorms++;
         }
 
-      }
+      }//end for over channel RMS values
 
-      if (plane_has_bad_rms && nch_zerorms > 10) {
+      if (plane_has_bad_rms || nch_zerorms > 10) {
         BAD_PLANES.add('{{ tpc_title }}');
       }
       else {
@@ -470,6 +693,11 @@ var dead_chs = {{ dead_chs }};
   tpc_buffer.start();
   }
 {% endfor %}
+
+//For audible alarm
+if (TPC_ON) {TPC_status = BAD_PLANES.size;} //else TPC_status = 0;
+document.getElementById("TPCValue").setAttribute("TPC-value", TPC_status);
+updateDisplay();
 
 
 //CRTs
@@ -503,7 +731,7 @@ var crt_config = {{crt_config|tojson|safe}};
       }
 
       if (baseline_sum == 0){
-        $("#CRT-Status").text("Not OK");
+        $("#CRT-Status").text("NO DATA");
         $("#CRT-Status").css({"color": "orange"});
       }
       else if (BAD_CRTS.size > 0) {
@@ -564,13 +792,13 @@ var pmt_config = {{pmt_config|tojson|safe}};
 
         var bad = (this_rms_data.size > 0) && ( (baseline < {{pmt_baseline_min}}) || (baseline > {{pmt_baseline_max}}) || (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}));
         
-        if (bad)  {
+        if (bad && i < 120)  { // only 120 channels, the rest above are clock channels
           badPMTs.push(i);
         }
       }
 
       if (baseline_sum == 0){
-        $("#PMT-Status").text("Not OK");
+        $("#PMT-Status").text("NO DATA");
         $("#PMT-Status").css({"color": "orange"});
       }
       else if (BAD_PMTS.size > 0) {
@@ -588,22 +816,84 @@ var pmt_config = {{pmt_config|tojson|safe}};
   }
 {% endfor %}
 
+// Timing
+var timing_config = {{timing_config|tojson|safe}};
+var timing_metrics = {{timing_metrics|tojson|safe}};
+var timing_channels = undefined;
+var bad_timing = [];
+
+{% for i in range(3) %}
+  {
+  {% for metric in timing_metrics[i] %}
+  {
+
+  var metric = {{ metric|tojson }};
+  var config_controller = new Config.GroupConfigController(timing_config, undefined, [metric], [{{i}}], 0, 10)
+  var data_link = config_controller.data_link(0, [metric], undefined, 1);
+
+  var poll = new Data.D3DataPoll(data_link, 10*60*1000 /* 10 minutes */);
+  var buffer = new Data.D3DataBuffer(poll, 5, [ // last parameter is number of events to use
+    function(data) {
+      var timing_data = data;
+      for (var i = 0; i < timing_data.length; i++) {
+	      var timing = timing_data[i].get_last()[1];
+        if (timing < {{timing_alarms_min[i]}} || timing > {{timing_alarms_max[i]}}) {
+          bad_timing.push(i);
+        }
+      }
+    }
+  ]);
+  buffer.start();
+  }
+  {% endfor %}
+}
+{% endfor %}
+
+if (bad_timing.length > 0) {
+  let bad_timing_str = "NOT OK. Bad channels: " + Array.from(bad_timing).join(" ");
+  $("#Timing-Status").html(bad_timing_str);
+  $("#Timing-Status").css({"color": "orange"});
+}
+else {
+  $("#Timing-Status").text("OK");
+  $("#Timing-Status").css({"color": "green"});
+}
+
 
 // check if metadata time is recent
 var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
 poll.add_callback(function(data) {
-    $("#run-number").html(data.run);
+    var run = data.run;
+    //$("#run-number").html(data.run);
     var time = moment(new Date(parseInt(data.time)));
-    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
-    var dqm_recent = is_recent(time, 120*1000);
+    //$("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+    var dqm_recent = is_recent(time, 300*1000);
     var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
       $("#TPC-Status").text("Disconnected (" + delta + "s)");
-      $("#TPC-Status").css({"color": "red"});
+      $("#TPC-Status").css({"color": "orange"});
       $("#CRT-Status").text("Disconnected (" + delta + "s)");
-      $("#CRT-Status").css({"color": "red"});
+      $("#CRT-Status").css({"color": "orange"});
+    }
+});
+poll.run();
+
+// check if PMT metadata time is recent
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmetaPMT/run,subrun,event,time");
+poll.add_callback(function(data) {
+    var PMTrun = data.run;
+    var PMTtime = moment(new Date(parseInt(data.time)));
+    //if (PMTtime > time) {
+    //  run = PMTrun;
+    //  time = PMTtime;
+    //}
+    $("#run-number").html(data.run);
+    $("#timestamp").html(PMTtime.format("MM/DD HH:mm:ss"));
+    var dqm_recent = is_recent(time, 300*1000);
+    var delta = (time_delta(time) / 1000.).toFixed(0);
+    if (!dqm_recent) {
       $("#PMT-Status").text("Disconnected (" + delta + "s)");
-      $("#PMT-Status").css({"color": "red"});
+      $("#PMT-Status").css({"color": "orange"});
     }
 });
 poll.run();
