@@ -15,7 +15,7 @@ import simplejson as json
 from psycopg2.extras import RealDictCursor
 from minargon.tools import parseiso, parseiso_or_int, stream_args
 from minargon import app
-from flask import jsonify, request, render_template, abort, g, session
+from flask import jsonify, request, render_template, abort, g
 from datetime import datetime, timedelta # needed for testing only
 import time
 import calendar
@@ -149,23 +149,6 @@ def is_valid_connection(connection_name):
 
 #--------------------
 # make the db query and return the data
-@app.route('/set_user_HV_start_time', methods=['POST'])
-def set_user_HV_start_time():
-    """
-    Store the user's HV reset time in their session.
-    """
-    data = request.get_json()
-    HV_start_time = data.get('HV_start_time')
-
-    if not HV_start_time:
-        return jsonify({"status": "error", "message": "Missing HV_start_time"}), 400
-
-    # Store the user's specific HV reset time in their session
-    session['HV_start_time'] = HV_start_time
-    #print(f"User-specific HV start time set: {HV_start_time}")
-
-    return jsonify({"status": "success", "HV_start_time": HV_start_time})
-
 def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     query_builder = {
         "YEAR": config["year_name"],
@@ -237,19 +220,11 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
-    HV_start_time = session.get('HV_start_time', None)
-    #print("HV_Start_Time: ",HV_start_time)
-
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start_2hr = int(stop_t) - 7200000
-    # Use the most recent time: either start_2hr or HV_start_time
-    if HV_start_time and HV_start_time > start_2hr:
-        start = HV_start_time
-    else:
-        start = start_2hr
-
+    start = int(stop_t) - 7200000
+    
     awindow = (stop_t - start)
     awindow_hr = awindow/1e3/60//60
     awindow_min = (awindow - awindow_hr*1e3*60*60)/1e3//60

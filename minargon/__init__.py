@@ -42,8 +42,6 @@ class ReverseProxied(object):
 
 app = Flask(__name__)
 
-app.secret_key = "Sh37d62d8akzid4ld9JSSS8590djab" # Required for session management #Don't store in git
-
 app.config.from_envvar('MINARGON_SETTINGS', silent=False)
 
 if not "WEB_ROOT" in app.config:
