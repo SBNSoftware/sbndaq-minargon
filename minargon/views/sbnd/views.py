@@ -540,7 +540,7 @@ def CRT_channel_snapshot():
 @app.route('/CRT_event')
 def CRT_event():
     #return timeseries_view(request.args, "CRT_event", "", "crtEventLink")
-    return timeseries_view(request.args, "CRT_event", "", "")
+    return timeseries_view(request.args, "CRT_event")
 
 # PMTs
 @app.route('/PMT_status')
