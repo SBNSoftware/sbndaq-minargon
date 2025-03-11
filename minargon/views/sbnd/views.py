@@ -61,7 +61,7 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
 TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
                           ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
                           ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
-TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
+TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
 TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
 TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
 
@@ -482,8 +482,9 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
-CRT_config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+CRT_config_board   = online_metrics.get_group_config("online", "CRT_board",   front_end_abort=True)
 CRT_config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+CRT_config_event   = online_metrics.get_group_config("online", "CRT_event",   front_end_abort=True)
 
 @app.route('/CRT_status')
 def CRT_status():
@@ -510,13 +511,13 @@ def CRT_board_snapshot():
     view_ind = {'board_no': board_no}
     view_ind_opts = {'board_no': list(range(20))}
 
-    # TODO: implement real channel mapping
-    board_channels = list(range(board_no*32, (board_no+1)*32))
+    board_channels = list( range( board_no * 100, board_no * 100 + 32 ) )
 
     template_args = {
         'title': ("CRT Board %i Snapshot" % board_no),
         'board_config': CRT_config_board,
         'channel_config': CRT_config_channel,
+        'event_config': CRT_config_event,
         'board_no': board_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -545,6 +546,11 @@ def CRT_channel_snapshot():
     }
 
     return render_template("sbnd/crt_channel_snapshot.html", **template_args)
+
+@app.route('/CRT_event')
+def CRT_event():
+    #return timeseries_view(request.args, "CRT_event", "", "crtEventLink")
+    return timeseries_view(request.args, "CRT_event")
 
 # PMTs
 @app.route('/PMT_status')
