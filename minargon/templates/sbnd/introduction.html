@@ -52,7 +52,7 @@
     <br>
     <span id="lastDisabledTime"></span>  <!-- Display last disabled time -->
     <br>
-    <button onclick="resetAlarm()">Issue Resolved - Reset Alarm</button>
+    <button onclick="resetAlarm()">Issue Resolved - Enable Alarm</button>
     <br>
     <span id="lastResetTime"></span>  <!-- Display last reset time -->
     
@@ -86,7 +86,7 @@
             const lastDisabled = localStorage.getItem("disableTimestamp");
             document.getElementById("lastDisabledTime").innerText = lastDisabled 
                 ? `Last disabled: ${formatTimestamp(lastDisabled)}`
-                : "Last disabled: Never";
+                : "Currently Active";
         }
 
         function updateLastResetTime() {
