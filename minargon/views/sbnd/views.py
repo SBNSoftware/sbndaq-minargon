@@ -58,14 +58,7 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
-#TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
-#                          ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
-#                          ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
-#TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
-#TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
-#TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
-
-TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
+TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
                           ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
                           ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
 TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
@@ -262,12 +255,6 @@ def introduction():
       "imon_lolo": imon_n_lolo,
       "timing_config": timing_config,
       "timing_metrics": TIMING_METRICS_STREAMS,
-      #"timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
-      #                      TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
-      #                      TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
-      #"timing_alarms_max": [TIMING_BEAM_nCRTT1_MAX, TIMING_BEAM_nBES_MAX, TIMING_BEAM_nRWM_MAX, TIMING_BEAM_nFTRIG_MAX, TIMING_BEAM_nETRIG_MAX, TIMING_BEAM_RWM_BES_diff_MAX, TIMING_BEAM_ETRIG_BES_diff_MAX, TIMING_BEAM_FTRIG_ETRIG_diff_MAX,
-      #                      TIMING_OFFBEAM_nCRTT1_MAX, TIMING_OFFBEAM_nFTRIG_MAX, TIMING_OFFBEAM_nETRIG_MAX, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX,
-      #                      TIMING_CROSSING_MUON_nFTRIG_MAX, TIMING_CROSSING_MUON_nETRIG_MAX, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX]
       "timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
                             TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
                             TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
@@ -495,8 +482,9 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
-CRT_config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+CRT_config_board   = online_metrics.get_group_config("online", "CRT_board",   front_end_abort=True)
 CRT_config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+CRT_config_event   = online_metrics.get_group_config("online", "CRT_event",   front_end_abort=True)
 
 @app.route('/CRT_status')
 def CRT_status():
@@ -523,13 +511,13 @@ def CRT_board_snapshot():
     view_ind = {'board_no': board_no}
     view_ind_opts = {'board_no': list(range(20))}
 
-    # TODO: implement real channel mapping
-    board_channels = list(range(board_no*32, (board_no+1)*32))
+    board_channels = list( range( board_no * 100, board_no * 100 + 32 ) )
 
     template_args = {
         'title': ("CRT Board %i Snapshot" % board_no),
         'board_config': CRT_config_board,
         'channel_config': CRT_config_channel,
+        'event_config': CRT_config_event,
         'board_no': board_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -558,6 +546,11 @@ def CRT_channel_snapshot():
     }
 
     return render_template("sbnd/crt_channel_snapshot.html", **template_args)
+
+@app.route('/CRT_event')
+def CRT_event():
+    #return timeseries_view(request.args, "CRT_event", "", "crtEventLink")
+    return timeseries_view(request.args, "CRT_event")
 
 # PMTs
 @app.route('/PMT_status')
