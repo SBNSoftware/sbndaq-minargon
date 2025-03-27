@@ -244,8 +244,43 @@
 </div>
 
 <br>
-<br>
 
+<!-- {{daq_status}} -->
+<div class = "row">
+  <div class="col-lg-11 col-md-11 col-sm-12" style="padding:0">
+    <h3>DAQ Run Status</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Run Number</th>
+                <th>Configuration</th>
+                <th>Start Time</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if daq_status %}
+            <tr>
+                <td>{{ daq_status.run_number }}</td>
+                <td>{{ daq_status.configuration }}</td>
+                <td>{{ daq_status.start_time }}</td>
+                <td>{{ daq_status.duration }}</td>
+                <td>{{ daq_status.status }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No DAQ run status available</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+  </div>
+  </div>
+
+  <br>
+
+  
 <div class="row">
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
   <h3 class="hcenter"> DQM Status </h3>
@@ -292,6 +327,7 @@
   </table>
 </div>
 </div>
+
 
 {%endblock%}
 
