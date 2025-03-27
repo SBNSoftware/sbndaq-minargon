@@ -223,7 +223,15 @@
                     {{ nav_link('Software_Trigger', 'Software Trigger') }}
                   </ul>
                 </li>
-              <!-- {{ nav_link('view_streams', 'Data Browser')}} -->
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Nearline Metrics<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                  <li class="nav-item"><A class='nav-link' HREF=/cgi-bin/minargon/minargon.wsgi/view_streams/1?redis_online=purity:TPCE:attenuation:nearline,purity:TPCW:attenuation:nearline>Purity</A></li>
+                  <li class="nav-item"><A class='nav-link' HREF=/cgi-bin/minargon/minargon.wsgi/view_streams?redis_online=beamnorm:PMT-tophat:fractional-hat:nearline>Top Hat</A></li>
+                  <li class="nav-item"><A class='nav-link' HREF=/cgi-bin/minargon/minargon.wsgi/online_group/pmtgain>PMT Gains</A></li>
+                </ul>
+              </li>
+              {{ nav_link('view_streams', 'Data Browser')}}
             </ul>
           </div><!--/.navbar-collapse -->
         </nav>

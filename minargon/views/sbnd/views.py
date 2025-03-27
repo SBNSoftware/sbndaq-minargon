@@ -217,7 +217,11 @@ def introduction():
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
 
+    #daq status
+    daq_status = online_metrics.get_daq_run_status("online",'daq_run_status')
+
     render_args = {
+      "daq_status": daq_status, 
       "crt_config": crt_config,
       "crt_channels": crt_channels, #channels mean BOARD here
       "crts": CRTS,
