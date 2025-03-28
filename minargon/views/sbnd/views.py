@@ -644,7 +644,7 @@ def Beam_Light_Diff():
 @app.route('/Beam_CRT_Diff')
 def Beam_CRT_Diff():
     #return timeseries_view(request.args, "BEAM_CRT_DIFF")
-    config_trigger = online_metrics.get_group_config("online", "PTB_CRT_DIFF", front_end_abort=True)
+    config_trigger = online_metrics.get_group_config("online", "BEAM_CRT_DIFF", front_end_abort=True)
     render_args = {
       "config": config_trigger,
       "eventmeta_key": EVENTMETA_KEY,
