@@ -44,6 +44,9 @@
 
     <p>TPC Status: <span id="TPCDisplayValue">{{ TPC_value }}</span>; Alarm TPC Status > 0</p>
     <span id="TPCValue" TPC-value="{{ TPC_value }}" style="display: none;"></span>
+
+    <p id="alarmReason">Checking alarm status...</p>
+
     <span id="isAlarmDisabled"></span> 
     <br>
     <button onclick="testAlarm()">Test Alarm</button>
@@ -62,6 +65,7 @@
         let alarmTriggered = false;
         let alarmDisabled = localStorage.getItem("alarmDisabled") === "true";
         const DISABLE_DURATION =  60 * 60 * 1000; // 1 hour in milliseconds
+        var daqStatus = "{{ daq_status.status | lower | default('unknown') }}";
 
         function formatTimestamp(timestamp) {
             if (!timestamp) return "Never";
@@ -119,7 +123,28 @@
             let HVValue = parseInt(document.getElementById("HVValue").getAttribute("HV-value"));
             let TPCValue = parseInt(document.getElementById("TPCValue").getAttribute("TPC-value"));
 
-            if ((HVValue > 0 || TPCValue > 0 ) && !alarmTriggered && !alarmDisabled) {
+            let alarmReasonElement = document.getElementById("alarmReason");
+
+            if (alarmTriggered || alarmDisabled) {
+              return;  // Stop the function if the alarm has already been triggered or is disabled
+            }
+
+            let alarmReason = "Alarm is not ringing.";
+
+            if (!alarmTriggered && !alarmDisabled) {
+                if (HVValue > 0) {
+                    alarmReason = "Alarm triggered: High Voltage Status > 0.";
+                } else if (TPCValue > 0) {
+                    alarmReason = "Alarm triggered: TPC Status > 0.";
+                } else if (daqStatus !== "running") {
+                    alarmReason = "Alarm triggered: DAQ Status is not running.";
+                }
+            }
+            
+            localStorage.setItem("alarmReason", alarmReason);
+            alarmReasonElement.textContent = alarmReason;
+
+            if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
                 document.getElementById("alarmSound").play();
                 alarmTriggered = true;
             } 
@@ -149,8 +174,6 @@
             setIsAlarmDisabled();
         }
 
-  
-
         function formatTimestamp(timestamp) {
           if (!timestamp) return "Never";
           const date = new Date(parseInt(timestamp));
@@ -165,12 +188,28 @@
         document.getElementById("TPCDisplayValue").innerText = newTPCValue;
       }
 
+      function restoreAlarmReason() {
+        let savedAlarmReason = localStorage.getItem("alarmReason");
+        let alarmReasonElement = document.getElementById("alarmReason");
+        alarmReasonElement.textContent = savedAlarmReason || "Checking alarm status...";
+
+        // Apply color based on alarm status
+        if (savedAlarmReason.includes("Alarm triggered")) {
+                alarmReasonElement.style.color = "red";  // Highlight in red if alarm is ringing
+                alarmReasonElement.style.fontWeight = "bold";
+            } else {
+                alarmReasonElement.style.color = "green";  //Highlight in green otherwise
+                alarmReasonElement.style.fontWeight = "bold";
+            }
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
       setInterval(checkAlarm, 1000);  // Check every second
       updateLastDisabledTime(); // Update time on page load
       updateLastResetTime(); // Update time on page load
       setIsAlarmDisabled();
       updateDisplay();
+      restoreAlarmReason();
       });
   </script>
 
@@ -245,7 +284,6 @@
 
 <br>
 
-<!-- {{daq_status}} -->
 <div class = "row">
   <div class="col-lg-11 col-md-11 col-sm-12" style="padding:0">
     <h3>DAQ Run Status</h3>
@@ -266,7 +304,12 @@
                 <td>{{ daq_status.configuration }}</td>
                 <td>{{ daq_status.start_time }}</td>
                 <td>{{ daq_status.duration }}</td>
-                <td>{{ daq_status.status }}</td>
+                <td id="daqStatus">
+                  <span style="color: white; font-weight: bold; padding: 5px 10px; border-radius: 5px;
+                            background-color: {% if daq_status.status.lower() == 'running' %} green {% else %} red {% endif %};">
+                            {{ daq_status.status }}
+                        </span>
+             </td>
             </tr>
             {% else %}
             <tr>
@@ -657,6 +700,7 @@ var TPC_status = 0;
         let bad_planes_str = "NOT OK."+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
         $("#TPC-Status").html(bad_planes_str);
         $("#TPC-Status").css({"color": "red"});
+        TPC_status = 1;
       }
       else {
         $("#TPC-Status").text("OK");
@@ -669,7 +713,6 @@ var TPC_status = 0;
 {% endfor %}
 
 //For audible alarm
-if (TPC_ON) {TPC_status = BAD_PLANES.size;} //else TPC_status = 0;
 document.getElementById("TPCValue").setAttribute("TPC-value", TPC_status);
 updateDisplay();
 
