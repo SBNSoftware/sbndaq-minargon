@@ -106,3 +106,25 @@ div.alert-holder {
 .nav-item {
   background: rgb(127, 7, 10);
 }
+
+.hover-box {
+  position: relative;
+  cursor: pointer;
+}
+
+.hover-details {
+  position: absolute;
+  background-color: #ffffd4;
+  border: 1px solid #aaa;
+  padding: 10px;
+  z-index: 10;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre;
+  display: none;
+  font-family: monospace;
+}
+
+.hover-box:hover + .hover-details {
+  display: block;
+}
