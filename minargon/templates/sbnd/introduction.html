@@ -357,7 +357,10 @@
   </tr>
   <tr>
     <th style="width: 31%;"><a href="{{url_for('CRT_status')}}">CRT Status:</a></th>
-    <th><span id="CRT-Status"> </span></th>
+    <th>
+      <span id="CRT-Status" class="hover-box"> </span>
+      <div id="CRT-Status-Details" class="hover-details" style="display: none;"></div>
+    </th>
   </tr>
   <tr>
     <th style="width: 31%;"><a href="{{url_for('PTB_status')}}">Trigger Status:</a></th>
