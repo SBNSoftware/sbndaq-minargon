@@ -25,7 +25,8 @@ CRT Status
 
 <div class="row">
 <h4 class="hcenter" style="color:red; margin-top: 20px;">
-Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
+Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}} ADC <br>
+Limits on CRT deadtime are between {{deadtime_min}} and {{deadtime_max}} ns
 </h4>
 </div>
 <br>
@@ -33,10 +34,10 @@ Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
 <br>
 
 {% for crt in crts %}
-{% if loop.index0 % 3 == 0 %}
+{% if loop.index0 % 4 == 0 %}
   <div class="row">
 {% endif %}
-    <div class="col-lg-4 col-md-4" style="padding:0">
+    <div class="col-lg-10 col-md-10" style="padding:0">
       <h3>
         <a>{{crt}}</a>
       </h3>
@@ -45,11 +46,12 @@ Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
         <tr>
           <th> Board </th>
           <th> Baseline </th>
+	  <th> Deadtime </th>
         </tr>
         </thead>
       </table>
     </div>
-    {% if loop.index0 % 3 == 2 %}
+    {% if loop.index0 % 1 == 0 %}
   </div>
   <br>
 {% endif %}
@@ -72,10 +74,10 @@ var config = {{config|tojson|safe}};
 {
 
 // Setup the config
-var config_controller = new Config.GroupConfigController(config, undefined, ["baseline"], {{channels}}, 0, 32);
+var config_controller = new Config.GroupConfigController(config, undefined, ["baseline", "Deadtime"], {{channels}}, 0, 32);
 
 // Use the config to get the DataLink
-var data_link = config_controller.data_link(0, ["baseline"], undefined, 1);
+var data_link = config_controller.data_link(0, ["baseline", "Deadtime"], undefined, 1);
 
 // Turn that DataLink into a DataBuffer
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
@@ -83,17 +85,31 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
   function(data) {
     var channels = {{channels}};
     var isbad = [];
+    var baseline_isbad = [];
+    var deadtime_isbad = [];
     var baseline_data = data.slice(0, channels.length);
+    var deadtime_data = data.slice(channels.length, 2*channels.length);
 
     var baselines = [];
+    var deadtimes = [];
     for (var i = 0; i < channels.length; i++) {
       var baseline = -1;
+      var deadtime = -1;
       if (baseline_data[i].size > 0) {
         var baseline = baseline_data[i].get_last()[1];
       }
+      if (deadtime_data[i].size > 0) {
+        var deadtime = deadtime_data[i].get_last()[1];
+      }
       baselines.push(baseline);
-      var bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
+      deadtimes.push(deadtime);
+      var bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) ||
+      (deadtime < {{deadtime_min}}) || (deadtime > {{deadtime_max}}) );
       isbad.push(bad);
+      var baseline_bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
+      baseline_isbad.push(baseline_bad);
+      var deadtime_bad = ((deadtime < {{deadtime_min}}) || (deadtime > {{deadtime_max}}));
+      deadtime_isbad.push(deadtime_bad);
     }
 
     var header = `
@@ -101,6 +117,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         <tr>
           <th> Board </th>
           <th> Baseline </th>
+	  <th> Deadtime </th>
         </tr>
         </thead>
         <tbody>`;
@@ -108,14 +125,23 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     var table_html = header;
 
     for (var ind = 0; ind < channels.length; ind++) {
-      var c = "";
+      var c = ""; // overall board 
+      var bs = ""; // baseline cell
+      var dt = ""; // deadtime cell
       if (isbad[ind]) {
         c = 'style="background-color: red"';
+      }
+      if (baseline_isbad[ind]) {
+        bs = 'style="background-color: red"';
+      }
+      if (deadtime_isbad[ind]) {
+        dt = 'style="background-color: red"';
       }
       var row = `
           <tr>
             <th><a href="CRT_board_snapshot?board_no=` + channels[ind] + `">` + channels[ind] + `</a></th>
-            <th ` + c + `>` + baselines[ind].toFixed(2) +  `</th>
+            <th ` + bs + `>` + baselines[ind].toFixed(2) +  `</th>
+	    <th ` + dt + `>` + deadtimes[ind].toFixed(0) +  `</th>
           </tr>`; 
       table_html = table_html.concat(row);
     }
