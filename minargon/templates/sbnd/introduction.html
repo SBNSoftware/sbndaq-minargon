@@ -748,11 +748,11 @@ var crt_config = {{crt_config|tojson|safe}};
       
       var crt_channels = {{crt_channels}};
       var baseline_data    = data.slice(0, crt_channels.length);
-      var deadtime_data    = data.slice(1, crt_channels.length);
-      var pullwindow_data  = data.slice(2, crt_channels.length);
-      var missingt0_data   = data.slice(3, crt_channels.length);
-      var missingt1_data   = data.slice(4, crt_channels.length);
-      var readoutrate_data = data.slice(5, crt_channels.length);
+      var deadtime_data    = data.slice(crt_channels.length, 2*crt_channels.length);
+      var pullwindow_data  = data.slice(2*crt_channels.length, 3*crt_channels.length);
+      var missingt0_data   = data.slice(3*crt_channels.length, 4*crt_channels.length);
+      var missingt1_data   = data.slice(4*crt_channels.length, 5*crt_channels.length);
+      var readoutrate_data = data.slice(5*crt_channels.length);
 
       for (var i = 0; i < crt_channels.length; i++) {
 
