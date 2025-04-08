@@ -98,6 +98,19 @@ IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
+CRT_DEADTIME_ALARM_MIN = 18000
+CRT_DEADTIME_ALARM_MAX = 500000
+
+CRT_PULLWINDOW_ALARM_MIN = 30000000
+CRT_PULLWINDOW_ALARM_MAX = 50000000
+
+CRT_MISSINGT0_ALARM_MAX = 0
+
+CRT_MISSINGT1_ALARM_MAX = 0
+
+CRT_READOUTRATE_ALARM_MIN = 50
+CRT_READOUTRATE_ALARM_MIN = 1750
+
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
 
@@ -227,6 +240,14 @@ def introduction():
       "crts": CRTS,
       "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
       "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+      "crt_deadtime_min": CRT_DEADTIME_ALARM_MIN,
+      "crt_deadtime_max": CRT_DEADTIME_ALARM_MAX,
+      "crt_pullwindow_min": CRT_PULLWINDOW_ALARM_MIN,
+      "crt_pullwindow_max": CRT_PULLWINDOW_ALARM_MAX,
+      "crt_missingt0_max": CRT_MISSINGT0_ALARM_MAX,
+      "crt_missingt1_max": CRT_MISSINGT1_ALARM_MAX,
+      "crt_readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
+      "crt_readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
       "pmts": PMTS,
       "pmt_config": pmt_config,
       "pmt_channels": PMT_CHANNELS,
