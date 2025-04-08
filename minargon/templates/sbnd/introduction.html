@@ -838,30 +838,30 @@ var crt_config = {{crt_config|tojson|safe}};
       }
       else if (bad_count > 0) { // OK, something's wrong.. What?
 
-        let message_parts = []; // start assembling the problems
+        let message_parts = ["NOT OK. See details..."]; // start assembling the problems
 
         if (BAD_CRT_BASELINES.size > 0) {
-          let baseline_str = "BASELINES NOT OK. Bad boards: " + Array.from(BAD_CRT_BASELINES).join(" ");
+          let baseline_str = "baseline";
           message_parts.push(baseline_str);
         }
         if (BAD_CRT_DEADTIMES.size > 0) {
-          let deadtime_str = "DEADTIMES NOT OK. Bad boards: " + Array.from(BAD_CRT_DEADTIMES).join(" ");
+          let deadtime_str = "Deadtime";
           message_parts.push(deadtime_str);
         }
         if (BAD_CRT_PULLWINDOWS.size > 0) {
-          let pullwindow_str = "PULL WINDOWS NOT OK. Bad boards: " + Array.from(BAD_CRT_PULLWINDOWS).join(" ");
+          let pullwindow_str = "PullWindow";
           message_parts.push(pullwindow_str);
         }
         if (BAD_CRT_MISSINGT0S.size > 0) {
-          let missingt0_str = "MISSING T0S NOT OK. Bad boards: " + Array.from(BAD_CRT_MISSINGT0S).join(" ");
+          let missingt0_str = "MissingT0";
           message_parts.push(missingt0_str);
         }
         if (BAD_CRT_MISSINGT1S.size > 0) {
-          let missingt1_str = "MISSING T1S NOT OK. Bad boards: " + Array.from(BAD_CRT_MISSINGT1S).join(" ");
+          let missingt1_str = "MissingT1";
           message_parts.push(missingt1_str);
         }
         if (BAD_CRT_READOUTRATES.size > 0) {
-          let readoutrate_str = "READOUT RATES NOT OK. Bad boards: " + Array.from(BAD_CRT_READOUTRATES).join(" ");
+          let readoutrate_str = "ReadoutRate";
           message_parts.push(readoutrate_str);
         }
 
