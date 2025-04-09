@@ -24,9 +24,9 @@ CRT Status
 {% endif %}
 
 <div class="row">
-<h4 class="hcenter" style="color:red; margin-top: 20px;">
-Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}} ADC <br>
-Limits on CRT deadtime are between {{deadtime_min}} and {{deadtime_max}} ns
+<h4 class="hcenter" style="color:black; margin-top: 20px;">
+Limits on CRT <span style="font-weight: bold; color:#448ee4">baseline</span> are between <span style="font-weight:bold; color:#fd411e">{{baseline_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{baseline_max}}</span> ADC <br>
+Limits on CRT <span style="font-weight: bold; color:#448ee4">deadtime</span> are between <span style="font-weight:bold; color:#fd411e">{{deadtime_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{deadtime_max}}</span> ns
 </h4>
 </div>
 <br>
@@ -34,7 +34,7 @@ Limits on CRT deadtime are between {{deadtime_min}} and {{deadtime_max}} ns
 <br>
 
 {% for crt in crts %}
-{% if loop.index0 % 4 == 0 %}
+{% if loop.index0 % 1 == 0 %}
   <div class="row">
 {% endif %}
     <div class="col-lg-10 col-md-10" style="padding:0">
@@ -44,9 +44,9 @@ Limits on CRT deadtime are between {{deadtime_min}} and {{deadtime_max}} ns
       <table class="table table-striped" id="{{ crt | replace(' ', '-') | replace(';', '')}}">
         <thead>
         <tr>
-          <th> Board </th>
-          <th> Baseline </th>
-	  <th> Deadtime </th>
+          <th style="text-align: center;"> Board </th>
+          <th style="text-align: center;"> Baseline </th>
+	  <th style="text-align: center;"> Deadtime </th>
         </tr>
         </thead>
       </table>
@@ -115,9 +115,9 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     var header = `
         <thead>
         <tr>
-          <th> Board </th>
-          <th> Baseline </th>
-	  <th> Deadtime </th>
+          <th style="text-align: center;"> Board </th>
+          <th style="text-align: center;"> Baseline </th>
+	  <th style="text-align: center;"> Deadtime </th>
         </tr>
         </thead>
         <tbody>`;
@@ -125,21 +125,24 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     var table_html = header;
 
     for (var ind = 0; ind < channels.length; ind++) {
-      var c = ""; // overall board 
-      var bs = ""; // baseline cell
-      var dt = ""; // deadtime cell
+      var c = 'style="text-align:center;"'; // overall board 
+      var bs = 'style="text-align:center;"'; // baseline cell
+      var dt = 'style="text-align:center;"'; // deadtime cell
       if (isbad[ind]) {
-        c = 'style="background-color: red"';
+        //c = 'style="background-color: red"';
+        c = 'style="text-align:center; background-color: rgba(0, 105, 150, 0.5);"';
       }
       if (baseline_isbad[ind]) {
-        bs = 'style="background-color: red"';
+        //bs = 'style="background-color: red"';
+        bs = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
       }
       if (deadtime_isbad[ind]) {
-        dt = 'style="background-color: red"';
+        //dt = 'style="background-color: red"';
+        dt = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
       }
       var row = `
           <tr>
-            <th><a href="CRT_board_snapshot?board_no=` + channels[ind] + `">` + channels[ind] + `</a></th>
+            <th ${c}><a href="CRT_board_snapshot?board_no=${channels[ind]}">${channels[ind]}</a></th>
             <th ` + bs + `>` + baselines[ind].toFixed(2) +  `</th>
 	    <th ` + dt + `>` + deadtimes[ind].toFixed(0) +  `</th>
           </tr>`; 
