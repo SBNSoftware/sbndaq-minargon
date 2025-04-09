@@ -99,7 +99,7 @@ CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
 CRT_DEADTIME_ALARM_MIN = 18000
-CRT_DEADTIME_ALARM_MAX = 45000 #500000
+CRT_DEADTIME_ALARM_MAX = 500000
 
 CRT_PULLWINDOW_ALARM_MIN = 30000000
 CRT_PULLWINDOW_ALARM_MAX = 50000000
@@ -523,6 +523,12 @@ def CRT_status():
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "deadtime_min": CRT_DEADTIME_ALARM_MIN,
       "deadtime_max": CRT_DEADTIME_ALARM_MAX,
+      "pullwindow_min": CRT_PULLWINDOW_ALARM_MIN,
+      "pullwindow_max": CRT_PULLWINDOW_ALARM_MAX,
+      "readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
+      "readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
+      "missingt0_max": CRT_MISSINGT0_ALARM_MAX,
+      "missingt1_max": CRT_MISSINGT1_ALARM_MAX,
       "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
     }
 
