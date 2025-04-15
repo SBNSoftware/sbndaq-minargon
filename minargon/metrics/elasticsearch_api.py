@@ -8,6 +8,7 @@ from minargon import app
 
 ES_INSTANCES = app.config["ELASTICSEARCH_INSTANCES"]
 
+# General elasticsearch stuff-----------------------------------------------------
 
 def make_connection(database):
     config = ES_INSTANCES[database]
@@ -84,7 +85,7 @@ def _gather_monthly_indices(es, topic, max_indices, strptime_fmt):
 
 # SBND slow control alarm specific stuff------------------------------------------
 
-def prep_alarms(hits, source_cols, component_depth):
+def prep_alarms(hits, source_cols, component_depth, database):
     """
     Categorise and convert timezone (elasticsearch uses UTC for all times).
 
@@ -115,7 +116,9 @@ def prep_alarms(hits, source_cols, component_depth):
         else:
             continue
 
-        components, pv = _get_pv_categs(hit["_source"]["config"], component_depth)
+        components, pv = _get_pv_categs(
+            hit["_source"]["config"], component_depth, ES_INSTANCES[database]["alarm_topic"]
+        )
         hit_data["pv"] = pv
         _convert_timezones(hit_data, utc_zone, fnal_zone)
         _nested_append(alarms, components, hit_data)
@@ -124,10 +127,10 @@ def prep_alarms(hits, source_cols, component_depth):
     return alarms, component_hierarchy
 
 
-def _get_pv_categs(pv_path, component_depth):
+def _get_pv_categs(pv_path, component_depth, pv_prefix):
     """Get components of pv path assuming the pv name has a single / in it """
     pv_path = _pv_path_clean(pv_path)
-    components = pv_path.split("state:/SBNDDCS/")[1].split("/")
+    components = pv_path.split("state:/" + pv_prefix + "/")[1].split("/")
     pv = "/".join(components[-2:])
     components = components[:-2]
     while len(components) < component_depth:
