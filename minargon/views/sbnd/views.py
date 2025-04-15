@@ -865,7 +865,7 @@ def es_alarms():
 
     alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
     alarms, component_hierarchy = elasticsearch_api.prep_alarms(
-        alarm_hits, source_cols, component_depth
+        alarm_hits, source_cols, component_depth, database
     )
 
     render_args = {
