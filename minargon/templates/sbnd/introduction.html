@@ -719,22 +719,45 @@ updateDisplay();
 
 //CRTs
 var baseline_sum = 0;
-var BAD_CRTS = new Set();
+var BAD_CRT_BASELINES = new Set();
+var BAD_CRT_DEADTIMES = new Set();
+var BAD_CRT_PULLWINDOWS = new Set();
+var BAD_CRT_MISSINGT0S = new Set();
+var BAD_CRT_MISSINGT1S = new Set();
+var BAD_CRT_READOUTRATES = new Set();
+
+let BAD_CRT_SETS = [
+   BAD_CRT_BASELINES,
+   BAD_CRT_DEADTIMES,
+   BAD_CRT_PULLWINDOWS,
+   BAD_CRT_MISSINGT0S,
+   BAD_CRT_MISSINGT1S,
+   BAD_CRT_READOUTRATES,
+];
+
 var crt_config = {{crt_config|tojson|safe}};
 
 {% for crt in crts %}
   {% set crt_channels = crt_channels[loop.index0]|tojson %}
   {
-  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "", undefined, undefined);
-  var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
+  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline", "Deadtime", "PullWindow", "MissingT0", "MissingT1", "ReadoutRate"], {{crt_channels}}, 0, 25, "", undefined, undefined);
+  var crt_data_link = crt_config_controller.data_link(0, ["baseline", "Deadtime", "PullWindow", "MissingT0", "MissingT1", "ReadoutRate"], undefined, 1);
   var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
   var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
     function(data) {
       
       var crt_channels = {{crt_channels}};
-      var baseline_data = data;
+      var baseline_data    = data.slice(0, crt_channels.length);
+      var deadtime_data    = data.slice(crt_channels.length, 2*crt_channels.length);
+      var pullwindow_data  = data.slice(2*crt_channels.length, 3*crt_channels.length);
+      var missingt0_data   = data.slice(3*crt_channels.length, 4*crt_channels.length);
+      var missingt1_data   = data.slice(4*crt_channels.length, 5*crt_channels.length);
+      var readoutrate_data = data.slice(5*crt_channels.length);
 
       for (var i = 0; i < crt_channels.length; i++) {
+
+        // Baselines
+
         if (baseline_data[i].size > 0) {
           var baseline = baseline_data[i].get_last()[1];
           baseline_sum += baseline;
@@ -743,18 +766,114 @@ var crt_config = {{crt_config|tojson|safe}};
         if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
         {
           var channel_str = String(crt_channels[i]);
-          BAD_CRTS.add(channel_str);
+          BAD_CRT_BASELINES.add(channel_str);
+        }
+
+        // Deadtimes
+
+        if (deadtime_data[i].size > 0) {
+          var deadtime = deadtime_data[i].get_last()[1];
+        }
+
+        if ( (deadtime < {{crt_deadtime_min}}) || (deadtime > {{crt_deadtime_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_DEADTIMES.add(channel_str);
+        }
+
+        // Pullwindows
+
+        if (pullwindow_data[i].size > 0) {
+          var pullwindow = pullwindow_data[i].get_last()[1];
+        }
+
+        if ( (pullwindow < {{crt_pullwindow_min}}) || (pullwindow > {{crt_pullwindow_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_PULLWINDOWS.add(channel_str);
+        }
+
+        // Missingt0s
+
+        if (missingt0_data[i].size > 0) {
+          var missingt0 = missingt0_data[i].get_last()[1];
+        }
+
+        if ( (missingt0 > {{crt_missingt0_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_MISSINGT0S.add(channel_str);
+        }
+
+        // Missingt1s
+
+        if (missingt1_data[i].size > 0) {
+          var missingt1 = missingt1_data[i].get_last()[1];
+        }
+
+        if ( (missingt1 > {{crt_missingt1_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_MISSINGT1S.add(channel_str);
+        }
+
+        // Readoutrates
+
+        if (readoutrate_data[i].size > 0) {
+          var readoutrate = readoutrate_data[i].get_last()[1];
+        }
+
+        if ( (readoutrate < {{crt_readoutrate_min}}) || (readoutrate > {{crt_readoutrate_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_READOUTRATES.add(channel_str);
         }
       }
+
+      let bad_count = BAD_CRT_SETS.filter(set => set.size > 0).length;
 
       if (baseline_sum == 0){
         $("#CRT-Status").text("NO DATA");
         $("#CRT-Status").css({"color": "orange"});
       }
-      else if (BAD_CRTS.size > 0) {
-        let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
-        $("#CRT-Status").html(bad_crts_str);
-        $("#CRT-Status").css({"color": "orange"});
+      else if (bad_count > 0) { // OK, something's wrong.. What?
+
+        let message_parts = ["NOT OK. See status page..."]; // start assembling the problems
+
+        if (BAD_CRT_BASELINES.size > 0) {
+          let baseline_str = "baseline";
+          message_parts.push(baseline_str);
+        }
+        if (BAD_CRT_DEADTIMES.size > 0) {
+          let deadtime_str = "Deadtime";
+          message_parts.push(deadtime_str);
+        }
+        if (BAD_CRT_PULLWINDOWS.size > 0) {
+          let pullwindow_str = "PullWindow";
+          message_parts.push(pullwindow_str);
+        }
+        if (BAD_CRT_MISSINGT0S.size > 0) {
+          let missingt0_str = "MissingT0";
+          message_parts.push(missingt0_str);
+        }
+        if (BAD_CRT_MISSINGT1S.size > 0) {
+          let missingt1_str = "MissingT1";
+          message_parts.push(missingt1_str);
+        }
+        if (BAD_CRT_READOUTRATES.size > 0) {
+          let readoutrate_str = "ReadoutRate";
+          message_parts.push(readoutrate_str);
+        }
+
+        $("#CRT-Status").html(message_parts.join("<br>")); // br means newline in HTML
+
+        // How bad is the situation? Orange is only 1 metric down, orangered is > 1 metric
+        let color="#fd411e"; // orangered
+        if( bad_count == 1 ) {
+           color="orange";
+        }
+
+        $("#CRT-Status").css({"color": color});
       }
       else {
         $("#CRT-Status").text("OK");
