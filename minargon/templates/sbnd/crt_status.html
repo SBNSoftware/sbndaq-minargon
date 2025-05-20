@@ -48,6 +48,9 @@ Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
         </tr>
         </thead>
       </table>
+      <img src="static/images/crtmaps/{{ crt.lower().replace(' ', '_') }}.png" 
+           alt="{{ crt }}"
+	   style="width: 100%; height: auto; margin-top: 10px;">
     </div>
     {% if loop.index0 % 3 == 2 %}
   </div>
