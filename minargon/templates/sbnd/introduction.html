@@ -44,6 +44,9 @@
 
     <p>TPC Status: <span id="TPCDisplayValue">{{ TPC_value }}</span>; Alarm TPC Status > 0</p>
     <span id="TPCValue" TPC-value="{{ TPC_value }}" style="display: none;"></span>
+
+    <p id="alarmReason">Checking alarm status...</p>
+
     <span id="isAlarmDisabled"></span> 
     <br>
     <button onclick="testAlarm()">Test Alarm</button>
@@ -52,7 +55,7 @@
     <br>
     <span id="lastDisabledTime"></span>  <!-- Display last disabled time -->
     <br>
-    <button onclick="resetAlarm()">Issue Resolved - Reset Alarm</button>
+    <button onclick="resetAlarm()">Issue Resolved - Enable Alarm</button>
     <br>
     <span id="lastResetTime"></span>  <!-- Display last reset time -->
     
@@ -62,6 +65,7 @@
         let alarmTriggered = false;
         let alarmDisabled = localStorage.getItem("alarmDisabled") === "true";
         const DISABLE_DURATION =  60 * 60 * 1000; // 1 hour in milliseconds
+        var daqStatus = "{{ daq_status.status | lower | default('unknown') }}";
 
         function formatTimestamp(timestamp) {
             if (!timestamp) return "Never";
@@ -86,7 +90,7 @@
             const lastDisabled = localStorage.getItem("disableTimestamp");
             document.getElementById("lastDisabledTime").innerText = lastDisabled 
                 ? `Last disabled: ${formatTimestamp(lastDisabled)}`
-                : "Last disabled: Never";
+                : "Currently Active";
         }
 
         function updateLastResetTime() {
@@ -119,7 +123,28 @@
             let HVValue = parseInt(document.getElementById("HVValue").getAttribute("HV-value"));
             let TPCValue = parseInt(document.getElementById("TPCValue").getAttribute("TPC-value"));
 
-            if ((HVValue > 0 || TPCValue > 0 ) && !alarmTriggered && !alarmDisabled) {
+            let alarmReasonElement = document.getElementById("alarmReason");
+
+            if (alarmTriggered || alarmDisabled) {
+              return;  // Stop the function if the alarm has already been triggered or is disabled
+            }
+
+            let alarmReason = "Alarm is not ringing.";
+
+            if (!alarmTriggered && !alarmDisabled) {
+                if (HVValue > 0) {
+                    alarmReason = "Alarm triggered: High Voltage Status > 0.";
+                } else if (TPCValue > 0) {
+                    alarmReason = "Alarm triggered: TPC Status > 0.";
+                } else if (daqStatus !== "running") {
+                    alarmReason = "Alarm triggered: DAQ Status is not running.";
+                }
+            }
+            
+            localStorage.setItem("alarmReason", alarmReason);
+            alarmReasonElement.textContent = alarmReason;
+
+            if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
                 document.getElementById("alarmSound").play();
                 alarmTriggered = true;
             } 
@@ -149,8 +174,6 @@
             setIsAlarmDisabled();
         }
 
-  
-
         function formatTimestamp(timestamp) {
           if (!timestamp) return "Never";
           const date = new Date(parseInt(timestamp));
@@ -165,12 +188,28 @@
         document.getElementById("TPCDisplayValue").innerText = newTPCValue;
       }
 
+      function restoreAlarmReason() {
+        let savedAlarmReason = localStorage.getItem("alarmReason");
+        let alarmReasonElement = document.getElementById("alarmReason");
+        alarmReasonElement.textContent = savedAlarmReason || "Checking alarm status...";
+
+        // Apply color based on alarm status
+        if (savedAlarmReason.includes("Alarm triggered")) {
+                alarmReasonElement.style.color = "red";  // Highlight in red if alarm is ringing
+                alarmReasonElement.style.fontWeight = "bold";
+            } else {
+                alarmReasonElement.style.color = "green";  //Highlight in green otherwise
+                alarmReasonElement.style.fontWeight = "bold";
+            }
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
       setInterval(checkAlarm, 1000);  // Check every second
       updateLastDisabledTime(); // Update time on page load
       updateLastResetTime(); // Update time on page load
       setIsAlarmDisabled();
       updateDisplay();
+      restoreAlarmReason();
       });
   </script>
 
@@ -244,8 +283,47 @@
 </div>
 
 <br>
-<br>
 
+<div class = "row">
+  <div class="col-lg-11 col-md-11 col-sm-12" style="padding:0">
+    <h3>DAQ Run Status</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Run Number</th>
+                <th>Configuration</th>
+                <th>Start Time</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if daq_status %}
+            <tr>
+                <td>{{ daq_status.run_number }}</td>
+                <td>{{ daq_status.configuration }}</td>
+                <td>{{ daq_status.start_time }}</td>
+                <td>{{ daq_status.duration }}</td>
+                <td id="daqStatus">
+                  <span style="color: white; font-weight: bold; padding: 5px 10px; border-radius: 5px;
+                            background-color: {% if daq_status.status.lower() == 'running' %} green {% else %} red {% endif %};">
+                            {{ daq_status.status }}
+                        </span>
+             </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No DAQ run status available</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+  </div>
+  </div>
+
+  <br>
+
+  
 <div class="row">
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
   <h3 class="hcenter"> DQM Status </h3>
@@ -292,6 +370,7 @@
   </table>
 </div>
 </div>
+
 
 {%endblock%}
 
@@ -621,6 +700,7 @@ var TPC_status = 0;
         let bad_planes_str = "NOT OK."+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
         $("#TPC-Status").html(bad_planes_str);
         $("#TPC-Status").css({"color": "red"});
+        TPC_status = 1;
       }
       else {
         $("#TPC-Status").text("OK");
@@ -633,29 +713,51 @@ var TPC_status = 0;
 {% endfor %}
 
 //For audible alarm
-if (TPC_ON) {TPC_status = BAD_PLANES.size;} //else TPC_status = 0;
 document.getElementById("TPCValue").setAttribute("TPC-value", TPC_status);
 updateDisplay();
 
 
 //CRTs
 var baseline_sum = 0;
-var BAD_CRTS = new Set();
+var BAD_CRT_BASELINES = new Set();
+var BAD_CRT_DEADTIMES = new Set();
+var BAD_CRT_PULLWINDOWS = new Set();
+var BAD_CRT_MISSINGT0S = new Set();
+var BAD_CRT_MISSINGT1S = new Set();
+var BAD_CRT_READOUTRATES = new Set();
+
+let BAD_CRT_SETS = [
+   BAD_CRT_BASELINES,
+   BAD_CRT_DEADTIMES,
+   BAD_CRT_PULLWINDOWS,
+   BAD_CRT_MISSINGT0S,
+   BAD_CRT_MISSINGT1S,
+   BAD_CRT_READOUTRATES,
+];
+
 var crt_config = {{crt_config|tojson|safe}};
 
 {% for crt in crts %}
   {% set crt_channels = crt_channels[loop.index0]|tojson %}
   {
-  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "", undefined, undefined);
-  var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
+  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline", "Deadtime", "PullWindow", "MissingT0", "MissingT1", "ReadoutRate"], {{crt_channels}}, 0, 25, "", undefined, undefined);
+  var crt_data_link = crt_config_controller.data_link(0, ["baseline", "Deadtime", "PullWindow", "MissingT0", "MissingT1", "ReadoutRate"], undefined, 1);
   var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
   var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
     function(data) {
       
       var crt_channels = {{crt_channels}};
-      var baseline_data = data;
+      var baseline_data    = data.slice(0, crt_channels.length);
+      var deadtime_data    = data.slice(crt_channels.length, 2*crt_channels.length);
+      var pullwindow_data  = data.slice(2*crt_channels.length, 3*crt_channels.length);
+      var missingt0_data   = data.slice(3*crt_channels.length, 4*crt_channels.length);
+      var missingt1_data   = data.slice(4*crt_channels.length, 5*crt_channels.length);
+      var readoutrate_data = data.slice(5*crt_channels.length);
 
       for (var i = 0; i < crt_channels.length; i++) {
+
+        // Baselines
+
         if (baseline_data[i].size > 0) {
           var baseline = baseline_data[i].get_last()[1];
           baseline_sum += baseline;
@@ -664,18 +766,114 @@ var crt_config = {{crt_config|tojson|safe}};
         if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
         {
           var channel_str = String(crt_channels[i]);
-          BAD_CRTS.add(channel_str);
+          BAD_CRT_BASELINES.add(channel_str);
+        }
+
+        // Deadtimes
+
+        if (deadtime_data[i].size > 0) {
+          var deadtime = deadtime_data[i].get_last()[1];
+        }
+
+        if ( (deadtime < {{crt_deadtime_min}}) || (deadtime > {{crt_deadtime_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_DEADTIMES.add(channel_str);
+        }
+
+        // Pullwindows
+
+        if (pullwindow_data[i].size > 0) {
+          var pullwindow = pullwindow_data[i].get_last()[1];
+        }
+
+        if ( (pullwindow < {{crt_pullwindow_min}}) || (pullwindow > {{crt_pullwindow_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_PULLWINDOWS.add(channel_str);
+        }
+
+        // Missingt0s
+
+        if (missingt0_data[i].size > 0) {
+          var missingt0 = missingt0_data[i].get_last()[1];
+        }
+
+        if ( (missingt0 > {{crt_missingt0_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_MISSINGT0S.add(channel_str);
+        }
+
+        // Missingt1s
+
+        if (missingt1_data[i].size > 0) {
+          var missingt1 = missingt1_data[i].get_last()[1];
+        }
+
+        if ( (missingt1 > {{crt_missingt1_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_MISSINGT1S.add(channel_str);
+        }
+
+        // Readoutrates
+
+        if (readoutrate_data[i].size > 0) {
+          var readoutrate = readoutrate_data[i].get_last()[1];
+        }
+
+        if ( (readoutrate < {{crt_readoutrate_min}}) || (readoutrate > {{crt_readoutrate_max}}) )
+        {
+          var channel_str = String(crt_channels[i]);
+          BAD_CRT_READOUTRATES.add(channel_str);
         }
       }
+
+      let bad_count = BAD_CRT_SETS.filter(set => set.size > 0).length;
 
       if (baseline_sum == 0){
         $("#CRT-Status").text("NO DATA");
         $("#CRT-Status").css({"color": "orange"});
       }
-      else if (BAD_CRTS.size > 0) {
-        let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
-        $("#CRT-Status").html(bad_crts_str);
-        $("#CRT-Status").css({"color": "orange"});
+      else if (bad_count > 0) { // OK, something's wrong.. What?
+
+        let message_parts = ["NOT OK. See status page..."]; // start assembling the problems
+
+        if (BAD_CRT_BASELINES.size > 0) {
+          let baseline_str = "baseline";
+          message_parts.push(baseline_str);
+        }
+        if (BAD_CRT_DEADTIMES.size > 0) {
+          let deadtime_str = "Deadtime";
+          message_parts.push(deadtime_str);
+        }
+        if (BAD_CRT_PULLWINDOWS.size > 0) {
+          let pullwindow_str = "PullWindow";
+          message_parts.push(pullwindow_str);
+        }
+        if (BAD_CRT_MISSINGT0S.size > 0) {
+          let missingt0_str = "MissingT0";
+          message_parts.push(missingt0_str);
+        }
+        if (BAD_CRT_MISSINGT1S.size > 0) {
+          let missingt1_str = "MissingT1";
+          message_parts.push(missingt1_str);
+        }
+        if (BAD_CRT_READOUTRATES.size > 0) {
+          let readoutrate_str = "ReadoutRate";
+          message_parts.push(readoutrate_str);
+        }
+
+        $("#CRT-Status").html(message_parts.join("<br>")); // br means newline in HTML
+
+        // How bad is the situation? Orange is only 1 metric down, orangered is > 1 metric
+        let color="#fd411e"; // orangered
+        if( bad_count == 1 ) {
+           color="orange";
+        }
+
+        $("#CRT-Status").css({"color": color});
       }
       else {
         $("#CRT-Status").text("OK");

@@ -24,8 +24,13 @@ CRT Status
 {% endif %}
 
 <div class="row">
-<h4 class="hcenter" style="color:red; margin-top: 20px;">
-Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
+<h4 class="hcenter" style="color:black; margin-top: 20px;">
+Limits on CRT <span style="font-weight: bold; color:#448ee4">baseline</span> are between <span style="font-weight:bold; color:#fd411e">{{baseline_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{baseline_max}}</span> ADC <br>
+Limits on CRT <span style="font-weight: bold; color:#448ee4">deadtime</span> are between <span style="font-weight:bold; color:#fd411e">{{deadtime_min/1000.0}}</span> and <span style="font-weight:bold; color:#fd411e">{{deadtime_max/1000.0}}</span> us <br>
+Limits on CRT <span style="font-weight: bold; color:#448ee4">pull window</span> are between <span style="font-weight:bold; color:#fd411e">{{pullwindow_min/1000000.0}}</span> and <span style="font-weight:bold; color:#fd411e">{{pullwindow_max/1000000.0}}</span> ms <br>
+Limits on CRT <span style="font-weight: bold; color:#448ee4">readout rate</span> are between <span style="font-weight:bold; color:#fd411e">{{readoutrate_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{readoutrate_max}}</span> Hz <br>
+Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T0 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt0_max}}</span> <br>
+Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt1_max}}</span>
 </h4>
 </div>
 <br>
@@ -33,18 +38,22 @@ Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
 <br>
 
 {% for crt in crts %}
-{% if loop.index0 % 3 == 0 %}
+{% if loop.index0 % 1 == 0 %}
   <div class="row">
 {% endif %}
-    <div class="col-lg-4 col-md-4" style="padding:0">
+    <div class="col-lg-10 col-md-10" style="padding:0">
       <h3>
         <a>{{crt}}</a>
       </h3>
       <table class="table table-striped" id="{{ crt | replace(' ', '-') | replace(';', '')}}">
         <thead>
         <tr>
-          <th> Board </th>
-          <th> Baseline </th>
+          <th style="text-align: center;"> Board </th>
+          <th style="text-align: center;"> Baseline </th>
+	  <th style="text-align: center;"> Deadtime </th>
+	  <th style="text-align: center;"> Readout rate </th>
+	  <th style="text-align: center;"> MissingT0 </th>
+	  <th style="text-align: center;"> MissingT1 </th>
         </tr>
         </thead>
       </table>
@@ -52,7 +61,7 @@ Limits on CRT baseline are between {{baseline_min}} and {{baseline_max}}
            alt="{{ crt }}"
 	   style="width: 100%; height: auto; margin-top: 10px;">
     </div>
-    {% if loop.index0 % 3 == 2 %}
+    {% if loop.index0 % 1 == 0 %}
   </div>
   <br>
 {% endif %}
@@ -75,10 +84,10 @@ var config = {{config|tojson|safe}};
 {
 
 // Setup the config
-var config_controller = new Config.GroupConfigController(config, undefined, ["baseline"], {{channels}}, 0, 32);
+var config_controller = new Config.GroupConfigController(config, undefined, ["baseline", "Deadtime", "PullWindow", "ReadoutRate", "MissingT0", "MissingT1"], {{channels}}, 0, 32);
 
 // Use the config to get the DataLink
-var data_link = config_controller.data_link(0, ["baseline"], undefined, 1);
+var data_link = config_controller.data_link(0, ["baseline", "Deadtime", "PullWindow", "ReadoutRate", "MissingT0", "MissingT1"], undefined, 1);
 
 // Turn that DataLink into a DataBuffer
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
@@ -86,24 +95,87 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
   function(data) {
     var channels = {{channels}};
     var isbad = [];
+    var baseline_isbad = [];
+    var deadtime_isbad = [];
+    var pullwindow_isbad = [];
+    var readoutrate_isbad = [];
+    var missingt0_isbad = [];
+    var missingt1_isbad = [];
     var baseline_data = data.slice(0, channels.length);
+    var deadtime_data = data.slice(channels.length, 2*channels.length);
+    var pullwindow_data = data.slice(2*channels.length, 3*channels.length);
+    var readoutrate_data = data.slice(3*channels.length, 4*channels.length);
+    var missingt0_data = data.slice(4*channels.length, 5*channels.length);
+    var missingt1_data = data.slice(5*channels.length, 6*channels.length);
 
     var baselines = [];
+    var deadtimes = [];
+    var pullwindows = [];
+    var readoutrates = [];
+    var missingt0s = [];
+    var missingt1s = [];
     for (var i = 0; i < channels.length; i++) {
       var baseline = -1;
+      var deadtime = -1;
+      var pullwindow = -1;
+      var readoutrate = -1;
+      var missingt0 = -1;
+      var missingt1 = -1;
       if (baseline_data[i].size > 0) {
         var baseline = baseline_data[i].get_last()[1];
       }
+      if (deadtime_data[i].size > 0) {
+        var deadtime = deadtime_data[i].get_last()[1];
+      }
+      if (pullwindow_data[i].size > 0) {
+        var pullwindow = pullwindow_data[i].get_last()[1];
+      }
+      if (readoutrate_data[i].size > 0) {
+        var readoutrate = readoutrate_data[i].get_last()[1];
+      }
+      if (missingt0_data[i].size > 0) {
+        var missingt0 = missingt0_data[i].get_last()[1];
+      }
+      if (missingt1_data[i].size > 0) {
+        var missingt1 = missingt1_data[i].get_last()[1];
+      }
       baselines.push(baseline);
-      var bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
+      deadtimes.push(deadtime);
+      pullwindows.push(pullwindow);
+      readoutrates.push(readoutrate);
+      missingt0s.push(missingt0);
+      missingt1s.push(missingt1);
+      var bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}) ||
+      (deadtime < {{deadtime_min}}) || (deadtime > {{deadtime_max}}) ||
+      (pullwindow < {{pullwindow_min}}) || (pullwindow > {{pullwindow_max}}) ||
+      (readoutrate < {{readoutrate_min}}) || (readoutrate > {{readoutrate_max}}) ||
+      (missingt0 > {{missingt0_max}}) ||
+      (missingt1 > {{missingt1_max}}) );
       isbad.push(bad);
+      var baseline_bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
+      baseline_isbad.push(baseline_bad);
+      var deadtime_bad = ((deadtime < {{deadtime_min}}) || (deadtime > {{deadtime_max}}));
+      deadtime_isbad.push(deadtime_bad);
+      var pullwindow_bad = ((pullwindow < {{pullwindow_min}}) || (pullwindow > {{pullwindow_max}}));
+      pullwindow_isbad.push(pullwindow_bad);
+      var readoutrate_bad = ((readoutrate < {{readoutrate_min}}) || (readoutrate > {{readoutrate_max}}));
+      readoutrate_isbad.push(readoutrate_bad);
+      var missingt0_bad = ((missingt0 > {{missingt0_max}}));
+      missingt0_isbad.push(missingt0_bad);
+      var missingt1_bad = ((missingt1 > {{missingt1_max}}));
+      missingt1_isbad.push(missingt1_bad);
     }
 
     var header = `
         <thead>
         <tr>
-          <th> Board </th>
-          <th> Baseline </th>
+          <th style="text-align: center;"> Board </th>
+          <th style="text-align: center;"> Baseline [ADC] </th>
+	  <th style="text-align: center;"> Deadtime [us] </th>
+	  <th style="text-align: center;"> Pull window [ms] </th>
+          <th style="text-align: center;"> Readout rate [Hz] </th>
+	  <th style="text-align: center;"> Missing T0 resets </th>
+	  <th style="text-align: center;"> Missing T1 resets </th>
         </tr>
         </thead>
         <tbody>`;
@@ -111,14 +183,50 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
     var table_html = header;
 
     for (var ind = 0; ind < channels.length; ind++) {
-      var c = "";
+      var c = 'style="text-align:center;"'; // overall board 
+      var bs = 'style="text-align:center;"'; // baseline cell
+      var dt = 'style="text-align:center;"'; // deadtime cell
+      var pw = 'style="text-align:center;"'; // pullwindow cell
+      var rr = 'style="text-align:center;"'; // readoutrate cell
+      var m0 = 'style="text-align:center;"'; // missingt0 cell
+      var m1 = 'style="text-align:center;"'; // missingt1 cell
       if (isbad[ind]) {
-        c = 'style="background-color: red"';
+        //c = 'style="background-color: red"';
+        c = 'style="text-align:center; background-color: rgba(0, 105, 150, 0.5);"';
+      }
+      if (baseline_isbad[ind]) {
+        //bs = 'style="background-color: red"';
+        bs = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
+      }
+      if (deadtime_isbad[ind]) {
+        //dt = 'style="background-color: red"';
+        dt = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
+      }
+      if (pullwindow_isbad[ind]) {
+        //pw = 'style="background-color: red"';
+        pw = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
+      }
+      if (readoutrate_isbad[ind]) {
+        //rr = 'style="background-color: red"';
+        rr = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
+      }
+      if (missingt0_isbad[ind]) {
+        //m0 = 'style="background-color: red"';
+        m0 = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
+      }
+      if (missingt1_isbad[ind]) {
+        //m1 = 'style="background-color: red"';
+        m1 = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
       }
       var row = `
           <tr>
-            <th><a href="CRT_board_snapshot?board_no=` + channels[ind] + `">` + channels[ind] + `</a></th>
-            <th ` + c + `>` + baselines[ind].toFixed(2) +  `</th>
+            <th ${c}><a href="CRT_board_snapshot?board_no=${channels[ind]}">${channels[ind]}</a></th>
+            <th ` + bs + `>` + baselines[ind].toFixed(2) +  `</th>
+	    <th ` + dt + `>` + (deadtimes[ind]/1000.0).toFixed(3) +  `</th>
+            <th ` + pw + `>` + (pullwindows[ind]/1000000.0).toFixed(6) +  `</th>
+            <th ` + rr + `>` + readoutrates[ind].toFixed(0) +  `</th>
+	    <th ` + m0 + `>` + missingt0s[ind].toFixed(0) +  `</th>
+	    <th ` + m1 + `>` + missingt1s[ind].toFixed(0) +  `</th>
           </tr>`; 
       table_html = table_html.concat(row);
     }
