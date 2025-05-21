@@ -58,14 +58,7 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
-#TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
-#                          ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
-#                          ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
-#TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
-#TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
-#TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
-
-TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
+TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
                           ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
                           ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
 TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
@@ -85,7 +78,7 @@ TRIGGER_CRT_METRICS_SETS = [["BEAM_HLT_T1RESET", "NUMBER_BEAM_T1RESET", "NUMBER_
 # Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [96.35, 96.4, 96.33, 96.42 ],
+                "vmon": [96.1, 96.6, 95.8, 96.9],
                 "imon": [89.13, 89.48, 88.88, 90.18],
                 "vsp": [99.95, 100.05],
                 "isp": [91.5, 300.5],
@@ -104,6 +97,19 @@ IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
+
+CRT_DEADTIME_ALARM_MIN = 18000
+CRT_DEADTIME_ALARM_MAX = 500000
+
+CRT_PULLWINDOW_ALARM_MIN = 30000000
+CRT_PULLWINDOW_ALARM_MAX = 50000000
+
+CRT_MISSINGT0_ALARM_MAX = 0
+
+CRT_MISSINGT1_ALARM_MAX = 0
+
+CRT_READOUTRATE_ALARM_MIN = 50
+CRT_READOUTRATE_ALARM_MAX = 1750
 
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
@@ -224,12 +230,24 @@ def introduction():
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
 
+    #daq status
+    daq_status = online_metrics.get_daq_run_status("online",'daq_run_status')
+
     render_args = {
+      "daq_status": daq_status, 
       "crt_config": crt_config,
       "crt_channels": crt_channels, #channels mean BOARD here
       "crts": CRTS,
       "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
       "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+      "crt_deadtime_min": CRT_DEADTIME_ALARM_MIN,
+      "crt_deadtime_max": CRT_DEADTIME_ALARM_MAX,
+      "crt_pullwindow_min": CRT_PULLWINDOW_ALARM_MIN,
+      "crt_pullwindow_max": CRT_PULLWINDOW_ALARM_MAX,
+      "crt_missingt0_max": CRT_MISSINGT0_ALARM_MAX,
+      "crt_missingt1_max": CRT_MISSINGT1_ALARM_MAX,
+      "crt_readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
+      "crt_readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
       "pmts": PMTS,
       "pmt_config": pmt_config,
       "pmt_channels": PMT_CHANNELS,
@@ -262,12 +280,6 @@ def introduction():
       "imon_lolo": imon_n_lolo,
       "timing_config": timing_config,
       "timing_metrics": TIMING_METRICS_STREAMS,
-      #"timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
-      #                      TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
-      #                      TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
-      #"timing_alarms_max": [TIMING_BEAM_nCRTT1_MAX, TIMING_BEAM_nBES_MAX, TIMING_BEAM_nRWM_MAX, TIMING_BEAM_nFTRIG_MAX, TIMING_BEAM_nETRIG_MAX, TIMING_BEAM_RWM_BES_diff_MAX, TIMING_BEAM_ETRIG_BES_diff_MAX, TIMING_BEAM_FTRIG_ETRIG_diff_MAX,
-      #                      TIMING_OFFBEAM_nCRTT1_MAX, TIMING_OFFBEAM_nFTRIG_MAX, TIMING_OFFBEAM_nETRIG_MAX, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX,
-      #                      TIMING_CROSSING_MUON_nFTRIG_MAX, TIMING_CROSSING_MUON_nETRIG_MAX, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX]
       "timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
                             TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
                             TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
@@ -495,8 +507,9 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
-CRT_config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+CRT_config_board   = online_metrics.get_group_config("online", "CRT_board",   front_end_abort=True)
 CRT_config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+CRT_config_event   = online_metrics.get_group_config("online", "CRT_event",   front_end_abort=True)
 
 @app.route('/CRT_status')
 def CRT_status():
@@ -508,6 +521,14 @@ def CRT_status():
       "crts": CRTS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "deadtime_min": CRT_DEADTIME_ALARM_MIN,
+      "deadtime_max": CRT_DEADTIME_ALARM_MAX,
+      "pullwindow_min": CRT_PULLWINDOW_ALARM_MIN,
+      "pullwindow_max": CRT_PULLWINDOW_ALARM_MAX,
+      "readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
+      "readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
+      "missingt0_max": CRT_MISSINGT0_ALARM_MAX,
+      "missingt1_max": CRT_MISSINGT1_ALARM_MAX,
       "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
     }
 
@@ -523,13 +544,13 @@ def CRT_board_snapshot():
     view_ind = {'board_no': board_no}
     view_ind_opts = {'board_no': list(range(20))}
 
-    # TODO: implement real channel mapping
-    board_channels = list(range(board_no*32, (board_no+1)*32))
+    board_channels = list( range( board_no * 100, board_no * 100 + 32 ) )
 
     template_args = {
         'title': ("CRT Board %i Snapshot" % board_no),
         'board_config': CRT_config_board,
         'channel_config': CRT_config_channel,
+        'event_config': CRT_config_event,
         'board_no': board_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -558,6 +579,11 @@ def CRT_channel_snapshot():
     }
 
     return render_template("sbnd/crt_channel_snapshot.html", **template_args)
+
+@app.route('/CRT_event')
+def CRT_event():
+    #return timeseries_view(request.args, "CRT_event", "", "crtEventLink")
+    return timeseries_view(request.args, "CRT_event")
 
 # PMTs
 @app.route('/PMT_status')
@@ -647,7 +673,7 @@ def Beam_Light_Diff():
 @app.route('/Beam_CRT_Diff')
 def Beam_CRT_Diff():
     #return timeseries_view(request.args, "BEAM_CRT_DIFF")
-    config_trigger = online_metrics.get_group_config("online", "PTB_CRT_DIFF", front_end_abort=True)
+    config_trigger = online_metrics.get_group_config("online", "BEAM_CRT_DIFF", front_end_abort=True)
     render_args = {
       "config": config_trigger,
       "eventmeta_key": EVENTMETA_KEY,
@@ -868,7 +894,7 @@ def es_alarms():
 
     alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
     alarms, component_hierarchy = elasticsearch_api.prep_alarms(
-        alarm_hits, source_cols, component_depth
+        alarm_hits, source_cols, component_depth, database
     )
 
     render_args = {
