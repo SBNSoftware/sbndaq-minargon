@@ -34,18 +34,11 @@ Now, clone the minargon repository, and install the prerequisites:
     $ pip install -r requirements.txt
 
 Minargon needs a configuration file to run with the settings of where
-the Redis Database is located. An example settings file is given in
-`example_settigns.conf`. Either use those settings, or make a new
-settings file (if your database in a different location). Then set:
+the Redis Database is located. Set by:
 
     $ export MINARGON_SETTINGS=`pwd`/your_settings_file.conf
 
-Note on the different example settings files:
-	-`example_settings.conf` sets up a website instance with no database connections
-	-`example_settings_with_local_redis.conf` sets up a website instance with a 
-		database connection to an (already running) instance of redis
-	-`example_settings_icarus_gateway.conf` sets up a website instance with the 
-		proper database connections as running on the icarus-gateway machine
+Reach out to a DQM/OM expert for the settings.conf file
 
 Now, you can start up the webserver:
 
