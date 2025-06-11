@@ -1,0 +1,92 @@
+/*Compass*/
+.compass-block {
+  position: fixed;         /* Fixes to viewport */
+  bottom: 10px;
+  right: 10px;
+  width: 90px;
+  height: 90px;
+  background-color: white;
+  z-index: 900;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;        /* Ensures children stay inside */
+}
+
+.arrow-container {
+  position: absolute;
+  transform-style: preserve-3d;
+  z-index: 1000;
+  width: 100%;             /* example size, adjust as needed */
+  height: 100%;
+}
+
+.arrow-shaftX {
+    width: 60%;
+    height: 10%;
+    background-color: gray;
+    transform-origin: center;
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    transform: rotateY(90deg);
+}
+
+.arrow-shaftY {
+    width: 60%;
+    height: 10%;
+    background-color: gray;
+    transform-origin: center;
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    transform: rotateZ(90deg);
+}
+
+.arrow-shaftZ {
+    width: 60%;
+    height: 10%;
+    background-color: gray;
+    transform-origin: center;
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    transform: rotateX(90deg);
+}
+
+
+.arrow-text {
+  position: absolute;
+  font-size: 14px;
+  font-weight: bold;
+  color: blue;
+  pointer-events: none;
+
+  left: 45%;
+  top: 45%;
+}
+
+.north {
+  transform: translateZ(-40px);
+}
+
+.south {
+  transform: translateZ(40px);
+}
+
+.east {
+  transform: translateX(40px);
+}
+
+.west {
+  transform: translateX(-40px);
+}
+
+.top {
+  transform: translateY(-35px);
+}
+
+.bottom {
+  transform: translateY(35px);
+}
+

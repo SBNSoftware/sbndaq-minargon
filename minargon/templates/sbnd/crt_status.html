@@ -68,6 +68,44 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
 
 {% endfor %}
 
+<!-- develop the 3d map below -->
+<hr>
+<p>CHECK Start 3D Image </p>
+<section id="crtmap-section" style="height: 1000px; background: #f0f0f0;">
+    <link rel="stylesheet" href="static/css/crt_style/compass.css">
+    <link rel="stylesheet" href="static/css/crt_style/compass.css">
+
+
+    <div class="reset-container">
+	<button id="reset-button">Reset Map</button>
+        <!--
+	<input type="text" id="face-input" placeholder="Enter face name (e.g., front)">
+        <button id="rotate-face-button">Rotate to Face</button>
+	-->
+    </div>
+	
+    <div class="cube-container">
+    </div>
+
+    <div class="compass-block"> <!-- fix in place -->
+	<div class="arrow-container"> <!-- rotate around -->
+            <div class="arrow-shaftX"></div>
+            <div class="arrow-shaftY"></div>
+            <div class="arrow-shaftZ"></div>
+            <div class="arrow-text south"> S</div>
+            <div class="arrow-text north"> N</div>
+            <div class="arrow-text east">  E</div>
+            <div class="arrow-text west">  W</div>
+            <div class="arrow-text top">   T</div>
+            <div class="arrow-text bottom">B</div>
+	</div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/minargon/crtmap_motion.js') }}"></script>
+
+</section>
+<p>CHECK End 3D Image </p>
+
 {%endblock%}
 
 {% block script %}

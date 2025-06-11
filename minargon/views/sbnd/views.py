@@ -50,6 +50,8 @@ CRT_MAPS = {
 "Top-Low Wall": sorted([111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 145, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75]),
 "Top-High Wall": sorted([121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209])
 }
+
+
 CRTS = CRT_MAPS.keys() #crt refers to a WALL
 
 TIMING_METRICS = ["ETRIG_BES_diff", "ETRIG_RWM_diff", "ETRIG_FTRIG_diff", "BES_FTRIG_diff"]

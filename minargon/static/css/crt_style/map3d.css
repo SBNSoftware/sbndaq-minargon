@@ -1,0 +1,38 @@
+#crtmap-section {
+  position: relative;  /* Set the section as the reference frame */
+}
+
+/* Reset Button */
+.reset-container {
+    position: absolute;
+    top: 20px;
+    right: 20px; 
+    padding: 10px;
+}
+
+
+
+/* Cube Container */
+.cube-container {
+    perspective: 1000px;
+    transform-origin: center;
+    cursor: grab;
+}
+
+.cube-container:active {
+    cursor: grabbing;
+}
+
+.cube {
+    width: 150px;
+    height: 150px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg);
+}
+
+
+/** Faces **/
+.front-top {
+    transform: translateZ(150px) translateY(-50px);
+}
