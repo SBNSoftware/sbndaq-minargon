@@ -5,4 +5,5 @@
 *.wsgi
 __pycache__
 *~
+*.conf
 runserver.py
