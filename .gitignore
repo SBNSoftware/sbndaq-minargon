@@ -5,3 +5,4 @@
 *.wsgi
 __pycache__
 *~
+*.conf
