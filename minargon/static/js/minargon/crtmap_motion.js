@@ -1,9 +1,15 @@
 //map section
 const section = document.getElementById('crtmap-section');
+let isMouseInside = false;
+
+//scene-wrapper for scaling
+const sceneWrapper = document.querySelector('.scene-wrapper');
 
 //3D models
 const cube = document.querySelector('.cube');
 const cubeContainer = document.querySelector('.cube-container');
+
+//button
 const resetButton = document.getElementById('reset-button');
 
 //arrow for the compass at the bottom corner
@@ -14,9 +20,22 @@ const arrow = document.querySelector('.arrow-container');
 let isDragging = false;
 let startX, startY;
 let rotationX = 0, rotationY = 0;
+let zoomLevel = parseFloat(getComputedStyle(sceneWrapper).getPropertyValue('--zoom')) || 0.3;
+let zoom_min = 0.05;
+let zoom_max = 2;
 
 
-//if scroll into the map section, show compass
+//if scroll into the map section, 
+//Mark mouse enter event
+section.addEventListener('mouseenter', () => {
+  isMouseInside = true;
+  });
+  section.addEventListener('mouseleave', () => {
+    isMouseInside = false;
+	});
+
+
+////show compass
 const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach(entry => {
@@ -149,6 +168,23 @@ document.addEventListener('mouseleave', () => {
 		isDragging = false;
 		});
 
+// Reset button functionality
+resetButton.addEventListener('click', () => {
+		rotationX = 0;
+		rotationY = 0;
+		cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+	});
 
+// Zoom in/out on scroll
+document.addEventListener('wheel', (e) => {
+		if( !isMouseInside) return;
+		e.preventDefault();
+
+		const delta = Math.sign(e.deltaY);
+		zoomLevel += delta * -0.04;
+		zoomLevel = Math.min(Math.max(zoomLevel, zoom_min ), zoom_max); // Clamp zoom level between 0.05 and 2
+		// Update only the scale via CSS variable
+		sceneWrapper.style.setProperty('--zoom', zoomLevel);
+		}, {passive: false} );
 
 loadCubeConfig();

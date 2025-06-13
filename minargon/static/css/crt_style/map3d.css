@@ -37,7 +37,7 @@
 .scene-wrapper {
   width: 100%;
   height: 100%;
-  transform: translateY(20%) scale(0.3);
+  transform: translateY(30%) scale(var(--zoom, 0.3));
   position: relative;
   transform-origin: center center;
   transform-style: preserve-3d;
