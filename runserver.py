@@ -5,4 +5,4 @@ import random
 
 print("Open http://localhost:9394/")
 
-app.run(debug=True, port=9394)
+app.run(debug=True, port=5002)
