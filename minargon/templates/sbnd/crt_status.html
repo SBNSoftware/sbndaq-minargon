@@ -50,13 +50,16 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
         <tr>
           <th style="text-align: center;"> Board </th>
           <th style="text-align: center;"> Baseline </th>
-	  <th style="text-align: center;"> Deadtime </th>
-	  <th style="text-align: center;"> Readout rate </th>
-	  <th style="text-align: center;"> MissingT0 </th>
-	  <th style="text-align: center;"> MissingT1 </th>
+          <th style="text-align: center;"> Deadtime </th>
+          <th style="text-align: center;"> Readout rate </th>
+          <th style="text-align: center;"> MissingT0 </th>
+          <th style="text-align: center;"> MissingT1 </th>
         </tr>
         </thead>
       </table>
+      <img src="static/images/crtmaps/{{ crt.lower().replace(' ', '_') }}.png" 
+           alt="{{ crt }}"
+       style="width: 100%; height: auto; margin-top: 10px;">
     </div>
     {% if loop.index0 % 1 == 0 %}
   </div>
@@ -64,6 +67,86 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
 {% endif %}
 
 {% endfor %}
+
+<!-- develop the 3d map below -->
+<hr>
+<section id="crtmap-section" style="position: relative; padding: 10px; box-sizing: border-box; background: #fafafa; width: 70vw; aspect-ratio: 1/1; ">
+    <div style="
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(30, 30, 30, 0.5);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    z-index: 1000;
+    text-align: left;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    ">
+    <div style="font-size: 22px; font-weight: bold;">CRT 3D Viewer</div>
+    <div style="font-size: 14px; margin-top: 4px;">
+    Black boxes indicate the CRT modules, labeled with the attached FEB number.
+    </div>
+    </div>
+    <link rel="stylesheet" href="static/css/crt_style/compass.css">
+    <link rel="stylesheet" href="static/css/crt_style/map3d.css">
+    <!--Load CRT modules --> 
+    <script>
+        const FEBjsonURL = "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
+    </script>
+
+
+    
+    <div class="button-container">
+        <button id="reset-button">Reset Viewer</button>
+    <!--
+    <input type="text" id="face-input" placeholder="Enter face name (e.g., front)">
+    <button id="rotate-face-button">Rotate to Face</button>
+    -->
+    </div>
+
+    <div class="cube-container">
+        <div class="scene-wrapper">
+            <div class="cube">
+            </div>
+        </div>
+    </div>
+    
+    <div class="compass-container"> <!-- fix in place -->
+        <div class="arrow-container"> <!-- rotate around -->
+            <div class="arrow-shaft pX"></div>
+            <div class="arrow-shaft pY"></div>
+            <div class="arrow-shaft pZ"></div>
+            <div class="arrow-text south"> S</div>
+            <div class="arrow-text north"> N</div>
+            <div class="arrow-text east">  E</div>
+            <div class="arrow-text west">  W</div>
+            <div class="arrow-text top">   T</div>
+            <div class="arrow-text bottom">B</div>
+        </div>
+    </div>
+    <!-- this script fill in the class="cube" above using a FEB list in the format of JSON-->
+    <script src="{{ url_for('static', filename='js/minargon/crtmap_motion.js') }}"></script>
+
+    <div style="
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(100, 100, 100, 0.6); 
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    z-index: 1000;
+    ">
+        <strong>Instructions:</strong><br>
+        Scroll to zoom.<br>
+        Left click and drag to rotate.
+    </div>
+
+</section>
 
 {%endblock%}
 
@@ -168,11 +251,11 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         <tr>
           <th style="text-align: center;"> Board </th>
           <th style="text-align: center;"> Baseline [ADC] </th>
-	  <th style="text-align: center;"> Deadtime [us] </th>
-	  <th style="text-align: center;"> Pull window [ms] </th>
+      <th style="text-align: center;"> Deadtime [us] </th>
+      <th style="text-align: center;"> Pull window [ms] </th>
           <th style="text-align: center;"> Readout rate [Hz] </th>
-	  <th style="text-align: center;"> Missing T0 resets </th>
-	  <th style="text-align: center;"> Missing T1 resets </th>
+      <th style="text-align: center;"> Missing T0 resets </th>
+      <th style="text-align: center;"> Missing T1 resets </th>
         </tr>
         </thead>
         <tbody>`;
@@ -219,12 +302,12 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
           <tr>
             <th ${c}><a href="CRT_board_snapshot?board_no=${channels[ind]}">${channels[ind]}</a></th>
             <th ` + bs + `>` + baselines[ind].toFixed(2) +  `</th>
-	    <th ` + dt + `>` + (deadtimes[ind]/1000.0).toFixed(3) +  `</th>
+        <th ` + dt + `>` + (deadtimes[ind]/1000.0).toFixed(3) +  `</th>
             <th ` + pw + `>` + (pullwindows[ind]/1000000.0).toFixed(6) +  `</th>
             <th ` + rr + `>` + readoutrates[ind].toFixed(0) +  `</th>
-	    <th ` + m0 + `>` + missingt0s[ind].toFixed(0) +  `</th>
-	    <th ` + m1 + `>` + missingt1s[ind].toFixed(0) +  `</th>
-          </tr>`; 
+        <th ` + m0 + `>` + missingt0s[ind].toFixed(0) +  `</th>
+        <th ` + m1 + `>` + missingt1s[ind].toFixed(0) +  `</th>
+          </tr>`;
       table_html = table_html.concat(row);
     }
     table_html = table_html + "</tbody>";
