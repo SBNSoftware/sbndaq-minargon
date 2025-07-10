@@ -95,6 +95,8 @@ IMon_HI = DRIFTHV_ALARM_LIMITS["imon"][1]
 IMon_LOLO = DRIFTHV_ALARM_LIMITS["imon"][2]
 IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
+# CRT global limits
+
 CRT_BASELINE_ALARM_MIN = 20
 CRT_BASELINE_ALARM_MAX = 330
 
@@ -110,6 +112,18 @@ CRT_MISSINGT1_ALARM_MAX = 0
 
 CRT_READOUTRATE_ALARM_MIN = 50
 CRT_READOUTRATE_ALARM_MAX = 1750
+
+# CRT FEB-specific limits.
+# Overrides global limits for the FEBs and metrics specified
+CRT_FEB_SPECIFIC_LIMITS = {
+  78 : {
+      "Readout rate": [ 2000, 2500 ]
+  } , 
+  84 : {
+      "Readout rate": [ 0, 1 ],
+      "Missing T1": [ -1 ]
+  }
+}
 
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
@@ -238,6 +252,7 @@ def introduction():
       "crt_config": crt_config,
       "crt_channels": crt_channels, #channels mean BOARD here
       "crts": CRTS,
+      "crt_feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
       "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
       "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
       "crt_deadtime_min": CRT_DEADTIME_ALARM_MIN,
@@ -519,6 +534,7 @@ def CRT_status():
       "config": CRT_config_board,
       "channels": CRT_boards, #channels mean BOARD here
       "crts": CRTS,
+      "feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "deadtime_min": CRT_DEADTIME_ALARM_MIN,
