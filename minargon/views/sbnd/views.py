@@ -115,15 +115,9 @@ CRT_READOUTRATE_ALARM_MAX = 1750
 
 # CRT FEB-specific limits.
 # Overrides global limits for the FEBs and metrics specified
-CRT_FEB_SPECIFIC_LIMITS = {
-  78 : {
-      "Readout rate": [ 2000, 2500 ]
-  } , 
-  84 : {
-      "Readout rate": [ 0, 1 ],
-      "Missing T1": [ -1 ]
-  }
-}
+CRT_FEB_LIMITS_JSON = os.path.join( os.path.dirname(__file__), "crt_limits.json" )
+with open(CRT_FEB_LIMITS_JSON, 'r') as fcjl:
+    CRT_FEB_SPECIFIC_LIMITS = json.load(fcjl)
 
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
