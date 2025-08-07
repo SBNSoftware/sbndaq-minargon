@@ -95,21 +95,29 @@ IMon_HI = DRIFTHV_ALARM_LIMITS["imon"][1]
 IMon_LOLO = DRIFTHV_ALARM_LIMITS["imon"][2]
 IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
-CRT_BASELINE_ALARM_MIN = 20
-CRT_BASELINE_ALARM_MAX = 330
+# CRT FEB-specific limits.
+# Overrides global limits for the FEBs and metrics specified
+CRT_FEB_LIMITS_JSON = os.path.join( os.path.dirname(__file__), "crt_limits.json" )
+with open(CRT_FEB_LIMITS_JSON, 'r') as fcjl:
+    CRT_FEB_SPECIFIC_LIMITS = json.load(fcjl)
 
-CRT_DEADTIME_ALARM_MIN = 18000
-CRT_DEADTIME_ALARM_MAX = 500000
+# CRT global limits now read from the JSON
 
-CRT_PULLWINDOW_ALARM_MIN = 30000000
-CRT_PULLWINDOW_ALARM_MAX = 50000000
+CRT_BASELINE_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_baseline_min"]
+CRT_BASELINE_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_baseline_max"]
 
-CRT_MISSINGT0_ALARM_MAX = 0
+CRT_DEADTIME_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_deadtime_min"]
+CRT_DEADTIME_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_deadtime_max"]
 
-CRT_MISSINGT1_ALARM_MAX = 0
+CRT_PULLWINDOW_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_pullwindow_min"]
+CRT_PULLWINDOW_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_pullwindow_max"]
 
-CRT_READOUTRATE_ALARM_MIN = 50
-CRT_READOUTRATE_ALARM_MAX = 1750
+CRT_MISSINGT0_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_missingt0_max"]
+
+CRT_MISSINGT1_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_missingt1_max"]
+
+CRT_READOUTRATE_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_readoutrate_min"]
+CRT_READOUTRATE_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_readoutrate_max"]
 
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
@@ -238,6 +246,7 @@ def introduction():
       "crt_config": crt_config,
       "crt_channels": crt_channels, #channels mean BOARD here
       "crts": CRTS,
+      "crt_feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
       "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
       "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
       "crt_deadtime_min": CRT_DEADTIME_ALARM_MIN,
@@ -519,6 +528,7 @@ def CRT_status():
       "config": CRT_config_board,
       "channels": CRT_boards, #channels mean BOARD here
       "crts": CRTS,
+      "feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "deadtime_min": CRT_DEADTIME_ALARM_MIN,

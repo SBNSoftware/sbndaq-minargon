@@ -1,0 +1,783 @@
+{
+	"global_baseline_min": 20,
+	"global_baseline_max": 330,
+	"global_deadtime_min": 18000,
+	"global_deadtime_max": 50000,
+	"global_baseline_min": 20,
+	"global_pullwindow_min": 45000000,
+	"global_pullwindow_max": 50000000,
+	"global_readoutrate_min": 50,
+	"global_readoutrate_max": 1750,
+	"global_missingt0_max": 0,
+	"global_missingt1_max": 0,
+	"16":
+	{
+		"Readout rate": [ 1155, 1427 ],
+		"Baseline": [ 191, 231 ]
+	},
+	"18":
+	{
+		"Readout rate": [ 324, 401 ],
+		"Baseline": [ 107, 147 ]
+	},
+	"19":
+	{
+		"Readout rate": [ 271, 334 ],
+		"Baseline": [ 205, 245 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"24":
+	{
+		"Readout rate": [ 225, 278 ],
+		"Baseline": [ 158, 198 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"33":
+	{
+		"Readout rate": [ 230, 284 ],
+		"Baseline": [ 203, 243 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"34":
+	{
+		"Readout rate": [ 224, 276 ],
+		"Baseline": [ 179, 219 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"35":
+	{
+		"Readout rate": [ 1158, 1430 ],
+		"Baseline": [ 93, 133 ]
+	},
+	"36":
+	{
+		"Readout rate": [ 1147, 1417 ],
+		"Baseline": [ 199, 239 ]
+	},
+	"39":
+	{
+		"Readout rate": [ 649, 802 ],
+		"Baseline": [ 132, 172 ]
+	},
+	"40":
+	{
+		"Readout rate": [ 668, 825 ],
+		"Baseline": [ 162, 202 ]
+	},
+	"42":
+	{
+		"Readout rate": [ 237, 293 ],
+		"Baseline": [ 168, 208 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"44":
+	{
+		"Readout rate": [ 245, 303 ],
+		"Baseline": [ 93, 133 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"45":
+	{
+		"Readout rate": [ 408, 504 ],
+		"Baseline": [ 142, 182 ]
+	},
+	"47":
+	{
+		"Readout rate": [ 948, 1171 ],
+		"Baseline": [ 89, 129 ]
+	},
+	"48":
+	{
+		"Readout rate": [ 907, 1120 ],
+		"Baseline": [ 159, 199 ]
+	},
+	"49":
+	{
+		"Readout rate": [ 993, 1227 ],
+		"Baseline": [ 207, 247 ]
+	},
+	"50":
+	{
+		"Readout rate": [ 468, 578 ],
+		"Baseline": [ 172, 212 ]
+	},
+	"51":
+	{
+		"Readout rate": [ 1166, 1440 ],
+		"Baseline": [ 109, 149 ]
+	},
+	"55":
+	{
+		"Readout rate": [ 250, 309 ],
+		"Baseline": [ 121, 161 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"56":
+	{
+		"Readout rate": [ 312, 386 ],
+		"Baseline": [ 140, 180 ]
+	},
+	"57":
+	{
+		"Readout rate": [ 230, 284 ],
+		"Baseline": [ 112, 152 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"58":
+	{
+		"Readout rate": [ 146, 180 ],
+		"Baseline": [ 66, 106 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"59":
+	{
+		"Readout rate": [ 246, 304 ],
+		"Baseline": [ 165, 205 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"60":
+	{
+		"Readout rate": [ 307, 379 ],
+		"Baseline": [ 180, 220 ]
+	},
+	"61":
+	{
+		"Readout rate": [ 338, 418 ],
+		"Baseline": [ 69, 109 ]
+	},
+	"71":
+	{
+		"Readout rate": [ 1099, 1357 ],
+		"Baseline": [ 169, 209 ]
+	},
+	"72":
+	{
+		"Readout rate": [ 1131, 1397 ],
+		"Baseline": [ 132, 172 ]
+	},
+	"73":
+	{
+		"Readout rate": [ 84, 103 ],
+		"Baseline": [ 206, 246 ],
+		"Deadtime": [ 19000,500000 ],
+		"Pull window": [ 30000000,50000000 ]
+	},
+	"75":
+	{
+		"Readout rate": [ 1116, 1379 ],
+		"Baseline": [ 200, 240 ]
+	},
+	"77":
+	{
+		"Readout rate": [ 400, 494 ],
+		"Baseline": [ 104, 144 ]
+	},
+	"78":
+	{
+		"Readout rate": [ 408, 505 ],
+		"Baseline": [ 218, 258 ]
+	},
+	"79":
+	{
+		"Readout rate": [ 263, 325 ],
+		"Baseline": [ 161, 201 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"81":
+	{
+		"Readout rate": [ 386, 476 ],
+		"Baseline": [ 192, 232 ]
+	},
+	"82":
+	{
+		"Readout rate": [ 387, 478 ],
+		"Baseline": [ 160, 200 ]
+	},
+	"83":
+	{
+		"Readout rate": [ 356, 439 ],
+		"Baseline": [ 143, 183 ]
+	},
+	"84":
+	{
+		"Readout rate": [ 336, 415 ],
+		"Baseline": [ 78, 118 ]
+	},
+	"85":
+	{
+		"Readout rate": [ 427, 528 ],
+		"Baseline": [ 122, 162 ]
+	},
+	"86":
+	{
+		"Readout rate": [ 319, 395 ],
+		"Baseline": [ 225, 265 ]
+	},
+	"87":
+	{
+		"Readout rate": [ 420, 518 ],
+		"Baseline": [ 103, 143 ]
+	},
+	"88":
+	{
+		"Readout rate": [ 84, 103 ],
+		"Baseline": [ 142, 182 ],
+		"Deadtime": [ 19000,500000 ],
+		"Pull window": [ 30000000,50000000 ]
+	},
+	"90":
+	{
+		"Readout rate": [ 377, 465 ],
+		"Baseline": [ 175, 215 ]
+	},
+	"91":
+	{
+		"Readout rate": [ 361, 446 ],
+		"Baseline": [ 164, 204 ]
+	},
+	"93":
+	{
+		"Readout rate": [ 376, 465 ],
+		"Baseline": [ 139, 179 ]
+	},
+	"94":
+	{
+		"Readout rate": [ 355, 438 ],
+		"Baseline": [ 93, 133 ]
+	},
+	"95":
+	{
+		"Readout rate": [ 362, 448 ],
+		"Baseline": [ 157, 197 ]
+	},
+	"97":
+	{
+		"Readout rate": [ 308, 380 ],
+		"Baseline": [ 145, 185 ]
+	},
+	"98":
+	{
+		"Readout rate": [ 347, 429 ],
+		"Baseline": [ 146, 186 ]
+	},
+	"99":
+	{
+		"Readout rate": [ 359, 444 ],
+		"Baseline": [ 126, 166 ]
+	},
+	"100":
+	{
+		"Readout rate": [ 314, 387 ],
+		"Baseline": [ 161, 201 ]
+	},
+	"101":
+	{
+		"Readout rate": [ 337, 417 ],
+		"Baseline": [ 107, 147 ]
+	},
+	"102":
+	{
+		"Readout rate": [ 378, 466 ],
+		"Baseline": [ 94, 134 ]
+	},
+	"103":
+	{
+		"Readout rate": [ 320, 396 ],
+		"Baseline": [ 165, 205 ]
+	},
+	"104":
+	{
+		"Readout rate": [ 343, 424 ],
+		"Baseline": [ 126, 166 ]
+	},
+	"105":
+	{
+		"Readout rate": [ 967, 1194 ],
+		"Baseline": [ 180, 220 ]
+	},
+	"106":
+	{
+		"Readout rate": [ 901, 1113 ],
+		"Baseline": [ 130, 170 ]
+	},
+	"107":
+	{
+		"Readout rate": [ 916, 1132 ],
+		"Baseline": [ 140, 180 ]
+	},
+	"109":
+	{
+		"Readout rate": [ 906, 1119 ],
+		"Baseline": [ 251, 291 ]
+	},
+	"111":
+	{
+		"Readout rate": [ 897, 1108 ],
+		"Baseline": [ 153, 193 ]
+	},
+	"114":
+	{
+		"Readout rate": [ 935, 1155 ],
+		"Baseline": [ 124, 164 ]
+	},
+	"115":
+	{
+		"Readout rate": [ 968, 1196 ],
+		"Baseline": [ 127, 167 ]
+	},
+	"116":
+	{
+		"Readout rate": [ 962, 1189 ],
+		"Baseline": [ 212, 252 ]
+	},
+	"117":
+	{
+		"Readout rate": [ 927, 1145 ],
+		"Baseline": [ 63, 103 ]
+	},
+	"118":
+	{
+		"Readout rate": [ 930, 1149 ],
+		"Baseline": [ 119, 159 ]
+	},
+	"119":
+	{
+		"Readout rate": [ 934, 1154 ],
+		"Baseline": [ 145, 185 ]
+	},
+	"120":
+	{
+		"Readout rate": [ 236, 292 ],
+		"Baseline": [ 173, 213 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"121":
+	{
+		"Readout rate": [ 676, 835 ],
+		"Baseline": [ 166, 206 ]
+	},
+	"123":
+	{
+		"Readout rate": [ 482, 596 ],
+		"Baseline": [ 176, 216 ]
+	},
+	"125":
+	{
+		"Readout rate": [ 444, 548 ],
+		"Baseline": [ 169, 209 ]
+	},
+	"126":
+	{
+		"Readout rate": [ 486, 601 ],
+		"Baseline": [ 101, 141 ]
+	},
+	"127":
+	{
+		"Readout rate": [ 680, 840 ],
+		"Baseline": [ 104, 144 ]
+	},
+	"128":
+	{
+		"Readout rate": [ 661, 816 ],
+		"Baseline": [ 268, 308 ]
+	},
+	"129":
+	{
+		"Readout rate": [ 490, 605 ],
+		"Baseline": [ 208, 248 ]
+	},
+	"130":
+	{
+		"Readout rate": [ 237, 292 ],
+		"Baseline": [ 193, 233 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"131":
+	{
+		"Readout rate": [ 231, 286 ],
+		"Baseline": [ 157, 197 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"132":
+	{
+		"Readout rate": [ 331, 409 ],
+		"Baseline": [ 235, 275 ]
+	},
+	"133":
+	{
+		"Readout rate": [ 319, 394 ],
+		"Baseline": [ 161, 201 ]
+	},
+	"134":
+	{
+		"Readout rate": [ 357, 441 ],
+		"Baseline": [ 139, 179 ]
+	},
+	"135":
+	{
+		"Readout rate": [ 346, 427 ],
+		"Baseline": [ 155, 195 ]
+	},
+	"136":
+	{
+		"Readout rate": [ 352, 435 ],
+		"Baseline": [ 131, 171 ]
+	},
+	"138":
+	{
+		"Readout rate": [ 240, 296 ],
+		"Baseline": [ 116, 156 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"141":
+	{
+		"Readout rate": [ 1026, 1267 ],
+		"Baseline": [ 189, 229 ]
+	},
+	"143":
+	{
+		"Readout rate": [ 321, 397 ],
+		"Baseline": [ 122, 162 ]
+	},
+	"144":
+	{
+		"Readout rate": [ 983, 1214 ],
+		"Baseline": [ 54, 94 ]
+	},
+	"145":
+	{
+		"Readout rate": [ 895, 1106 ],
+		"Baseline": [ 158, 198 ]
+	},
+	"146":
+	{
+		"Readout rate": [ 248, 307 ],
+		"Baseline": [ 103, 143 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"147":
+	{
+		"Readout rate": [ 240, 297 ],
+		"Baseline": [ 142, 182 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"148":
+	{
+		"Readout rate": [ 338, 417 ],
+		"Baseline": [ 148, 188 ]
+	},
+	"149":
+	{
+		"Readout rate": [ 239, 295 ],
+		"Baseline": [ 144, 184 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"150":
+	{
+		"Readout rate": [ 334, 412 ],
+		"Baseline": [ 142, 182 ]
+	},
+	"151":
+	{
+		"Readout rate": [ 337, 417 ],
+		"Baseline": [ 189, 229 ]
+	},
+	"152":
+	{
+		"Readout rate": [ 363, 448 ],
+		"Baseline": [ 115, 155 ]
+	},
+	"153":
+	{
+		"Readout rate": [ 288, 355 ],
+		"Baseline": [ 177, 217 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"155":
+	{
+		"Readout rate": [ 253, 313 ],
+		"Baseline": [ 60, 100 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"156":
+	{
+		"Readout rate": [ 340, 420 ],
+		"Baseline": [ 155, 195 ]
+	},
+	"157":
+	{
+		"Readout rate": [ 345, 427 ],
+		"Baseline": [ 163, 203 ]
+	},
+	"158":
+	{
+		"Readout rate": [ 280, 346 ],
+		"Baseline": [ 171, 211 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"159":
+	{
+		"Readout rate": [ 225, 279 ],
+		"Baseline": [ 60, 100 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"160":
+	{
+		"Readout rate": [ 231, 286 ],
+		"Baseline": [ 153, 193 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"162":
+	{
+		"Readout rate": [ 317, 391 ],
+		"Baseline": [ 187, 227 ]
+	},
+	"163":
+	{
+		"Readout rate": [ 313, 386 ],
+		"Baseline": [ 122, 162 ]
+	},
+	"164":
+	{
+		"Readout rate": [ 318, 393 ],
+		"Baseline": [ 133, 173 ]
+	},
+	"165":
+	{
+		"Readout rate": [ 320, 396 ],
+		"Baseline": [ 165, 205 ]
+	},
+	"166":
+	{
+		"Readout rate": [ 297, 367 ],
+		"Baseline": [ 125, 165 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"168":
+	{
+		"Readout rate": [ 283, 350 ],
+		"Baseline": [ 183, 223 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"169":
+	{
+		"Readout rate": [ 308, 380 ],
+		"Baseline": [ 131, 171 ]
+	},
+	"170":
+	{
+		"Readout rate": [ 326, 403 ],
+		"Baseline": [ 170, 210 ]
+	},
+	"171":
+	{
+		"Readout rate": [ 286, 353 ],
+		"Baseline": [ 220, 260 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"172":
+	{
+		"Readout rate": [ 236, 292 ],
+		"Baseline": [ 150, 190 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"173":
+	{
+		"Readout rate": [ 201, 248 ],
+		"Baseline": [ 166, 206 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"174":
+	{
+		"Readout rate": [ 323, 399 ],
+		"Baseline": [ 177, 217 ]
+	},
+	"176":
+	{
+		"Readout rate": [ 198, 244 ],
+		"Baseline": [ 137, 177 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"178":
+	{
+		"Readout rate": [ 1021, 1261 ],
+		"Baseline": [ 175, 215 ]
+	},
+	"179":
+	{
+		"Readout rate": [ 1033, 1276 ],
+		"Baseline": [ 194, 234 ]
+	},
+	"180":
+	{
+		"Readout rate": [ 978, 1208 ],
+		"Baseline": [ 126, 166 ]
+	},
+	"182":
+	{
+		"Readout rate": [ 112, 139 ],
+		"Baseline": [ 182, 222 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"183":
+	{
+		"Readout rate": [ 1125, 1389 ],
+		"Baseline": [ 151, 191 ]
+	},
+	"184":
+	{
+		"Readout rate": [ 1131, 1398 ],
+		"Baseline": [ 141, 181 ]
+	},
+	"185":
+	{
+		"Readout rate": [ 1135, 1403 ],
+		"Baseline": [ 161, 201 ]
+	},
+	"187":
+	{
+		"Readout rate": [ 1091, 1347 ],
+		"Baseline": [ 140, 180 ]
+	},
+	"197":
+	{
+		"Readout rate": [ 422, 522 ],
+		"Baseline": [ 125, 165 ]
+	},
+	"198":
+	{
+		"Readout rate": [ 434, 536 ],
+		"Baseline": [ 144, 184 ]
+	},
+	"199":
+	{
+		"Readout rate": [ 377, 466 ],
+		"Baseline": [ 158, 198 ]
+	},
+	"200":
+	{
+		"Readout rate": [ 432, 534 ],
+		"Baseline": [ 178, 218 ]
+	},
+	"202":
+	{
+		"Readout rate": [ 325, 402 ],
+		"Baseline": [ 169, 209 ]
+	},
+	"203":
+	{
+		"Readout rate": [ 316, 391 ],
+		"Baseline": [ 230, 270 ]
+	},
+	"204":
+	{
+		"Readout rate": [ 387, 479 ],
+		"Baseline": [ 131, 171 ]
+	},
+	"205":
+	{
+		"Readout rate": [ 1130, 1396 ],
+		"Baseline": [ 200, 240 ]
+	},
+	"206":
+	{
+		"Readout rate": [ 324, 400 ],
+		"Baseline": [ 150, 190 ]
+	},
+	"207":
+	{
+		"Readout rate": [ 277, 342 ],
+		"Baseline": [ 150, 190 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"209":
+	{
+		"Readout rate": [ 1142, 1411 ],
+		"Baseline": [ 95, 135 ]
+	},
+	"210":
+	{
+		"Readout rate": [ 1133, 1400 ],
+		"Baseline": [ 129, 169 ]
+	},
+	"211":
+	{
+		"Readout rate": [ 1138, 1406 ],
+		"Baseline": [ 99, 139 ]
+	},
+	"212":
+	{
+		"Readout rate": [ 1144, 1413 ],
+		"Baseline": [ 75, 115 ]
+	},
+	"213":
+	{
+		"Readout rate": [ 1130, 1396 ],
+		"Baseline": [ 156, 196 ]
+	},
+	"216":
+	{
+		"Readout rate": [ 1101, 1360 ],
+		"Baseline": [ 148, 188 ]
+	},
+	"220":
+	{
+		"Readout rate": [ 328, 405 ],
+		"Baseline": [ 83, 123 ]
+	},
+	"222":
+	{
+		"Readout rate": [ 274, 338 ],
+		"Baseline": [ 126, 166 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	},
+	"223":
+	{
+		"Readout rate": [ 1135, 1402 ],
+		"Baseline": [ 99, 139 ]
+	},
+	"228":
+	{
+		"Readout rate": [ 1150, 1420 ],
+		"Baseline": [ 233, 273 ]
+	},
+	"238":
+	{
+		"Readout rate": [ 256, 316 ],
+		"Baseline": [ 81, 121 ],
+		"Deadtime": [ 19000, 80000 ],
+		"Pull window": [ 40000000,50000000 ]
+	}
+}
