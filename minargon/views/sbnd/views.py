@@ -80,10 +80,10 @@ TRIGGER_CRT_METRICS_SETS = [["BEAM_HLT_T1RESET", "NUMBER_BEAM_T1RESET", "NUMBER_
 # Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [96.1, 96.6, 95.8, 96.9],
-                "imon": [89.13, 89.48, 88.88, 90.18],
-                "vsp": [99.95, 100.05],
-                "isp": [91.5, 300.5],
+                "vmon": [94.4, 94.6, 94.35, 94.65],
+                "imon": [87.4, 87.8, 87.1, 89.1],
+                "vsp": [-0.05, 0.05],
+                "isp": [-0.05, 0.55],
                 "scheme": [-1, 2]
                 }
 
@@ -176,7 +176,9 @@ def introduction():
     bad_drifthv_pvs = []
     for idx_pv, pv in enumerate(pv_lists):
         this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "drifthv", pv)
-        if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
+        try: this_val = float(this_dbrow[0][1])
+        except: continue
+        if (this_val > DRIFTHV_ALARM_LIMITS[pv][0]) & (this_val < DRIFTHV_ALARM_LIMITS[pv][1]):
             continue
         bad_drifthv_pvs.append(pv)
     
@@ -190,13 +192,15 @@ def introduction():
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
         #print(vr[0])
-        if (float(vr[1]) < VMon_LOLO):
+        try: vmon_val = float(vr[1])
+        except: continue
+        if (vmon_val < VMon_LOLO):
             vmon_n_lolo += 1
-        if (float(vr[1]) < VMon_LO):
+        if (vmon_val < VMon_LO):
             vmon_n_lo += 1
-        if (float(vr[1]) > VMon_HIHI):
+        if (vmon_val > VMon_HIHI):
             vmon_n_hihi += 1
-        if (float(vr[1]) > VMon_HI):
+        if (vmon_val > VMon_HI):
             vmon_n_hi += 1
         else:
             continue
@@ -210,13 +214,15 @@ def introduction():
     imon_n_lo = 0
     imon_n_lolo = 0
     for ir in imon_dbrows:
-        if (float(ir[1]) < IMon_LOLO):
+        try: imon_val = float(ir[1])
+        except: continue
+        if (imon_val < IMon_LOLO):
             imon_n_lolo += 1
-        if (float(ir[1]) < IMon_LO):
+        if (imon_val < IMon_LO):
             imon_n_lo += 1
-        if (float(ir[1]) > IMon_HIHI):
+        if (imon_val > IMon_HIHI):
             imon_n_hihi += 1
-        if (float(ir[1]) > IMon_HI):
+        if (imon_val > IMon_HI):
             imon_n_hi += 1
         else:
             continue

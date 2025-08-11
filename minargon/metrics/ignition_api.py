@@ -223,7 +223,10 @@ def get_ignition_2hr_value_pv(connection, year, month, group, pv):
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start = int(stop_t) - 7200000
+    start_2hr = int(stop_t) - 7200000
+    start = 1752253744*1e3
+    # use whatever is larger
+    start = max(start_2hr, start)
     
     awindow = (stop_t - start)
     awindow_hr = awindow/1e3/60//60
