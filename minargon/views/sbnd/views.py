@@ -898,13 +898,14 @@ def es_alarms():
     source_cols = [ "message_time", "time", "value", "message", "severity", "config" ]
     component_depth = 3
 
-    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
+    max_indices = int(request.args.get("months", 1))
+    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database, max_indices)
     alarms, component_hierarchy = elasticsearch_api.prep_alarms(
         alarm_hits, source_cols, component_depth, database
     )
 
     render_args = {
-        "alarms" : alarms, "components" : component_hierarchy
+        "alarms" : alarms, "components" : component_hierarchy, "max_indices" : max_indices
     }
     render_args.update(extra_render_args)
 

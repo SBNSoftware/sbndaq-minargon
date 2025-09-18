@@ -7,8 +7,17 @@
   <p> Slow Control Alarms History </p>
 </h1>
 
-<p> Plots can be zoomed, dragged and hovered. Double click to snap axis to fit data. Email alexander.wilkinson.20@ucl.ac.uk with any questions. </p>
+<p> Plots can be zoomed, dragged and hovered. Double click to snap axis to fit data. Talk to slow control experts for any questions. </p>
 
+
+<div id="selectMonths">
+  <label>Select how many past months of alarm data to load:</label>
+  <ul>
+    <label for="monthInput" style="margin-left:16px;">Past months:</label>
+    <input id="monthInput" type="number" min="1" max="120" step="1" value="{{ max_indices }}" style="width: 80px; margin-right:8px;">
+    <button onclick="reloadPage()">Reload (with patience)</button>
+  </ul>
+</div>
 
 <div id="selectDropdowns">
   <label>Show alarms for system(s):</label>
@@ -200,6 +209,11 @@
   function triggerOnChange(element) {
     const ev = new Event("change");
     element.dispatchEvent(ev);
+  }
+
+  function reloadPage() {
+    const months = document.getElementById('monthInput').value;
+    window.location.href = `/Slow_Control_Alarms?months=${months}`;
   }
 
   // end-------------------------------------------------------- 
