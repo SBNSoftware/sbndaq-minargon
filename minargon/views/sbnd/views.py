@@ -78,10 +78,10 @@ TRIGGER_CRT_METRICS_SETS = [["BEAM_HLT_T1RESET", "NUMBER_BEAM_T1RESET", "NUMBER_
 # Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [-0.05, 0.05, -0.05, 0.05],
-                "imon": [-0.05, 0.5, -0.05, 0.5],
-                "vsp": [-0.05, 0.05],
-                "isp": [-0.05, 0.55],
+                "vmon": [94.4, 94.6, 94.35, 94.65],
+                "imon": [87.4, 87.8, 87.1, 89.1],
+                "vsp": [99.95, 100.05],
+                "isp": [91.5, 300.5],
                 "scheme": [-1, 2]
                 }
 
