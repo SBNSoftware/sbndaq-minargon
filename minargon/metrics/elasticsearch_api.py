@@ -18,11 +18,11 @@ def make_connection(database):
     return es
 
 
-def get_alarm_data(database):
+def get_alarm_data(database, max_indices):
     """Get raw hits from specified indices in elasticsearch db"""
     es = make_connection(database)
     indices, extra_render_args = _handle_index_gathering(
-        es, ES_INSTANCES[database]["index_gatherer"]
+        es, ES_INSTANCES[database]["index_gatherer"], max_indices
     )
 
     hits = []
@@ -40,14 +40,14 @@ def get_alarm_data(database):
     return hits, extra_render_args
 
 
-def _handle_index_gathering(es, gather_cfg):
+def _handle_index_gathering(es, gather_cfg, max_indices):
     try:
         if gather_cfg["type"] == "single_topic":
             indices = list(es.indices.get(index=topic).keys())
             extra_render_args = {}
         elif gather_cfg["type"] == "monthly":
             indices, extra_render_args = _gather_monthly_indices(
-                es, gather_cfg["topic"], gather_cfg["max_indices"], gather_cfg["strptime_fmt"]
+                es, gather_cfg["topic"], max_indices, gather_cfg["strptime_fmt"]
             )
     except KeyError as e:
         print(
