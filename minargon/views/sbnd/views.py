@@ -82,8 +82,8 @@ TRIGGER_CRT_METRICS_SETS = [["BEAM_HLT_T1RESET", "NUMBER_BEAM_T1RESET", "NUMBER_
 DRIFTHV_ALARM_LIMITS = {
                 "vmon": [94.4, 94.6, 94.35, 94.65],
                 "imon": [87.4, 87.8, 87.1, 89.1],
-                "vsp": [-0.05, 0.05],
-                "isp": [-0.05, 0.55],
+                "vsp": [99.95, 100.05],
+                "isp": [91.5, 300.5],
                 "scheme": [-1, 2]
                 }
 
@@ -910,13 +910,14 @@ def es_alarms():
     source_cols = [ "message_time", "time", "value", "message", "severity", "config" ]
     component_depth = 3
 
-    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
+    max_indices = int(request.args.get("months", 1))
+    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database, max_indices)
     alarms, component_hierarchy = elasticsearch_api.prep_alarms(
         alarm_hits, source_cols, component_depth, database
     )
 
     render_args = {
-        "alarms" : alarms, "components" : component_hierarchy
+        "alarms" : alarms, "components" : component_hierarchy, "max_indices" : max_indices
     }
     render_args.update(extra_render_args)
 
