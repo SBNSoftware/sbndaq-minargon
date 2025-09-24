@@ -736,6 +736,7 @@ let BAD_CRT_SETS = [
 ];
 
 var crt_config = {{crt_config|tojson|safe}};
+var crt_feb_specific_limits = {{crt_feb_specific_limits|tojson|safe}};
 
 {% for crt in crts %}
   {% set crt_channels = crt_channels[loop.index0]|tojson %}
@@ -756,77 +757,106 @@ var crt_config = {{crt_config|tojson|safe}};
 
       for (var i = 0; i < crt_channels.length; i++) {
 
-        // Baselines
+        // Get data
 
         if (baseline_data[i].size > 0) {
           var baseline = baseline_data[i].get_last()[1];
           baseline_sum += baseline;
         }
-
-        if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
-        {
-          var channel_str = String(crt_channels[i]);
-          BAD_CRT_BASELINES.add(channel_str);
-        }
-
-        // Deadtimes
-
         if (deadtime_data[i].size > 0) {
           var deadtime = deadtime_data[i].get_last()[1];
         }
-
-        if ( (deadtime < {{crt_deadtime_min}}) || (deadtime > {{crt_deadtime_max}}) )
-        {
-          var channel_str = String(crt_channels[i]);
-          BAD_CRT_DEADTIMES.add(channel_str);
-        }
-
-        // Pullwindows
-
         if (pullwindow_data[i].size > 0) {
           var pullwindow = pullwindow_data[i].get_last()[1];
         }
-
-        if ( (pullwindow < {{crt_pullwindow_min}}) || (pullwindow > {{crt_pullwindow_max}}) )
-        {
-          var channel_str = String(crt_channels[i]);
-          BAD_CRT_PULLWINDOWS.add(channel_str);
+        if (readoutrate_data[i].size > 0) {
+          var readoutrate = readoutrate_data[i].get_last()[1];
         }
-
-        // Missingt0s
-
         if (missingt0_data[i].size > 0) {
           var missingt0 = missingt0_data[i].get_last()[1];
         }
-
-        if ( (missingt0 > {{crt_missingt0_max}}) )
-        {
-          var channel_str = String(crt_channels[i]);
-          BAD_CRT_MISSINGT0S.add(channel_str);
-        }
-
-        // Missingt1s
-
         if (missingt1_data[i].size > 0) {
           var missingt1 = missingt1_data[i].get_last()[1];
         }
 
-        if ( (missingt1 > {{crt_missingt1_max}}) )
-        {
-          var channel_str = String(crt_channels[i]);
-          BAD_CRT_MISSINGT1S.add(channel_str);
+
+        var maybe_feb_specific = ( Number(crt_channels[i]) in crt_feb_specific_limits );
+        var baseline_feb_specific = false;
+        var deadtime_feb_specific = false;
+        var pullwindow_feb_specific = false;
+        var readoutrate_feb_specific = false;
+        var missingt0_feb_specific = false;
+        var missingt1_feb_specific = false;
+
+	// Check for FEB specific limits
+        if( maybe_feb_specific ) {
+          var limit_dict = crt_feb_specific_limits[crt_channels[i]];
+	  baseline_feb_specific = "Baseline" in limit_dict;
+	  deadtime_feb_specific = "Deadtime" in limit_dict;
+	  pullwindow_feb_specific = "Pull window" in limit_dict;
+	  readoutrate_feb_specific = "Readout rate" in limit_dict;
+	  missingt0_feb_specific = "Missing T0" in limit_dict;
+	  missingt1_feb_specific = "Missing T1" in limit_dict;
         }
 
-        // Readoutrates
+	var channel_str = String(crt_channels[i]);
 
-        if (readoutrate_data[i].size > 0) {
-          var readoutrate = readoutrate_data[i].get_last()[1];
+        var check_baseline_min = {{crt_baseline_min}};
+        var check_baseline_max = {{crt_baseline_max}};
+        if( baseline_feb_specific ) {
+          check_baseline_min = limit_dict["Baseline"][0];
+          check_baseline_max = limit_dict["Baseline"][1];
+        }
+        var check_deadtime_min = {{crt_deadtime_min}};
+        var check_deadtime_max = {{crt_deadtime_max}};
+        if( deadtime_feb_specific ) {
+          check_deadtime_min = limit_dict["Deadtime"][0];
+          check_deadtime_max = limit_dict["Deadtime"][1];
+        }
+        var check_pullwindow_min = {{crt_pullwindow_min}};
+        var check_pullwindow_max = {{crt_pullwindow_max}};
+        if( pullwindow_feb_specific ) {
+          check_pullwindow_min = limit_dict["Pull window"][0];
+          check_pullwindow_max = limit_dict["Pull window"][1];
+        }
+        var check_readoutrate_min = {{crt_readoutrate_min}};
+        var check_readoutrate_max = {{crt_readoutrate_max}};
+        if( readoutrate_feb_specific ) {
+          check_readoutrate_min = limit_dict["Readout rate"][0];
+          check_readoutrate_max = limit_dict["Readout rate"][1];
+        }
+        var check_missingt0 = {{crt_missingt0_max}};
+        if( missingt0_feb_specific ) {
+          check_missingt0 = limit_dict["Missing T0"][0];
+        }
+        var check_missingt1 = {{crt_missingt1_max}};
+        if( missingt1_feb_specific ) {
+          check_missingt1 = limit_dict["Missing T1"][0];
         }
 
-        if ( (readoutrate < {{crt_readoutrate_min}}) || (readoutrate > {{crt_readoutrate_max}}) )
+        if ( (baseline < check_baseline_min) || (baseline > check_baseline_max) )
+        { 
+	  BAD_CRT_BASELINES.add(channel_str);
+        }
+        if ( (deadtime < check_deadtime_min) || (deadtime > check_deadtime_max) )
         {
-          var channel_str = String(crt_channels[i]);
+          BAD_CRT_DEADTIMES.add(channel_str);
+        }
+        if ( (pullwindow < check_pullwindow_min) || (pullwindow > check_pullwindow_max) )
+        {
+          BAD_CRT_PULLWINDOWS.add(channel_str);
+        }
+        if ( (readoutrate < check_readoutrate_min) || (readoutrate > check_readoutrate_max) )
+        {
           BAD_CRT_READOUTRATES.add(channel_str);
+        }
+        if ( (missingt0 > check_missingt0) )
+        {
+          BAD_CRT_MISSINGT0S.add(channel_str);
+        }
+        if ( (missingt1 > check_missingt1) )
+        {
+          BAD_CRT_MISSINGT1S.add(channel_str);
         }
       }
 
