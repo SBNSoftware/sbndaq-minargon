@@ -216,17 +216,17 @@ def get_ignition_last_value_pv(connection, year, month, group, pv):
     return formatted
 
 @ignition_route
-def get_ignition_2hr_value_pv(connection, year, month, group, pv):
+def get_ignition_30min_value_pv(connection, year, month, group, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start_2hr = int(stop_t) - 7200000
+    start_30min = int(stop_t) - 1800000
     start = 1752253744*1e3
     # use whatever is larger
-    start = max(start_2hr, start)
+    start = max(start_30min, start)
     
     awindow = (stop_t - start)
     awindow_hr = awindow/1e3/60//60
@@ -427,6 +427,12 @@ def drifthv_ps_series(connection, pv):
     formatted = []
     for row in dbrows:
         # formatted.append((row[0], row[1], row[2]))
+        ##debugging## -- MK 8/12/25
+        #print(pv)
+        #print(row[1]) #row 1 is value
+        #print(row[2]) #row 2 is timestamp
+        if row[1] is None:
+            continue
         formatted.append((float(row[2]), float(row[1])))
     ret = {
         pv: formatted
