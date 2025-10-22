@@ -826,7 +826,11 @@ def build_link_tree(rconnect):
     
     # index by group, the metric, then instance
     for group, config, this_members, in zip(groups, configs, members):
-        config = json.loads(config)
+        try:
+            config = json.loads(config)
+        except:
+            continue
+
         tree_dict["nodes"].append({
             "expanded": False,
             "text": group,
@@ -921,3 +925,25 @@ def eventdisplay(rconnect, key):
     image.save(temp_data, "JPEG")
     encoded_img_data = base64.b64encode(temp_data.getvalue())
     return encoded_img_data.decode('utf-8')
+
+@app.route('/<rconnect>/get_daq_run_status/<key>')
+@redis_route
+def get_daq_run_status(rconnect, key='daq_run_status'):
+    latest_status = rconnect.xrevrange(key, count=1)
+    if not latest_status:
+        return None  # No data available
+
+    entry_id, data = latest_status[0]
+
+    # Convert byte keys to strings
+    data = {key.decode() if isinstance(key, bytes) else key: value.decode() if isinstance(value, bytes) else value for key, value in data.items()}
+    
+    return data
+    # Extracting fields from the Redis entry
+    #return {
+    #    "run_number": data.get("run_number"),
+    #    "configuration": data.get("configuration"),
+    #    "start_time": data.get("start_time"),
+    #    "duration": data.get("duration"),
+    #    "status": data.get("status"),
+    #}

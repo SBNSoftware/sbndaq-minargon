@@ -62,7 +62,13 @@ from .hardwaredb import HWSelectorConverter, HWSelectorListConverter
 app.url_map.converters["hw_selector"] = HWSelectorConverter
 app.url_map.converters["hw_selector_list"] = HWSelectorListConverter
 # load in the hardwaredb
-from . import hardwaredb
+print("TRYING TO LOAD THE HARDWARE DB")
+try:
+    from . import hardwaredb
+except Exception as e:
+    print("Uh oh! Could not import the Hardware DB:")
+    print(e)
+    exit(1)
 
 # routes
 if app.config["FRONT_END"] == "sbnd":

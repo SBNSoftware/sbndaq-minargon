@@ -17,9 +17,9 @@
 </div>
 {% endif %}
 <div class="row">
-    <div class="col-lg-6 col-md-12 order-1" style="padding:0">
+    <!--<div class="col-lg-6 col-md-12 order-1" style="padding:0">
         <div id="histogram"></div>
-    </div>
+    </div>-->
     <div class="col-lg-6 col-md-12 order-2" style="padding:0">
         <div id="scatter"></div>
     </div>
@@ -96,9 +96,9 @@ var scatter = config_controller.addGroupDataScatterController("scatter", "{{titl
   .set();
 
 // and histogram
-var histo = config_controller.addGroupDataHistoController("histogram", "{{title}}")
-  .rangeController("#form-range-lo", "#form-range-hi", false)
-  .set();
+//var histo = config_controller.addGroupDataHistoController("histogram", "{{title}}")
+//  .rangeController("#form-range-lo", "#form-range-hi", false)
+//  .set();
 
 // build cubism controller
 var cubism = config_controller.addCubismController("#timeseries", 25)
@@ -151,10 +151,6 @@ function crtBoardLink(group, instance) {
 
 function crtChannelLink(group, instance) {
   return "CRT_channel_snapshot?channel_no=" + instance;
-}
-
-function crtEventLink(group, instance) {
-  return "CRT_event_snapshot?event_no=" + instance;
 }
 
 function ptbLltLink(group, instance) {

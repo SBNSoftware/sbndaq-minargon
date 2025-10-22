@@ -30,7 +30,6 @@ from .checkStatus import messageString
 import six
 from six.moves import range
 
-
 # error class for connection
 class IgnitionConnectionError:
     def __init__(self):
@@ -152,6 +151,7 @@ def is_valid_connection(connection_name):
 # make the db query and return the data
 def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     query_builder = {
+        "YEAR": config["year_name"],
         "MONTH": config["time_name"],
         "GROUP": config["group_name"],
         "PV": pv,
@@ -160,7 +160,7 @@ def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     }
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{MONTH} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{YEAR}_{MONTH} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%value%'
@@ -188,20 +188,19 @@ def ignition_query(pv, start_t, stop_t, n_data, connection, month):
         raise  # let website handle the error
     return data
     
-#def get_ignition_last_value(connection, group):
 @ignition_route
-def get_ignition_last_value_pv(connection, month, group, pv):
+def get_ignition_last_value_pv(connection, year, month, group, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%{}%'
     ORDER BY d.t_stamp DESC 
-    LIMIT 1""".format(month, group, pv)
+    LIMIT 1""".format(year, month, group, pv)
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
@@ -217,30 +216,34 @@ def get_ignition_last_value_pv(connection, month, group, pv):
     return formatted
 
 @ignition_route
-def get_ignition_2hr_value_pv(connection, month, group, pv):
+def get_ignition_30min_value_pv(connection, year, month, group, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
 
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
     stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
 
-    start = int(stop_t)-7200000
-    LATEST_RAMP = 1720020000000
-    if (start < LATEST_RAMP):
-        start = LATEST_RAMP
+    start_30min = int(stop_t) - 1800000
+    start = 1752253744*1e3
+    # use whatever is larger
+    start = max(start_30min, start)
+    
+    awindow = (stop_t - start)
+    awindow_hr = awindow/1e3/60//60
+    awindow_min = (awindow - awindow_hr*1e3*60*60)/1e3//60
+
+    awindow = str(int(awindow_hr))+"hr "+str(int(awindow_min))+"min"
     start = str(start)
     stop = str(int(stop_t))
-    #print("start", start)
-    #print("stop", stop)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%{}%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp""".format(month, group, pv, start, stop)
+    ORDER BY d.t_stamp""".format(year, month, group, pv, start, stop)
 
     cursor.execute(query)
     dbrows = cursor.fetchall()
@@ -253,7 +256,7 @@ def get_ignition_2hr_value_pv(connection, month, group, pv):
 #        except:
 #            time = row[2]
         formatted.append((row[0], row[1], row[2]))
-    return formatted
+    return formatted, awindow
 
 
 
@@ -275,18 +278,25 @@ def cryo_ps_series(connection, month, pv):
         stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
     start = str(int(start_t))
     stop = str(int(stop_t))
-    current_month = datetime.now().month
+
+    current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+
     n_data = args['n_data']    # Number of data points
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp""".format(current_month, pv, start, stop)
+    ORDER BY d.t_stamp""".format(year, month_2digit, pv, start, stop)
     # LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
@@ -323,15 +333,20 @@ def cryo_ps_step(connection, month, pv):
     n_data = args['n_data']    # Number of data points
     n_data = 1000
 
+    current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
+
+
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
     ORDER BY d.t_stamp 
-    LIMIT {}""".format(month, pv, start, stop, n_data)
+    LIMIT {}""".format(year, month, pv, start, stop, n_data)
 
     cursor.execute(query)
     data = cursor.fetchall()
@@ -384,19 +399,26 @@ def drifthv_ps_series(connection, pv):
         stop_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 # convert to unix ms
     start = str(int(start_t))
     stop = str(int(stop_t))
-    current_month = datetime.now().month
+
+    current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+
     n_data = args['n_data']    # Number of data points
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
     AND s.tagpath LIKE '%{}%'
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
-    ORDER BY d.t_stamp""".format(current_month, pv, start, stop)
+    ORDER BY d.t_stamp""".format(year, month_2digit, pv, start, stop)
     # LIMIT {}""".format(month, pv, start, stop, n_data)
 
     cursor.execute(query)
@@ -405,6 +427,12 @@ def drifthv_ps_series(connection, pv):
     formatted = []
     for row in dbrows:
         # formatted.append((row[0], row[1], row[2]))
+        ##debugging## -- MK 8/12/25
+        #print(pv)
+        #print(row[1]) #row 1 is value
+        #print(row[2]) #row 2 is timestamp
+        if row[1] is None:
+            continue
         formatted.append((float(row[2]), float(row[1])))
     ret = {
         pv: formatted
@@ -434,8 +462,15 @@ def drifthv_ps_step(connection, pv):
     n_data = args['n_data']    # Number of data points
     n_data = 1000
 
+    current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_2025_{:02d} d, cryo_prd.sqlth_te s
+    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
@@ -443,7 +478,7 @@ def drifthv_ps_step(connection, pv):
     AND s.tagpath LIKE '%value%'
     AND d.t_stamp BETWEEN {} AND {}
     ORDER BY d.t_stamp 
-    LIMIT {}""".format(current_month, pv, start, stop, n_data)
+    LIMIT {}""".format(year, month_2digit, pv, start, stop, n_data)
 
     cursor.execute(query)
     data = cursor.fetchall()

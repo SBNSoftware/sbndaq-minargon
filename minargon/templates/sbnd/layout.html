@@ -124,6 +124,7 @@
 									{{ nav_link('CRT_status', 'Status') }}
 									{{ nav_link('CRT_board', 'Board Metrics') }}
 									{{ nav_link('CRT_channel', 'Channel Metrics') }}
+									{{ nav_link('CRT_event', 'Event Metrics') }}
 								</ul>
 						  </li>
 							
@@ -140,13 +141,28 @@
 				   <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
 				   <ul class='dropdown-menu bg-maroon'>  
 				  		{{ nav_link('PTB_status', 'Status') }}
-				  		{{ nav_link('LLT_rates', 'LLT') }}
-              {{ nav_link('HLT_rates', 'HLT') }}
-              {{ nav_link ('Beam_Light_Diff', 'Beam Light Difference')}}
-              {{ nav_link ('Beam_CRT_Diff', 'Beam CRT Difference')}}
-              {{ nav_link ('PTB_TDC_Diff', 'PTB TDC Difference')}}
-              {{ nav_link('MSUM_snapshot', 'MSUM Waveforms') }}
-              {{ nav_link('PTB_snapshot', 'PTB Waveforms') }}
+              <li class="dropdown-submenu bg-maroon nav-item">
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger Rates<b class='caret'></b></a>
+                <ul class="dropdown-menu bg-maroon">
+				  		    {{ nav_link('LLT_rates', 'LLT') }}
+                  {{ nav_link('HLT_rates', 'HLT') }}
+                </ul>
+              </li>
+              <li class="dropdown-submenu bg-maroon nav-item">
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Difference Metrics<b class='caret'></b></a>
+                <ul class="dropdown-menu bg-maroon">
+                  {{ nav_link ('Beam_Light_Diff', 'Beam Light Difference')}}
+                  {{ nav_link ('Beam_CRT_Diff', 'Beam CRT Difference')}}
+                  {{ nav_link ('PTB_TDC_Diff', 'PTB TDC Difference')}}
+                </ul>
+              </li>
+              <li class="dropdown-submenu bg-maroon nav-item">
+                <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Waveforms<b class='caret'></b></a>
+                <ul class="dropdown-menu bg-maroon">
+                  {{ nav_link('MSUM_snapshot', 'MSUM') }}
+                  {{ nav_link('PTB_snapshot', 'PTB') }}
+                </ul>
+              </li>
               {{ nav_link('Trigger_Board_Monitor', 'Trigger Board') }}
             </ul>
           </li>
@@ -155,7 +171,7 @@
 							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Timing<b class='caret'></b></a>
 						    <ul class='dropdown-menu bg-maroon'>  
 									{{ nav_link('Timing_status', 'Status') }}
-                  {{ nav_link('Timing_Metrics', 'Timing Metrics') }}
+                  {{ nav_link('Timing_Metric_View', 'Metrics') }}
                   {{ nav_link('Timing_Differences', 'Timing Differences') }}
 								</ul>
 						  </li>
@@ -207,7 +223,15 @@
                     {{ nav_link('Software_Trigger', 'Software Trigger') }}
                   </ul>
                 </li>
-              <!-- {{ nav_link('view_streams', 'Data Browser')}} -->
+              <li class='dropdown nav-item'>
+              <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Nearline Metrics<b class='caret'></b></a>
+                <ul class='dropdown-menu bg-maroon'>
+                  <li class="nav-item"><A class='nav-link' HREF=/cgi-bin/minargon/minargon.wsgi/view_streams/1?redis_online=purity:TPCE:attenuation:nearline,purity:TPCW:attenuation:nearline>Purity</A></li>
+                  <li class="nav-item"><A class='nav-link' HREF=/cgi-bin/minargon/minargon.wsgi/view_streams?redis_online=beamnorm:PMT-tophat:fractional-hat:nearline>Top Hat</A></li>
+                  <li class="nav-item"><A class='nav-link' HREF=/cgi-bin/minargon/minargon.wsgi/online_group/pmtgain>PMT Gains</A></li>
+                </ul>
+              </li>
+              {{ nav_link('view_streams', 'Data Browser')}}
             </ul>
           </div><!--/.navbar-collapse -->
         </nav>

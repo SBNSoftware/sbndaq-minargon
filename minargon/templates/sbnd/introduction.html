@@ -31,7 +31,192 @@
     <br>
     E-Log: <a href="https://dbweb0.fnal.gov/ECL/sbnd" target="_blank">click here</a>
     <br>
+    <br>
+    <br>
+
+    <!-- configurable audible alarm -->
+    <!-- {% set detector_value = 60 %} Get this value from the detector -->
+     {% set HV_value = -1 %} <!-- HV status, initialized to stupid value -->
+     {% set TPC_value = -1 %}
+
+    <p>Cthulhu (High Voltage) Status: <span id="HVDisplayValue">{{ HV_value }}</span>; Alarm HV > 0</p>
+    <span id="HVValue" HV-value="{{ HV_value }}" style="display: none;"></span>
+
+    <p>TPC Status: <span id="TPCDisplayValue">{{ TPC_value }}</span>; Alarm TPC Status > 0</p>
+    <span id="TPCValue" TPC-value="{{ TPC_value }}" style="display: none;"></span>
+
+    <p id="alarmReason">Checking alarm status...</p>
+
+    <span id="isAlarmDisabled"></span> 
+    <br>
+    <button onclick="testAlarm()">Test Alarm</button>
+    <br>
+    <button onclick="disableAlarm()">Issue Acknowledged - Disable Alarm</button>
+    <br>
+    <span id="lastDisabledTime"></span>  <!-- Display last disabled time -->
+    <br>
+    <button onclick="resetAlarm()">Issue Resolved - Enable Alarm</button>
+    <br>
+    <span id="lastResetTime"></span>  <!-- Display last reset time -->
+    
+    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio>
+
+    <script>
+        let alarmTriggered = false;
+        let alarmDisabled = localStorage.getItem("alarmDisabled") === "true";
+        const DISABLE_DURATION =  60 * 60 * 1000; // 1 hour in milliseconds
+        var daqStatus = "{{ daq_status.status | lower | default('unknown') }}";
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return "Never";
+            const date = new Date(parseInt(timestamp));
+            return date.toLocaleString(); // Convert to readable format
+        }
+
+        function setIsAlarmDisabled() {
+          const lastDisabled = localStorage.getItem("disableTimestamp");
+          const alarmStatus = document.getElementById("isAlarmDisabled");
+
+         if (lastDisabled) {
+          alarmStatus.innerText = "Alarm Disabled";
+          alarmStatus.style.color = "red"; // Set text color to red
+          } else {
+          alarmStatus.innerText = "Alarm Active";
+          alarmStatus.style.color = "green"; // Set text color to green
+          }
+        }
+
+        function updateLastDisabledTime() {
+            const lastDisabled = localStorage.getItem("disableTimestamp");
+            document.getElementById("lastDisabledTime").innerText = lastDisabled 
+                ? `Last disabled: ${formatTimestamp(lastDisabled)}`
+                : "Currently Active";
+        }
+
+        function updateLastResetTime() {
+            const lastReset = localStorage.getItem("resetTimestamp");
+            document.getElementById("lastResetTime").innerText = lastReset
+                ? `Last reset: ${formatTimestamp(lastReset)}`
+                : "Last reset: Never";
+        }
+
+        function checkAutoReset() {
+            const disableTimestamp = localStorage.getItem("disableTimestamp");
+            if (disableTimestamp) {
+                const currentTime = new Date().getTime();
+                if (currentTime - disableTimestamp > DISABLE_DURATION) {
+                    resetAlarm();
+                    console.log("Alarm auto-reset after 1 hour");
+                }
+              }
+        }
+
+        function testAlarm() {
+          let alarmSound = document.getElementById("alarmSound");
+          alarmSound.play()
+            .then(() => console.log("Test alarm playing!"))
+            .catch(error => console.log("Error playing test alarm:", error));
+        }
+
+        function checkAlarm() {
+            checkAutoReset();
+            let HVValue = parseInt(document.getElementById("HVValue").getAttribute("HV-value"));
+            let TPCValue = parseInt(document.getElementById("TPCValue").getAttribute("TPC-value"));
+
+            let alarmReasonElement = document.getElementById("alarmReason");
+
+            if (alarmTriggered || alarmDisabled) {
+              return;  // Stop the function if the alarm has already been triggered or is disabled
+            }
+
+            let alarmReason = "Alarm is not ringing.";
+
+            if (!alarmTriggered && !alarmDisabled) {
+                if (HVValue > 0) {
+                    alarmReason = "Alarm triggered: High Voltage Status > 0.";
+                } else if (TPCValue > 0) {
+                    alarmReason = "Alarm triggered: TPC Status > 0.";
+                } else if (daqStatus !== "running") {
+                    alarmReason = "Alarm triggered: DAQ Status is not running.";
+                }
+            }
+            
+            localStorage.setItem("alarmReason", alarmReason);
+            alarmReasonElement.textContent = alarmReason;
+
+            if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
+                document.getElementById("alarmSound").play();
+                alarmTriggered = true;
+            } 
+            
+        }
+
+        function disableAlarm() {
+            document.getElementById("alarmSound").pause();
+            alarmTriggered = false;
+            alarmDisabled = true;  // Prevent alarm from playing again
+            const timestamp = new Date().getTime();
+            localStorage.setItem("alarmDisabled", "true");
+            localStorage.setItem("disableTimestamp", timestamp);
+            updateLastDisabledTime();
+            setIsAlarmDisabled();
+        }
+
+        function resetAlarm() {
+            alarmTriggered = false;
+            alarmDisabled = false;
+            const timestamp = new Date().getTime();
+            localStorage.setItem("alarmDisabled", "false");
+            localStorage.removeItem("disableTimestamp");
+            localStorage.setItem("resetTimestamp", timestamp);
+            updateLastDisabledTime();
+            updateLastResetTime();
+            setIsAlarmDisabled();
+        }
+
+        function formatTimestamp(timestamp) {
+          if (!timestamp) return "Never";
+          const date = new Date(parseInt(timestamp));
+          return date.toLocaleString(); // Convert to a human-readable format
+        }
+
+
+        function updateDisplay() {
+        let newHVValue = document.getElementById("HVValue").getAttribute("HV-value");
+        let newTPCValue = document.getElementById("TPCValue").getAttribute("TPC-value");
+        document.getElementById("HVDisplayValue").innerText = newHVValue;
+        document.getElementById("TPCDisplayValue").innerText = newTPCValue;
+      }
+
+      function restoreAlarmReason() {
+        let savedAlarmReason = localStorage.getItem("alarmReason");
+        let alarmReasonElement = document.getElementById("alarmReason");
+        alarmReasonElement.textContent = savedAlarmReason || "Checking alarm status...";
+
+        // Apply color based on alarm status
+        if (savedAlarmReason.includes("Alarm triggered")) {
+                alarmReasonElement.style.color = "red";  // Highlight in red if alarm is ringing
+                alarmReasonElement.style.fontWeight = "bold";
+            } else {
+                alarmReasonElement.style.color = "green";  //Highlight in green otherwise
+                alarmReasonElement.style.fontWeight = "bold";
+            }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+      setInterval(checkAlarm, 1000);  // Check every second
+      updateLastDisabledTime(); // Update time on page load
+      updateLastResetTime(); // Update time on page load
+      setIsAlarmDisabled();
+      updateDisplay();
+      restoreAlarmReason();
+      });
+  </script>
+
+
 </div>
+
+<!-- <audio src="static/audio/0096.wav" autoplay></audio> -->
 
 <div class="col-lg-3 col-md-3 col-sm-8" style="padding:0">
     <h5>Online Monitoring Wikis</h5>
@@ -53,7 +238,7 @@
       <th><span id="DriftHV-Status"> </span></th>
     </tr>
     <tr>
-      <th style="width: 41%;"> VMon 2-hr alarm log:</a></th>
+      <th style="width: 41%;"> VMon alarms during past <span id="vmon_awindow"></span></a></th>
       <th> # of samples: <span id="VMon-Nsamples"> </span>
       <table>
       <tbody style="font-size: 12px";>
@@ -73,7 +258,7 @@
       </th>
     </tr>
     <tr>
-      <th style="width: 41%;"> IMon 2-hr alarm log:</a></th>
+      <th style="width: 41%;"> IMon alarms during past <span id="imon_awindow"></span></a></th>
       <th> # of samples: <span id="IMon-Nsamples"> </span>
       <table>
       <tbody style="font-size: 12px";>
@@ -98,8 +283,47 @@
 </div>
 
 <br>
-<br>
 
+<div class = "row">
+  <div class="col-lg-11 col-md-11 col-sm-12" style="padding:0">
+    <h3>DAQ Run Status</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Run Number</th>
+                <th>Configuration</th>
+                <th>Start Time</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if daq_status %}
+            <tr>
+                <td>{{ daq_status.run_number }}</td>
+                <td>{{ daq_status.configuration }}</td>
+                <td>{{ daq_status.start_time }}</td>
+                <td>{{ daq_status.duration }}</td>
+                <td id="daqStatus">
+                  <span style="color: white; font-weight: bold; padding: 5px 10px; border-radius: 5px;
+                            background-color: {% if daq_status.status.lower() == 'running' %} green {% else %} red {% endif %};">
+                            {{ daq_status.status }}
+                        </span>
+             </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No DAQ run status available</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+  </div>
+  </div>
+
+  <br>
+
+  
 <div class="row">
 <div class="col-lg-5 col-md-5 col-sm-12" style="padding:0">
   <h3 class="hcenter"> DQM Status </h3>
@@ -140,12 +364,13 @@
     <th><span id="Trigger-Status"> </span></th>
   </tr>
   <tr>
-    <th style="width: 31%;"><a href="{{url_for('Timing_Differences')}}">Timing Status:</a></th>
+    <th style="width: 31%;"><a href="{{url_for('Timing_status')}}">Timing Status:</a></th>
     <th><span id="Timing-Status"> </span></th>
   </tr>
   </table>
 </div>
 </div>
+
 
 {%endblock%}
 
@@ -226,7 +451,7 @@ poll_redis_mem_frac.add_callback(function(data) {
     $(spanid).text((data.val * 100).toFixed(2));
 
     spanid = "#redis-mem";
-    if (data.val > 0.80) {     $(spanid).css({"color": "red"});
+    if (data.val > 0.85) {     $(spanid).css({"color": "red"});
     }
     else {
       $(spanid).css({"color": "green"});
@@ -295,6 +520,10 @@ var HV_status = 0;
 if (BAD_DRIFTHVS.size > 0) {
   HV_status = 1;
 }
+
+let awindow_str = "{{awindow}}";
+$("#vmon_awindow").html(awindow_str);
+$("#imon_awindow").html(awindow_str);
 //vmon log
 var vmon_status = 0;
 $("#VMon-Nsamples").html({{vmon_nsamples}});
@@ -408,12 +637,18 @@ else {
   $("#DriftHV-Status").css({"color": "green"});
 }
 
+//For audible alarm
+
+document.getElementById("HVValue").setAttribute("HV-value", HV_status);
+updateDisplay();
+
 
 // TPCs
 var BAD_PLANES = new Set();
 var TPC_ON = false;
 var short_chs = {{ short_chs }};
 var dead_chs = {{ dead_chs }};
+var TPC_status = 0;
 {% for tpc_plane in tpc_planes %}
   {% set tpc_channels = tpc_channels[loop.index0]|tojson %}
   {% set tpc_title = tpc_titles[loop.index0] %}
@@ -451,7 +686,7 @@ var dead_chs = {{ dead_chs }};
 
       }//end for over channel RMS values
 
-      if (plane_has_bad_rms && nch_zerorms > 10) {
+      if (plane_has_bad_rms || nch_zerorms > 10) {
         BAD_PLANES.add('{{ tpc_title }}');
       }
       else {
@@ -465,6 +700,7 @@ var dead_chs = {{ dead_chs }};
         let bad_planes_str = "NOT OK."+"<a href={{url_for('TPC_metrics_per_plane')}}>Bad Planes: </a>" + Array.from(BAD_PLANES).sort().join(", ");
         $("#TPC-Status").html(bad_planes_str);
         $("#TPC-Status").css({"color": "red"});
+        TPC_status = 1;
       }
       else {
         $("#TPC-Status").text("OK");
@@ -476,45 +712,198 @@ var dead_chs = {{ dead_chs }};
   }
 {% endfor %}
 
+//For audible alarm
+document.getElementById("TPCValue").setAttribute("TPC-value", TPC_status);
+updateDisplay();
+
 
 //CRTs
 var baseline_sum = 0;
-var BAD_CRTS = new Set();
+var BAD_CRT_BASELINES = new Set();
+var BAD_CRT_DEADTIMES = new Set();
+var BAD_CRT_PULLWINDOWS = new Set();
+var BAD_CRT_MISSINGT0S = new Set();
+var BAD_CRT_MISSINGT1S = new Set();
+var BAD_CRT_READOUTRATES = new Set();
+
+let BAD_CRT_SETS = [
+   BAD_CRT_BASELINES,
+   BAD_CRT_DEADTIMES,
+   BAD_CRT_PULLWINDOWS,
+   BAD_CRT_MISSINGT0S,
+   BAD_CRT_MISSINGT1S,
+   BAD_CRT_READOUTRATES,
+];
+
 var crt_config = {{crt_config|tojson|safe}};
+var crt_feb_specific_limits = {{crt_feb_specific_limits|tojson|safe}};
 
 {% for crt in crts %}
   {% set crt_channels = crt_channels[loop.index0]|tojson %}
   {
-  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline"], {{crt_channels}}, 0, 25, "", undefined, undefined);
-  var crt_data_link = crt_config_controller.data_link(0, ["baseline"], undefined, 1);
+  var crt_config_controller = new Config.GroupConfigController(crt_config, undefined, ["baseline", "Deadtime", "PullWindow", "MissingT0", "MissingT1", "ReadoutRate"], {{crt_channels}}, 0, 25, "", undefined, undefined);
+  var crt_data_link = crt_config_controller.data_link(0, ["baseline", "Deadtime", "PullWindow", "MissingT0", "MissingT1", "ReadoutRate"], undefined, 1);
   var crt_poll = new Data.D3DataPoll(crt_data_link, 60*1000 /* 1 minute */);
   var crt_buffer = new Data.D3DataBuffer(crt_poll, 1, [
     function(data) {
       
       var crt_channels = {{crt_channels}};
-      var baseline_data = data;
+      var baseline_data    = data.slice(0, crt_channels.length);
+      var deadtime_data    = data.slice(crt_channels.length, 2*crt_channels.length);
+      var pullwindow_data  = data.slice(2*crt_channels.length, 3*crt_channels.length);
+      var missingt0_data   = data.slice(3*crt_channels.length, 4*crt_channels.length);
+      var missingt1_data   = data.slice(4*crt_channels.length, 5*crt_channels.length);
+      var readoutrate_data = data.slice(5*crt_channels.length);
 
       for (var i = 0; i < crt_channels.length; i++) {
+
+        // Get data
+
         if (baseline_data[i].size > 0) {
           var baseline = baseline_data[i].get_last()[1];
           baseline_sum += baseline;
         }
+        if (deadtime_data[i].size > 0) {
+          var deadtime = deadtime_data[i].get_last()[1];
+        }
+        if (pullwindow_data[i].size > 0) {
+          var pullwindow = pullwindow_data[i].get_last()[1];
+        }
+        if (readoutrate_data[i].size > 0) {
+          var readoutrate = readoutrate_data[i].get_last()[1];
+        }
+        if (missingt0_data[i].size > 0) {
+          var missingt0 = missingt0_data[i].get_last()[1];
+        }
+        if (missingt1_data[i].size > 0) {
+          var missingt1 = missingt1_data[i].get_last()[1];
+        }
 
-        if ( (baseline < {{crt_baseline_min}}) || (baseline > {{crt_baseline_max}}) )
+
+        var maybe_feb_specific = ( Number(crt_channels[i]) in crt_feb_specific_limits );
+        var baseline_feb_specific = false;
+        var deadtime_feb_specific = false;
+        var pullwindow_feb_specific = false;
+        var readoutrate_feb_specific = false;
+        var missingt0_feb_specific = false;
+        var missingt1_feb_specific = false;
+
+	// Check for FEB specific limits
+        if( maybe_feb_specific ) {
+          var limit_dict = crt_feb_specific_limits[crt_channels[i]];
+	  baseline_feb_specific = "Baseline" in limit_dict;
+	  deadtime_feb_specific = "Deadtime" in limit_dict;
+	  pullwindow_feb_specific = "Pull window" in limit_dict;
+	  readoutrate_feb_specific = "Readout rate" in limit_dict;
+	  missingt0_feb_specific = "Missing T0" in limit_dict;
+	  missingt1_feb_specific = "Missing T1" in limit_dict;
+        }
+
+	var channel_str = String(crt_channels[i]);
+
+        var check_baseline_min = {{crt_baseline_min}};
+        var check_baseline_max = {{crt_baseline_max}};
+        if( baseline_feb_specific ) {
+          check_baseline_min = limit_dict["Baseline"][0];
+          check_baseline_max = limit_dict["Baseline"][1];
+        }
+        var check_deadtime_min = {{crt_deadtime_min}};
+        var check_deadtime_max = {{crt_deadtime_max}};
+        if( deadtime_feb_specific ) {
+          check_deadtime_min = limit_dict["Deadtime"][0];
+          check_deadtime_max = limit_dict["Deadtime"][1];
+        }
+        var check_pullwindow_min = {{crt_pullwindow_min}};
+        var check_pullwindow_max = {{crt_pullwindow_max}};
+        if( pullwindow_feb_specific ) {
+          check_pullwindow_min = limit_dict["Pull window"][0];
+          check_pullwindow_max = limit_dict["Pull window"][1];
+        }
+        var check_readoutrate_min = {{crt_readoutrate_min}};
+        var check_readoutrate_max = {{crt_readoutrate_max}};
+        if( readoutrate_feb_specific ) {
+          check_readoutrate_min = limit_dict["Readout rate"][0];
+          check_readoutrate_max = limit_dict["Readout rate"][1];
+        }
+        var check_missingt0 = {{crt_missingt0_max}};
+        if( missingt0_feb_specific ) {
+          check_missingt0 = limit_dict["Missing T0"][0];
+        }
+        var check_missingt1 = {{crt_missingt1_max}};
+        if( missingt1_feb_specific ) {
+          check_missingt1 = limit_dict["Missing T1"][0];
+        }
+
+        if ( (baseline < check_baseline_min) || (baseline > check_baseline_max) )
+        { 
+	  BAD_CRT_BASELINES.add(channel_str);
+        }
+        if ( (deadtime < check_deadtime_min) || (deadtime > check_deadtime_max) )
         {
-          var channel_str = String(crt_channels[i]);
-          BAD_CRTS.add(channel_str);
+          BAD_CRT_DEADTIMES.add(channel_str);
+        }
+        if ( (pullwindow < check_pullwindow_min) || (pullwindow > check_pullwindow_max) )
+        {
+          BAD_CRT_PULLWINDOWS.add(channel_str);
+        }
+        if ( (readoutrate < check_readoutrate_min) || (readoutrate > check_readoutrate_max) )
+        {
+          BAD_CRT_READOUTRATES.add(channel_str);
+        }
+        if ( (missingt0 > check_missingt0) )
+        {
+          BAD_CRT_MISSINGT0S.add(channel_str);
+        }
+        if ( (missingt1 > check_missingt1) )
+        {
+          BAD_CRT_MISSINGT1S.add(channel_str);
         }
       }
 
+      let bad_count = BAD_CRT_SETS.filter(set => set.size > 0).length;
+
       if (baseline_sum == 0){
-        $("#CRT-Status").text("Not OK");
+        $("#CRT-Status").text("NO DATA");
         $("#CRT-Status").css({"color": "orange"});
       }
-      else if (BAD_CRTS.size > 0) {
-        let bad_crts_str = "NOT OK. Bad boards: " + Array.from(BAD_CRTS).join(" ");
-        $("#CRT-Status").html(bad_crts_str);
-        $("#CRT-Status").css({"color": "orange"});
+      else if (bad_count > 0) { // OK, something's wrong.. What?
+
+        let message_parts = ["NOT OK. See status page..."]; // start assembling the problems
+
+        if (BAD_CRT_BASELINES.size > 0) {
+          let baseline_str = "baseline";
+          message_parts.push(baseline_str);
+        }
+        if (BAD_CRT_DEADTIMES.size > 0) {
+          let deadtime_str = "Deadtime";
+          message_parts.push(deadtime_str);
+        }
+        if (BAD_CRT_PULLWINDOWS.size > 0) {
+          let pullwindow_str = "PullWindow";
+          message_parts.push(pullwindow_str);
+        }
+        if (BAD_CRT_MISSINGT0S.size > 0) {
+          let missingt0_str = "MissingT0";
+          message_parts.push(missingt0_str);
+        }
+        if (BAD_CRT_MISSINGT1S.size > 0) {
+          let missingt1_str = "MissingT1";
+          message_parts.push(missingt1_str);
+        }
+        if (BAD_CRT_READOUTRATES.size > 0) {
+          let readoutrate_str = "ReadoutRate";
+          message_parts.push(readoutrate_str);
+        }
+
+        $("#CRT-Status").html(message_parts.join("<br>")); // br means newline in HTML
+
+        // How bad is the situation? Orange is only 1 metric down, orangered is > 1 metric
+        let color="#fd411e"; // orangered
+        if( bad_count == 1 ) {
+           color="orange";
+        }
+
+        $("#CRT-Status").css({"color": color});
       }
       else {
         $("#CRT-Status").text("OK");
@@ -575,7 +964,7 @@ var pmt_config = {{pmt_config|tojson|safe}};
       }
 
       if (baseline_sum == 0){
-        $("#PMT-Status").text("Not OK");
+        $("#PMT-Status").text("NO DATA");
         $("#PMT-Status").css({"color": "orange"});
       }
       else if (BAD_PMTS.size > 0) {
@@ -593,6 +982,49 @@ var pmt_config = {{pmt_config|tojson|safe}};
   }
 {% endfor %}
 
+// Timing
+var timing_config = {{timing_config|tojson|safe}};
+var timing_metrics = {{timing_metrics|tojson|safe}};
+var timing_channels = undefined;
+var bad_timing = [];
+
+{% for i in range(3) %}
+  {
+  {% for metric in timing_metrics[i] %}
+  {
+
+  var metric = {{ metric|tojson }};
+  var config_controller = new Config.GroupConfigController(timing_config, undefined, [metric], [{{i}}], 0, 10)
+  var data_link = config_controller.data_link(0, [metric], undefined, 1);
+
+  var poll = new Data.D3DataPoll(data_link, 10*60*1000 /* 10 minutes */);
+  var buffer = new Data.D3DataBuffer(poll, 5, [ // last parameter is number of events to use
+    function(data) {
+      var timing_data = data;
+      for (var i = 0; i < timing_data.length; i++) {
+	      var timing = timing_data[i].get_last()[1];
+        if (timing < {{timing_alarms_min[i]}} || timing > {{timing_alarms_max[i]}}) {
+          bad_timing.push(i);
+        }
+      }
+    }
+  ]);
+  buffer.start();
+  }
+  {% endfor %}
+}
+{% endfor %}
+
+if (bad_timing.length > 0) {
+  let bad_timing_str = "NOT OK. Bad channels: " + Array.from(bad_timing).join(" ");
+  $("#Timing-Status").html(bad_timing_str);
+  $("#Timing-Status").css({"color": "orange"});
+}
+else {
+  $("#Timing-Status").text("OK");
+  $("#Timing-Status").css({"color": "green"});
+}
+
 
 // check if metadata time is recent
 var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/eventmeta/run,subrun,event,time");
@@ -605,9 +1037,9 @@ poll.add_callback(function(data) {
     var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
       $("#TPC-Status").text("Disconnected (" + delta + "s)");
-      $("#TPC-Status").css({"color": "red"});
+      $("#TPC-Status").css({"color": "orange"});
       $("#CRT-Status").text("Disconnected (" + delta + "s)");
-      $("#CRT-Status").css({"color": "red"});
+      $("#CRT-Status").css({"color": "orange"});
     }
 });
 poll.run();
@@ -627,7 +1059,7 @@ poll.add_callback(function(data) {
     var delta = (time_delta(time) / 1000.).toFixed(0);
     if (!dqm_recent) {
       $("#PMT-Status").text("Disconnected (" + delta + "s)");
-      $("#PMT-Status").css({"color": "red"});
+      $("#PMT-Status").css({"color": "orange"});
     }
 });
 poll.run();

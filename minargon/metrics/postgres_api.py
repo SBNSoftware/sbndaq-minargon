@@ -406,9 +406,9 @@ def ps_series(connection, ID):
     args = stream_args(request.args)
     start_t = args['start']    # Start time
     now = datetime.now(timezone('UTC')) # Get the time now in UTC
-    # 24 hours ago
-    start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
     if start_t is None:
+        # 24 hours ago
+        start_t = calendar.timegm(now.timetuple()) *1e3 + now.microsecond/1e3 - 48*60*60*1e3 # convert to unix ms
         # TODO:
         return abort(404, "Must specify a start time to a PostgreSQL request") 
 

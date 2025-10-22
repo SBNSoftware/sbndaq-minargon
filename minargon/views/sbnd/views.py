@@ -21,7 +21,8 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
-# Channel mapping
+# Channel mappings
+
 TPC_CHANNELS = [list(range(0, 1984)),
             list(range(1984, 3968)),
             list(range(3968, 5632)),
@@ -34,7 +35,7 @@ DEAD_CH = [4800, 4801, 4802, 4803, 4804, 4805, 10438, 10439, 10440, 10441, 10442
 		3242, 3243, 3244, 3245, 3246, 3247, 3248, 3249, 3250, 3251, 3252, 3253, 3254, 3255, 3256, 3257, 3258, 3259, 3260, 3261, 3262, 3263,
 		4160, 4161, 4162, 4163, 4164, 4165, 4166, 4167, 4168, 4169, 4170, 4171, 4172, 4173, 4174, 4175, 4176, 4177, 4178, 4179, 4180, 4181, 
 		4182, 4183, 4184, 4185, 4186, 4187, 4188, 4189, 4190, 4191]
-SHORT_CH = [7169, 8378] 
+SHORT_CH = [7169, 8378, 5060] 
 
 
 PMTS = ["PMT"]
@@ -49,6 +50,8 @@ CRT_MAPS = {
 "Top-Low Wall": sorted([111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 145, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75]),
 "Top-High Wall": sorted([121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209])
 }
+
+
 CRTS = CRT_MAPS.keys() #crt refers to a WALL
 
 TIMING_METRICS = ["ETRIG_BES_diff", "ETRIG_RWM_diff", "ETRIG_FTRIG_diff", "BES_FTRIG_diff"]
@@ -57,16 +60,28 @@ TIMING_METRICS_SETS = [["ETRIG_BES_diff", "ch4exists", "ch1exists"],
     ["ETRIG_FTRIG_diff", "ch4exists", "ch3exists"], 
     ["BES_FTRIG_diff", "ch1exists", "ch3exists"]]
 
-NEW_TIMING_METRICS = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
-NEW_TIMING_METRICS_SETS_NUMBERS = [[0,1,2,3,4,5,6,7,8],[0,3,4,8],[3,4,8]] #beam, offbeam, crossing muons
-NEW_TIMING_METRICS_SETS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
-                           ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
+TIMING_METRICS_STREAMS = [["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "BES_CRTT1_diff", "RWM_BES_diff", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"],
+                          ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"],
+                          ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]]
+TIMING_METRICS_BEAM = ["nCRTT1", "nBES", "nRWM", "nFTRIG", "nETRIG", "ETRIG_BES_diff", "FTRIG_ETRIG_diff"]
+TIMING_METRICS_OFFBEAM = ["nCRTT1","nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
+TIMING_METRICS_CROSSING_MUONS = ["nFTRIG", "nETRIG","FTRIG_ETRIG_diff"]
+
+TRIGGER_TDC_METRICS = ["TDC_HLT_FLASH", "TDC_HLT_EVENT", "TDC_HLT_T1", "TDC_LLT_BES"]
+TRIGGER_TDC_METRICS_SETS = [["TDC_HLT_FLASH", "NUMBER_TDC_FLASH", "NUMBER_PTB_FLASH"], 
+                            ["TDC_HLT_EVENT", "NUMBER_TDC_EVENT", "NUMBER_PTB_EVENT"], 
+                            ["TDC_HLT_T1", "NUMBER_TDC_T1", "NUMBER_PTB_T1"],
+                            ["TDC_LLT_BES", "NUMBER_TDC_BES", "NUMBER_PTB_BES"]]
+
+TRIGGER_CRT_METRICS = ["BEAM_HLT_T1RESET", "OFFBEAM_HLT_T1RESET"]
+TRIGGER_CRT_METRICS_SETS = [["BEAM_HLT_T1RESET", "NUMBER_BEAM_T1RESET", "NUMBER_BEAM_HLT"],
+			    ["OFFBEAM_HLT_T1RESET", "NUMBER_OFFBEAM_T1RESET", "NUMBER_OFFBEAM_HLT"]] 
 
 # Alarm limits
 
 DRIFTHV_ALARM_LIMITS = {
-                "vmon": [96.35, 96.4, 96.33, 96.42 ],
-                "imon": [89.13, 89.48, 88.88, 90.18],
+                "vmon": [94.4, 94.6, 94.35, 94.65],
+                "imon": [87.4, 87.8, 87.1, 89.1],
                 "vsp": [99.95, 100.05],
                 "isp": [91.5, 300.5],
                 "scheme": [-1, 2]
@@ -82,8 +97,29 @@ IMon_HI = DRIFTHV_ALARM_LIMITS["imon"][1]
 IMon_LOLO = DRIFTHV_ALARM_LIMITS["imon"][2]
 IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
 
-CRT_BASELINE_ALARM_MIN = 20
-CRT_BASELINE_ALARM_MAX = 330
+# CRT FEB-specific limits.
+# Overrides global limits for the FEBs and metrics specified
+CRT_FEB_LIMITS_JSON = os.path.join( os.path.dirname(__file__), "crt_limits.json" )
+with open(CRT_FEB_LIMITS_JSON, 'r') as fcjl:
+    CRT_FEB_SPECIFIC_LIMITS = json.load(fcjl)
+
+# CRT global limits now read from the JSON
+
+CRT_BASELINE_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_baseline_min"]
+CRT_BASELINE_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_baseline_max"]
+
+CRT_DEADTIME_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_deadtime_min"]
+CRT_DEADTIME_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_deadtime_max"]
+
+CRT_PULLWINDOW_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_pullwindow_min"]
+CRT_PULLWINDOW_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_pullwindow_max"]
+
+CRT_MISSINGT0_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_missingt0_max"]
+
+CRT_MISSINGT1_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_missingt1_max"]
+
+CRT_READOUTRATE_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_readoutrate_min"]
+CRT_READOUTRATE_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_readoutrate_max"]
 
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
@@ -93,6 +129,38 @@ PMT_BASELINE_ALARM_MAX = 14270
 
 TPC_RMS_ALARM_MAX = 15
 
+TIMING_BEAM_nCRTT1_MIN = 0.5
+TIMING_BEAM_nCRTT1_MAX = 1.5
+TIMING_BEAM_nBES_MIN = 0.5
+TIMING_BEAM_nBES_MAX = 1.5
+TIMING_BEAM_nRWM_MIN = 0.5
+TIMING_BEAM_nRWM_MAX = 1.5
+TIMING_BEAM_nFTRIG_MIN = 0
+TIMING_BEAM_nFTRIG_MAX = 30
+TIMING_BEAM_nETRIG_MIN = 0.5
+TIMING_BEAM_nETRIG_MAX = 1.5
+TIMING_BEAM_RWM_BES_diff_MIN = 333
+TIMING_BEAM_RWM_BES_diff_MAX = 335
+TIMING_BEAM_ETRIG_BES_diff_MIN = 331
+TIMING_BEAM_ETRIG_BES_diff_MAX = 333
+TIMING_BEAM_FTRIG_ETRIG_diff_MIN = -1.5
+TIMING_BEAM_FTRIG_ETRIG_diff_MAX = 1.5
+TIMING_OFFBEAM_nCRTT1_MIN = 0.5
+TIMING_OFFBEAM_nCRTT1_MAX = 1.5
+TIMING_OFFBEAM_nFTRIG_MIN = 0
+TIMING_OFFBEAM_nFTRIG_MAX = 30
+TIMING_OFFBEAM_nETRIG_MIN = 0.5
+TIMING_OFFBEAM_nETRIG_MAX = 1.5
+TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN = -1.5
+TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX = 1.5
+TIMING_CROSSING_MUON_nFTRIG_MIN = 0
+TIMING_CROSSING_MUON_nFTRIG_MAX = 20
+TIMING_CROSSING_MUON_nETRIG_MIN = 0.5
+TIMING_CROSSING_MUON_nETRIG_MAX = 1.5
+TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN = 0
+TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX = 1.5
+
+
 EVENTMETA_KEY = "eventmeta"
 
 @app.route('/introduction')
@@ -101,18 +169,22 @@ def introduction():
     database = "sbnd_ignition"
     pv_lists = ["scheme", "vsp", "vmon", "isp", "imon"] 
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
     bad_drifthv_pvs = []
     for idx_pv, pv in enumerate(pv_lists):
-        this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
-        if (float(this_dbrow[0][1]) > DRIFTHV_ALARM_LIMITS[pv][0]) & (float(this_dbrow[0][1]) < DRIFTHV_ALARM_LIMITS[pv][1]):
+        this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "drifthv", pv)
+        try: this_val = float(this_dbrow[0][1])
+        except: continue
+        if (this_val > DRIFTHV_ALARM_LIMITS[pv][0]) & (this_val < DRIFTHV_ALARM_LIMITS[pv][1]):
             continue
         bad_drifthv_pvs.append(pv)
     
-    # alarms in the past 2 hours
+    # alarms in the past 30 minutes
     # vmon
-    vmon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, month_2digit, "drifthv", "vmon")
+    vmon_dbrows, awindow = ignition_api.get_ignition_30min_value_pv(database, year, month_2digit, "drifthv", "vmon")
     vmon_nsamples = len(vmon_dbrows)
     vmon_n_hi = 0
     vmon_n_hihi = 0
@@ -120,32 +192,37 @@ def introduction():
     vmon_n_lolo = 0
     for vr in vmon_dbrows:
         #print(vr[0])
-        if (float(vr[1]) < VMon_LOLO):
+        try: vmon_val = float(vr[1])
+        except: continue
+        if (vmon_val < VMon_LOLO):
             vmon_n_lolo += 1
-        if (float(vr[1]) < VMon_LO):
+        if (vmon_val < VMon_LO):
             vmon_n_lo += 1
-        if (float(vr[1]) > VMon_HIHI):
+        if (vmon_val > VMon_HIHI):
             vmon_n_hihi += 1
-        if (float(vr[1]) > VMon_HI):
+        if (vmon_val > VMon_HI):
             vmon_n_hi += 1
         else:
             continue
 
     # imon
-    imon_dbrows = ignition_api.get_ignition_2hr_value_pv(database, month_2digit, "drifthv", "imon")
+    imon_dbrows, awindow = ignition_api.get_ignition_30min_value_pv(database, year, month_2digit, "drifthv", "imon")
+    print("awindow", awindow)
     imon_nsamples = len(imon_dbrows)
     imon_n_hi = 0
     imon_n_hihi = 0
     imon_n_lo = 0
     imon_n_lolo = 0
     for ir in imon_dbrows:
-        if (float(ir[1]) < IMon_LOLO):
+        try: imon_val = float(ir[1])
+        except: continue
+        if (imon_val < IMon_LOLO):
             imon_n_lolo += 1
-        if (float(ir[1]) < IMon_LO):
+        if (imon_val < IMon_LO):
             imon_n_lo += 1
-        if (float(ir[1]) > IMon_HIHI):
+        if (imon_val > IMon_HIHI):
             imon_n_hihi += 1
-        if (float(ir[1]) > IMon_HI):
+        if (imon_val > IMon_HI):
             imon_n_hi += 1
         else:
             continue
@@ -161,17 +238,33 @@ def introduction():
     # pmts
     pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
 
+    # timing
+    timing_config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    timing_config['streams'] = ['archiving']
+    
     # event
     event_group_name = "tpc"
     event_config = online_metrics.get_group_config("online", event_group_name, front_end_abort=True)
-    
+
+    #daq status
+    daq_status = online_metrics.get_daq_run_status("online",'daq_run_status')
 
     render_args = {
+      "daq_status": daq_status, 
       "crt_config": crt_config,
       "crt_channels": crt_channels, #channels mean BOARD here
       "crts": CRTS,
+      "crt_feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
       "crt_baseline_min": CRT_BASELINE_ALARM_MIN,
       "crt_baseline_max": CRT_BASELINE_ALARM_MAX,
+      "crt_deadtime_min": CRT_DEADTIME_ALARM_MIN,
+      "crt_deadtime_max": CRT_DEADTIME_ALARM_MAX,
+      "crt_pullwindow_min": CRT_PULLWINDOW_ALARM_MIN,
+      "crt_pullwindow_max": CRT_PULLWINDOW_ALARM_MAX,
+      "crt_missingt0_max": CRT_MISSINGT0_ALARM_MAX,
+      "crt_missingt1_max": CRT_MISSINGT1_ALARM_MAX,
+      "crt_readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
+      "crt_readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
       "pmts": PMTS,
       "pmt_config": pmt_config,
       "pmt_channels": PMT_CHANNELS,
@@ -191,6 +284,7 @@ def introduction():
       "tpc_rms_max": TPC_RMS_ALARM_MAX, 
       "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
       "bad_drifthv_pvs": bad_drifthv_pvs,
+      "awindow": awindow,
       "vmon_nsamples": vmon_nsamples,
       "vmon_hi": vmon_n_hi,
       "vmon_hihi": vmon_n_hihi,
@@ -200,7 +294,15 @@ def introduction():
       "imon_hi": imon_n_hi,
       "imon_hihi": imon_n_hihi,
       "imon_lo": imon_n_lo,
-      "imon_lolo": imon_n_lolo
+      "imon_lolo": imon_n_lolo,
+      "timing_config": timing_config,
+      "timing_metrics": TIMING_METRICS_STREAMS,
+      "timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
+                            TIMING_OFFBEAM_nCRTT1_MIN, TIMING_OFFBEAM_nFTRIG_MIN, TIMING_OFFBEAM_nETRIG_MIN, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MIN,
+                            TIMING_CROSSING_MUON_nFTRIG_MIN, TIMING_CROSSING_MUON_nETRIG_MIN, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MIN],
+      "timing_alarms_max": [TIMING_BEAM_nCRTT1_MAX, TIMING_BEAM_nBES_MAX, TIMING_BEAM_nRWM_MAX, TIMING_BEAM_nFTRIG_MAX, TIMING_BEAM_nETRIG_MAX, TIMING_BEAM_RWM_BES_diff_MAX, TIMING_BEAM_ETRIG_BES_diff_MAX, TIMING_BEAM_FTRIG_ETRIG_diff_MAX,
+                            TIMING_OFFBEAM_nCRTT1_MAX, TIMING_OFFBEAM_nFTRIG_MAX, TIMING_OFFBEAM_nETRIG_MAX, TIMING_OFFBEAM_FTRIG_ETRIG_diff_MAX,
+                            TIMING_CROSSING_MUON_nFTRIG_MAX, TIMING_CROSSING_MUON_nETRIG_MAX, TIMING_CROSSING_MUON_FTRIG_ETRIG_diff_MAX]
     }
 
     return render_template('sbnd/introduction.html', **render_args)
@@ -422,8 +524,9 @@ def wireplane_view_dab():
     return timeseries_view(request.args, instance_name, "wire", "wireLinkDAB", "eventmeta_dab", db="onlineDAB")
 
 # CRT
-CRT_config_board = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
+CRT_config_board   = online_metrics.get_group_config("online", "CRT_board",   front_end_abort=True)
 CRT_config_channel = online_metrics.get_group_config("online", "CRT_channel", front_end_abort=True)
+CRT_config_event   = online_metrics.get_group_config("online", "CRT_event",   front_end_abort=True)
 
 @app.route('/CRT_status')
 def CRT_status():
@@ -433,8 +536,17 @@ def CRT_status():
       "config": CRT_config_board,
       "channels": CRT_boards, #channels mean BOARD here
       "crts": CRTS,
+      "feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
+      "deadtime_min": CRT_DEADTIME_ALARM_MIN,
+      "deadtime_max": CRT_DEADTIME_ALARM_MAX,
+      "pullwindow_min": CRT_PULLWINDOW_ALARM_MIN,
+      "pullwindow_max": CRT_PULLWINDOW_ALARM_MAX,
+      "readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
+      "readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
+      "missingt0_max": CRT_MISSINGT0_ALARM_MAX,
+      "missingt1_max": CRT_MISSINGT1_ALARM_MAX,
       "eventmeta_key": EVENTMETA_KEY, #Art Event metadata
     }
 
@@ -450,13 +562,13 @@ def CRT_board_snapshot():
     view_ind = {'board_no': board_no}
     view_ind_opts = {'board_no': list(range(20))}
 
-    # TODO: implement real channel mapping
-    board_channels = list(range(board_no*32, (board_no+1)*32))
+    board_channels = list( range( board_no * 100, board_no * 100 + 32 ) )
 
     template_args = {
         'title': ("CRT Board %i Snapshot" % board_no),
         'board_config': CRT_config_board,
         'channel_config': CRT_config_channel,
+        'event_config': CRT_config_event,
         'board_no': board_no,
         'view_ind': view_ind,
         'view_ind_opts': view_ind_opts,
@@ -485,6 +597,11 @@ def CRT_channel_snapshot():
     }
 
     return render_template("sbnd/crt_channel_snapshot.html", **template_args)
+
+@app.route('/CRT_event')
+def CRT_event():
+    #return timeseries_view(request.args, "CRT_event", "", "crtEventLink")
+    return timeseries_view(request.args, "CRT_event")
 
 # PMTs
 @app.route('/PMT_status')
@@ -573,11 +690,31 @@ def Beam_Light_Diff():
 
 @app.route('/Beam_CRT_Diff')
 def Beam_CRT_Diff():
-    return timeseries_view(request.args, "BEAM_CRT_DIFF")
+    #return timeseries_view(request.args, "BEAM_CRT_DIFF")
+    config_trigger = online_metrics.get_group_config("online", "BEAM_CRT_DIFF", front_end_abort=True)
+    render_args = {
+      "config": config_trigger,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TRIGGER_CRT_METRICS,
+      "metrics_sets": TRIGGER_CRT_METRICS_SETS
+    }
+    return render_template("sbnd/timing_differences.html",**render_args)
 
 @app.route('/PTB_TDC_Diff')
 def PTB_TDC_Diff():
-    return timeseries_view(request.args, "PTB_TDC_DIFF")
+    #return timeseries_view(request.args, "PTB_TDC_DIFF")
+    config_trigger = online_metrics.get_group_config("online", "PTB_TDC_DIFF", front_end_abort=True)
+    render_args = {
+      "config": config_trigger,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TRIGGER_TDC_METRICS,
+      "metrics_sets": TRIGGER_TDC_METRICS_SETS
+    }
+    return render_template("sbnd/timing_differences.html",**render_args)
 
 """ #TODO: group the LLT_TDCs together?
 @app.route('/LLT27_TDC_1')
@@ -693,19 +830,6 @@ def Timing_Differences():
     }
     return render_template("sbnd/timing_differences.html",**render_args)
 
-@app.route('/Matt_Test_Timing')
-def Matt_Test_Timing():
-    config_timing = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-    render_args = {
-      "config": config_timing,
-      "eventmeta_key": EVENTMETA_KEY,
-      "channels": "undefined",
-      "link_function": "undefined",
-      "metrics":  NEW_TIMING_METRICS,
-      "metrics_sets": NEW_TIMING_METRICS_SETS
-    }
-    return render_template('sbnd/matt_test_timing.html',**render_args)
-
 @app.route('/Matt_Test_Histogram')
 def Matt_Test_Histogram():
     config = online_metrics.get_group_config("online", "tpc_channel", front_end_abort=True)
@@ -721,22 +845,6 @@ def Matt_Test_Histogram():
       "one_channel": False
     }
     return render_template('sbnd/histogram.html',**render_args)
-
-@app.route('/Timing_status')
-def Timing_status():
-
-    #config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
-    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
-
-    render_args = {
-      "config": config,
-      "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
-      "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
-      "eventmeta_key": EVENTMETA_KEY,
-      "is_beam_on": False
-    }
-
-    return render_template('sbnd/timing_status.html', **render_args) 
 
 
 @app.route('/purity')
@@ -802,13 +910,14 @@ def es_alarms():
     source_cols = [ "message_time", "time", "value", "message", "severity", "config" ]
     component_depth = 3
 
-    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database)
+    max_indices = int(request.args.get("months", 1))
+    alarm_hits, extra_render_args = elasticsearch_api.get_alarm_data(database, max_indices)
     alarms, component_hierarchy = elasticsearch_api.prep_alarms(
-        alarm_hits, source_cols, component_depth
+        alarm_hits, source_cols, component_depth, database
     )
 
     render_args = {
-        "alarms" : alarms, "components" : component_hierarchy
+        "alarms" : alarms, "components" : component_hierarchy, "max_indices" : max_indices
     }
     render_args.update(extra_render_args)
 
@@ -824,6 +933,8 @@ def cryo_monitor():
 		"cryo_top": ["te-8003a"]}
     dbrows = []
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     current_timestamp = time.mktime(current_time.timetuple())
     month_2digit = str(this_month).zfill(2)
@@ -831,7 +942,7 @@ def cryo_monitor():
     for k in pv_lists.keys():
         this_list = pv_lists[k]
         for pv in this_list:
-            this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+            this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "", pv)
             try:
                 formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
                 formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
@@ -854,10 +965,12 @@ def ping_ignition():
     database = "sbnd_ignition"
     pv = "te-8101a"
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
     tstamp = 0
-    this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+    this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "", pv)
     tstamp = this_dbrow[0][2]
     pong = False
     if (tstamp > 0):
@@ -869,10 +982,12 @@ def ping_archiver():
     database = "sbnd_ignition"
     pv = "te-8101a"
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     month_2digit = str(this_month).zfill(2)
     tstamp = 0
-    this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "", pv)
+    this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "", pv)
     tstamp = this_dbrow[0][2]
     pong = False
     if (tstamp > 0):
@@ -897,7 +1012,14 @@ def cryo_stream(pv):
 #
 #    # print config
     database = "sbnd_ignition"
-    month = "02"
+
+    current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
+    this_month = current_time.month
+    current_timestamp = time.mktime(current_time.timetuple())
+    month_2digit = str(this_month).zfill(2)
+
     # render_args = {
     #   "pv": pv, 
 #      "IDs": IDs,
@@ -915,7 +1037,8 @@ def cryo_stream(pv):
     render_args = {
       "configs": configs,
       "database": database,
-      "month": month,
+      "year": year,
+      "month": month_2digit,
       "pv": pv
     }
     return render_template('sbnd/cryo_stream.html', **render_args)
@@ -931,11 +1054,13 @@ def DriftHV_Heinzinger():
 
     dbrows = []
     current_time = datetime.now()
+    this_year = current_time.year
+    year = str(this_year)
     this_month = current_time.month
     current_timestamp = time.mktime(current_time.timetuple())
     month_2digit = str(this_month).zfill(2)
     for pv in pv_lists:
-        this_dbrow = ignition_api.get_ignition_last_value_pv(database, month_2digit, "drifthv", pv)
+        this_dbrow = ignition_api.get_ignition_last_value_pv(database, year, month_2digit, "drifthv", pv)
         try:
             formatted_time = datetime.fromtimestamp(this_dbrow[0][2]/1000) # ms since epoch
             formatted_time = datetime.strftime(formatted_time, "%Y-%m-%d %H:%M")
@@ -984,12 +1109,11 @@ def Trigger_Board_Monitor():
     }
     return render_template('sbnd/trigger_board_monitor.html', **render_args)
 
+
 @app.route('/Software_Trigger')
 def Software_Trigger():
-    #return timeseries_view(request.args, "BeamMetrics")
-
     config = online_metrics.get_group_config("online", "BeamMetrics", front_end_abort=True)
-    config['streams'] = ['fast', 'slow', 'flash', 'archiving']
+    config['streams'] = ['archiving', 'flash']
     render_args = {
       "config": config,
       "eventmeta_key": EVENTMETA_KEY,
@@ -1002,6 +1126,47 @@ def Software_Trigger():
       "one_channel": True
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
+
+
+@app.route('/Timing_status')
+def Timing_status():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    print(config)
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+    #   "timing_channel_metrics": ["ch0exists", "ch1exists","ch2exists","ch3exists","ch4exists"],
+    #   "timing_channel_names": ["CRT T1 Reset","Beam Early Signal (BES)", "Resistor Wall Monitor (RWM)", "Flash Trigger (FTRIG)", "Event Trigger (ETRIG)"],
+    #   "is_beam_on": False
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_STREAMS,
+      "title": "Timing Metrics",
+    }
+    return render_template('sbnd/timing_status.html', **render_args) 
+
+
+@app.route('/Timing_Metric_View')
+def Timing_Metric_View():
+    config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
+    config['streams'] = ['archiving']
+    render_args = {
+      "config": config,
+      "eventmeta_key": EVENTMETA_KEY,
+      "channels": "undefined",
+      "link_function": "undefined",
+      "metrics": TIMING_METRICS_STREAMS,
+      "title": "Timing Metrics",
+      "include_timeseries": True,
+      "include_histos": False,
+      "one_channel": True
+    }
+    return render_template('sbnd/timing_metrics.html',**render_args)
+
+
+
+
+
 
 
 
