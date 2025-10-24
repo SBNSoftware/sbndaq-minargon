@@ -3,7 +3,8 @@ from minargon import app
 from werkzeug.routing import BaseConverter, ValidationError
 from flask import abort, g
 from functools import wraps
-import sqlite3
+import pysqlite3
+#import sqlite4
 import os
 
 class HWSelector:

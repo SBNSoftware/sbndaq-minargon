@@ -630,7 +630,7 @@ def PMT_status():
 
 
 @app.route('/PMT')
-@app.route('/PMT/<hw_selector:hw_select>')
+#@app.route('/PMT/<hw_selector:hw_select>')
 @app.route('/PMT/<PMTLOC>')
 def PMT(hw_select=None, PMTLOC=None):
     if PMTLOC:

@@ -14,7 +14,7 @@ from . import redis_api
 from . import postgres_api
 from . import ignition_api
 from psycopg2.extras import RealDictCursor
-from minargon.hardwaredb import select
+#from minargon.hardwaredb import select
 import six
 from six.moves import range
 from six.moves import zip
@@ -255,7 +255,7 @@ def stream_group_subscribe(rconnect, stream_type, metric_names, group_name, inst
 
 @app.route('/<connect>/stream_group/<stream_type>/<list:metric_names>/<group_name>/<int:instance_start>/<int:instance_end>')
 @app.route('/<connect>/stream_group/<stream_type>/<list:metric_names>/<group_name>/<list:instance_list>')
-@app.route('/<connect>/stream_group/<stream_type>/<list:metric_names>/<group_name>/hw_select/<hw_selector:hw_select>')
+#@app.route('/<connect>/stream_group/<stream_type>/<list:metric_names>/<group_name>/hw_select/<hw_selector:hw_select>')
 def stream_group(connect, stream_type, metric_names, group_name, instance_start=None, instance_end=None, instance_list=None, hw_select=None):
     args = stream_args(request.args)
 
@@ -280,7 +280,7 @@ def stream_group(connect, stream_type, metric_names, group_name, instance_start=
 
 @app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/<int:instance_start>/<int:instance_end>')
 @app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/<list:instance_list>')
-@app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/hw_select/<hw_selector:hw_select>')
+#@app.route('/<connect>/stream_group_ref/<stream_type>/<list:metric_names>/<group_name>/hw_select/<hw_selector:hw_select>')
 def stream_group_ref(connect, stream_type, metric_names, group_name, instance_start=None, instance_end=None, instance_list=None, hw_select=None):
     if instance_list is not None:
         instances = instance_list
@@ -300,14 +300,15 @@ def stream_group_last_time(connect, stream_type, metric, group):
         time = 0
     return jsonify(time=time)
 
-@app.route('/<connect>/stream_group_hw_step/<stream_type>/<metric_name>/<group_name>/<hw_selector:hw_select>')
+#@app.route('/<connect>/stream_group_hw_step/<stream_type>/<metric_name>/<group_name>/<hw_selector:hw_select>')
 def stream_group_hw_step(connect, stream_type, metric_name, group_name, hw_select):
     args = stream_args(request.args)
     # get an instance
-    instances = select(hw_select)
+    #instances = select(hw_select)
     if not len(instances):
         return jsonify(step=0)
 
+    '''
     instance = instances[0]
 
     # get the step
@@ -317,6 +318,8 @@ def stream_group_hw_step(connect, stream_type, metric_name, group_name, hw_selec
         # build a key
         key = "%s:%s:%s:%s" % (group_name, instance, metric_name, stream_type)
         return infer_step_size_online(connect, key)
+    '''
+    return
 
 def average_streams(streams):
     return streams[0]
@@ -333,8 +336,8 @@ def stream_avg(rconnect, streams):
 
     return jsonify(values=data, min_end_time=min_end_time)
 
-@app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>')
-@app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>/<int:downsample>')
+#@app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>')
+#@app.route('/<connect>/stream_group_hw_avg/<stream_type>/<metric_name>/<group_name>/<hw_selector_list:hw_selects>/<int:downsample>')
 def stream_group_hw_avg(connect, stream_type, metric_name, group_name, hw_selects, downsample=1):
     # HOTFIX: This seems to be overtaxing redis -- ignore this for now
     return jsonify(values={}, min_end_time=0)

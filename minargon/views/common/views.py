@@ -10,7 +10,7 @@ from minargon.metrics import online_metrics
 import os.path
 from datetime import date, datetime
 
-from minargon import hardwaredb
+#from minargon import hardwaredb
 
 """
 	Routes intented to be seen by the user	
