@@ -2,49 +2,61 @@
 	"global_baseline_min": 20,
 	"global_baseline_max": 330,
 	"global_deadtime_min": 18000,
-	"global_deadtime_max": 50000,
-	"global_pullwindow_min": 48000000,
+	"global_deadtime_max": 60000,
+	"global_pullwindow_min": 47000000,
 	"global_pullwindow_max": 50000000,
 	"global_readoutrate_min": 50,
 	"global_readoutrate_max": 1750,
 	"global_missingt0_max": 0,
-	"global_missingt1_max": 0,
+        "global_missingt1_max": 0,
+        "4":
+	{
+	        "Readout rate": [ -1000, 100000000 ],
+	        "Baseline": [ -160, 180 ],
+	        "Pull window": [ -1000, 100000000 ]
+	},
 	"16":
 	{
 		"Readout rate": [ 1155, 1563 ],
-		"Baseline": [ 201, 221 ]
+		"Baseline": [ 191, 211 ]
 	},
 	"18":
 	{
 		"Readout rate": [ 324, 439 ],
-		"Baseline": [ 117, 137 ]
+		"Baseline": [ 109, 129 ]
 	},
 	"19":
 	{
 		"Readout rate": [ 271, 366 ],
-		"Baseline": [ 215, 235 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 205, 225 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"24":
 	{
 		"Readout rate": [ 225, 304 ],
 		"Baseline": [ 168, 188 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
+	},
+        "29":
+	{
+	        "Readout rate": [ -1000, 100000000 ],
+	        "Baseline": [ 181, 201 ],
+	        "Pull window": [ -1000, 100000000 ]
 	},
 	"33":
 	{
 		"Readout rate": [ 230, 311 ],
 		"Baseline": [ 213, 233 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"34":
 	{
 		"Readout rate": [ 224, 303 ],
 		"Baseline": [ 176, 196 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"35":
@@ -70,15 +82,15 @@
 	"42":
 	{
 		"Readout rate": [ 237, 321 ],
-		"Baseline": [ 178, 198 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 171, 191 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"44":
 	{
 		"Readout rate": [ 245, 332 ],
 		"Baseline": [ 103, 123 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"45":
@@ -115,7 +127,7 @@
 	{
 		"Readout rate": [ 250, 339 ],
 		"Baseline": [ 131, 151 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"56":
@@ -127,32 +139,32 @@
 	{
 		"Readout rate": [ 230, 311 ],
 		"Baseline": [ 109, 129 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"58":
 	{
-		"Readout rate": [ 146, 198 ],
-		"Baseline": [ 76, 96 ],
-		"Deadtime": [ 19000, 80000 ],
-		"Pull window": [ 45000000, 50000000 ]
+		"Readout rate": [ 134, 210 ],
+		"Baseline": [ 84, 104 ],
+		"Deadtime": [ 18000, 200000 ],
+		"Pull window": [ 40000000, 50000000 ]
 	},
 	"59":
 	{
 		"Readout rate": [ 246, 333 ],
 		"Baseline": [ 175, 195 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"60":
 	{
 		"Readout rate": [ 307, 415 ],
-		"Baseline": [ 190, 210 ]
+		"Baseline": [ 196, 216 ]
 	},
 	"61":
 	{
 		"Readout rate": [ 338, 458 ],
-		"Baseline": [ 79, 99 ]
+		"Baseline": [ 73, 93 ]
 	},
 	"71":
 	{
@@ -166,9 +178,9 @@
 	},
 	"73":
 	{
-		"Readout rate": [ 84, 125 ],
+		"Readout rate": [ 70, 125 ],
 		"Baseline": [ 205, 225 ],
-		"Deadtime": [ 19000, 500000 ],
+		"Deadtime": [ 18000, 500000 ],
 		"Pull window": [ 40000000, 50000000 ]
 	},
 	"75":
@@ -179,20 +191,20 @@
 	"77":
 	{
 		"Readout rate": [ 400, 541 ],
-		"Baseline": [ 114, 134 ]
+		"Baseline": [ 107, 127 ]
 	},
 	"78":
 	{
 		"Readout rate": [ 100, 553 ],
 	        "Baseline": [ 217, 237 ],
-	        "Deadtime": [ 19000, 500000 ],
+	        "Deadtime": [ 18000, 500000 ],
 	        "Pull window": [ 40000000, 50000000 ]
 	},
 	"79":
 	{
 		"Readout rate": [ 263, 356 ],
 		"Baseline": [ 171, 191 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"81":
@@ -203,7 +215,7 @@
 	"82":
 	{
 		"Readout rate": [ 387, 524 ],
-		"Baseline": [ 170, 190 ]
+		"Baseline": [ 162, 182 ]
 	},
 	"83":
 	{
@@ -223,24 +235,24 @@
 	"86":
 	{
 		"Readout rate": [ 319, 432 ],
-		"Baseline": [ 235, 255 ]
+		"Baseline": [ 229, 249 ]
 	},
 	"87":
 	{
 		"Readout rate": [ 420, 568 ],
-		"Baseline": [ 113, 133 ]
+		"Baseline": [ 107, 127 ]
 	},
 	"88":
 	{
-		"Readout rate": [ 84, 125 ],
-		"Baseline": [ 152, 172 ],
-		"Deadtime": [ 19000, 500000 ],
+		"Readout rate": [ 70, 125 ],
+		"Baseline": [ 158, 178 ],
+		"Deadtime": [ 18000, 500000 ],
 		"Pull window": [ 40000000, 50000000 ]
 	},
 	"90":
 	{
 		"Readout rate": [ 377, 510 ],
-		"Baseline": [ 185, 205 ]
+		"Baseline": [ 191, 211 ]
 	},
 	"91":
 	{
@@ -255,7 +267,7 @@
 	"94":
 	{
 		"Readout rate": [ 355, 480 ],
-		"Baseline": [ 103, 123 ]
+		"Baseline": [ 95, 115 ]
 	},
 	"95":
 	{
@@ -275,7 +287,7 @@
 	"99":
 	{
 		"Readout rate": [ 359, 486 ],
-		"Baseline": [ 136, 156 ]
+		"Baseline": [ 129, 149 ]
 	},
 	"100":
 	{
@@ -285,7 +297,7 @@
 	"101":
 	{
 		"Readout rate": [ 337, 456 ],
-		"Baseline": [ 117, 137 ]
+		"Baseline": [ 109, 129 ]
 	},
 	"102":
 	{
@@ -350,7 +362,7 @@
 	"118":
 	{
 		"Readout rate": [ 930, 1259 ],
-		"Baseline": [ 129, 149 ]
+		"Baseline": [ 121, 141 ]
 	},
 	"119":
 	{
@@ -360,8 +372,8 @@
 	"120":
 	{
 		"Readout rate": [ 236, 320 ],
-		"Baseline": [ 183, 203 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 176, 196 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"121":
@@ -377,7 +389,7 @@
 	"125":
 	{
 		"Readout rate": [ 444, 600 ],
-		"Baseline": [ 179, 199 ]
+		"Baseline": [ 171, 191 ]
 	},
 	"126":
 	{
@@ -402,15 +414,15 @@
 	"130":
 	{
 		"Readout rate": [ 237, 320 ],
-		"Baseline": [ 203, 223 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 196, 216 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"131":
 	{
 		"Readout rate": [ 231, 313 ],
 		"Baseline": [ 167, 187 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"132":
@@ -436,13 +448,13 @@
 	"136":
 	{
 		"Readout rate": [ 352, 477 ],
-		"Baseline": [ 141, 161 ]
+		"Baseline": [ 134, 154 ]
 	},
 	"138":
 	{
 		"Readout rate": [ 240, 324 ],
 		"Baseline": [ 126, 146 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"141":
@@ -453,7 +465,7 @@
 	"143":
 	{
 		"Readout rate": [ 321, 435 ],
-		"Baseline": [ 132, 152 ]
+		"Baseline": [ 125, 145 ]
 	},
 	"144":
 	{
@@ -469,14 +481,14 @@
 	{
 		"Readout rate": [ 248, 336 ],
 		"Baseline": [ 113, 133 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"147":
 	{
 		"Readout rate": [ 240, 325 ],
 		"Baseline": [ 152, 172 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"148":
@@ -488,7 +500,7 @@
 	{
 		"Readout rate": [ 239, 323 ],
 		"Baseline": [ 154, 174 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"150":
@@ -499,25 +511,25 @@
 	"151":
 	{
 		"Readout rate": [ 337, 457 ],
-		"Baseline": [ 199, 219 ]
+		"Baseline": [ 190, 210 ]
 	},
 	"152":
 	{
 		"Readout rate": [ 363, 491 ],
-		"Baseline": [ 125, 145 ]
+		"Baseline": [ 118, 138 ]
 	},
 	"153":
 	{
 		"Readout rate": [ 288, 389 ],
 		"Baseline": [ 187, 207 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"155":
 	{
 		"Readout rate": [ 253, 343 ],
 		"Baseline": [ 70, 90 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"156":
@@ -528,27 +540,27 @@
 	"157":
 	{
 		"Readout rate": [ 345, 467 ],
-		"Baseline": [ 173, 193 ]
+		"Baseline": [ 163, 183 ]
 	},
 	"158":
 	{
 		"Readout rate": [ 280, 379 ],
-		"Baseline": [ 181, 201 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 172, 192 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"159":
 	{
 		"Readout rate": [ 230, 310 ],
-		"Baseline": [ 70, 90 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 62, 82 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"160":
 	{
 		"Readout rate": [ 231, 313 ],
 		"Baseline": [ 150, 170 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"162":
@@ -575,14 +587,14 @@
 	{
 		"Readout rate": [ 297, 402 ],
 		"Baseline": [ 125, 145 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"168":
 	{
 		"Readout rate": [ 283, 383 ],
-		"Baseline": [ 193, 213 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 185, 205 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"169":
@@ -593,27 +605,27 @@
 	"170":
 	{
 		"Readout rate": [ 326, 441 ],
-		"Baseline": [ 180, 200 ]
+		"Baseline": [ 173, 193 ]
 	},
 	"171":
 	{
 		"Readout rate": [ 286, 386 ],
 		"Baseline": [ 230, 250 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"172":
 	{
 		"Readout rate": [ 236, 319 ],
-		"Baseline": [ 160, 180 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 154, 174 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"173":
 	{
 		"Readout rate": [ 195, 272 ],
 		"Baseline": [ 176, 196 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"174":
@@ -625,7 +637,7 @@
 	{
 		"Readout rate": [ 198, 267 ],
 		"Baseline": [ 147, 167 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"178":
@@ -645,10 +657,10 @@
 	},
 	"182":
 	{
-		"Readout rate": [ 112, 152 ],
-		"Baseline": [ 192, 212 ],
-		"Deadtime": [ 19000, 200000 ],
-		"Pull window": [ 45000000, 50000000 ]
+		"Readout rate": [ 100, 164 ],
+		"Baseline": [ 186, 206 ],
+		"Deadtime": [ 18000, 200000 ],
+		"Pull window": [ 40000000, 50000000 ]
 	},
 	"183":
 	{
@@ -703,7 +715,7 @@
 	"204":
 	{
 		"Readout rate": [ 387, 524 ],
-		"Baseline": [ 141, 161 ]
+		"Baseline": [ 135, 155 ]
 	},
 	"205":
 	{
@@ -718,8 +730,8 @@
 	"207":
 	{
 		"Readout rate": [ 277, 374 ],
-		"Baseline": [ 160, 180 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Baseline": [ 154, 174 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"209":
@@ -730,7 +742,7 @@
 	"210":
 	{
 		"Readout rate": [ 1133, 1533 ],
-		"Baseline": [ 139, 159 ]
+		"Baseline": [ 133, 153 ]
 	},
 	"211":
 	{
@@ -740,12 +752,12 @@
 	"212":
 	{
 		"Readout rate": [ 1144, 1548 ],
-		"Baseline": [ 85, 105 ]
+		"Baseline": [ 78, 98 ]
 	},
 	"213":
 	{
 		"Readout rate": [ 1130, 1529 ],
-		"Baseline": [ 166, 186 ]
+		"Baseline": [ 163, 183 ]
 	},
 	"216":
 	{
@@ -755,13 +767,13 @@
 	"220":
 	{
 		"Readout rate": [ 328, 443 ],
-		"Baseline": [ 93, 113 ]
+		"Baseline": [ 86, 106 ]
 	},
 	"222":
 	{
 		"Readout rate": [ 274, 371 ],
 		"Baseline": [ 136, 156 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	},
 	"223":
@@ -778,7 +790,7 @@
 	{
 		"Readout rate": [ 256, 346 ],
 		"Baseline": [ 91, 111 ],
-		"Deadtime": [ 19000, 80000 ],
+		"Deadtime": [ 18000, 100000 ],
 		"Pull window": [ 45000000, 50000000 ]
 	}
 }
