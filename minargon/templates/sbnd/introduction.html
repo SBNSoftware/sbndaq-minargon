@@ -59,13 +59,17 @@
     <br>
     <span id="lastResetTime"></span>  <!-- Display last reset time -->
     
-    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio>
+    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio> 
+    <audio id="ODHSound" src="static/audio/ODHAlarm_final.mp3" loop></audio>
 
     <script>
         let alarmTriggered = false;
         let alarmDisabled = localStorage.getItem("alarmDisabled") === "true";
+	let ODHDisabled = localStorage.getItem("ODHDisabled") === "true";
         const DISABLE_DURATION =  60 * 60 * 1000; // 1 hour in milliseconds
         var daqStatus = "{{ daq_status.status | lower | default('unknown') }}";
+	const ODHaudio = document.getElementById("ODHSound");
+		ODHaudio.loop = true;
 
         function formatTimestamp(timestamp) {
             if (!timestamp) return "Never";
@@ -151,6 +155,98 @@
             
         }
 
+	function checkODH() {
+
+		const ODHStartDate = new Date(2026, 1, 20, 19, 28, 0); //2026-Feb-20th-19:30:00
+		const ODHEndDate = new Date(2026, 1, 21, 0, 0 ,0); //2026-Feb-21st-00:00:00
+		const ODHTurnsOnNowDates = [
+			  //new Date(2026, 1, 20, 14, 19, 00),
+  			  //new Date(2026, 1, 20, 14, 15, 0),
+  			  new Date(2026, 1, 20, 19, 30, 0),
+  			  new Date(2026, 1, 20, 20, 30, 0),
+			];
+		//Y M D H M S
+		// Month is 0-based (2 = March)
+		const ODHStartTimestamp = ODHStartDate.getTime();
+		const ODHEndTimestamp = ODHEndDate.getTime();
+		const ODHTurnsOnNowTimestamps = ODHTurnsOnNowDates.map(d => d.getTime());
+		const now = new Date().getTime();
+
+		const TURN_ON_WINDOW_MS = 3000;
+
+		const shouldForceEnable = ODHTurnsOnNowTimestamps.some(ts =>
+  			  Math.abs(now - ts) <= TURN_ON_WINDOW_MS
+			);
+
+		if (shouldForceEnable){
+			ODHDisabled = false;
+			localStorage.setItem("ODHDisabled","false");
+			unHideODHPopup();
+		}
+
+		const inWindow = (now >= ODHStartTimestamp) && (now <= ODHEndTimestamp);
+
+		const controls = document.getElementById("odhControls");
+                controls.style.display = inWindow ? "inline-block" : "none";		
+
+		if (inWindow) {
+
+			const controls = document.getElementById("odhControls");
+                	controls.style.display = inWindow ? "inline-block" : "none";
+
+                	const ODHStatus = document.getElementById("isODHDisabled");
+
+                	if (ODHDisabled) {
+                		ODHStatus.innerText = "Well Then You Better Go Catch It!";
+                		ODHStatus.style.color = "red"; // Set text color to red
+                	} else {
+                		ODHStatus.innerText = "Well Then You Better Go Catch It!";
+                		ODHStatus.style.color = "green"; // Set text color to green
+                	}
+			
+			//if ODH is not disabled, play it:
+			if (ODHDisabled) return;
+
+
+			if (ODHaudio.paused) {
+   				ODHaudio.currentTime = 0;         // optional: start from beginning when entering window
+    				ODHaudio.play().catch(() => {});
+  				}
+			document.getElementById("ODHSound").play();
+			if (localStorage.getItem("ODHPopupDismissed") !== "true") {showODHPopup();}
+		}
+		
+	}
+
+	function ODHDisable() {
+		if (!ODHDisabled) {	
+			document.getElementById("ODHSound").pause();
+			ODHDisabled = true;
+			localStorage.setItem("ODHDisabled","true");
+			checkODH();
+		}
+		else {
+			ODHDisabled = false;
+			localStorage.setItem("ODHDisabled","false");
+			unHideODHPopup();
+			//showODHPopup();
+			checkODH();
+		}
+	}
+
+	function showODHPopup() {
+  		document.getElementById("odhPopupOverlay").style.display = "flex";
+		}
+
+	function hideODHPopup(dontShowAgain) {
+  		document.getElementById("odhPopupOverlay").style.display = "none";
+  		if (dontShowAgain) localStorage.setItem("ODHPopupDismissed", "true");
+	}
+	
+	function unHideODHPopup() {
+		localStorage.setItem("ODHPopupDismissed", "false");
+	}
+
         function disableAlarm() {
             document.getElementById("alarmSound").pause();
             alarmTriggered = false;
@@ -205,6 +301,7 @@
 
       document.addEventListener("DOMContentLoaded", () => {
       setInterval(checkAlarm, 1000);  // Check every second
+      setInterval(checkODH, 1000);
       updateLastDisabledTime(); // Update time on page load
       updateLastResetTime(); // Update time on page load
       setIsAlarmDisabled();
@@ -320,8 +417,44 @@
     </table>
   </div>
   </div>
-
+  <div id="odhControls">
+  	<button onclick="ODHDisable()">Hey Dave, is the DAQ Running?</button>
+  	<span id="isODHDisabled"></span>
+  </div> 
   <br>
+  <br>
+
+<div id="odhPopupOverlay" style="
+  position: fixed; inset: 0; display: none;
+  background: rgba(0,0,0,0.6);
+  align-items: center; justify-content: center;
+  z-index: 9999;
+">
+  <div style="
+    background: white; padding: 20px; border-radius: 12px;
+    width: min(700px, 90vw);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  ">
+    <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px;">
+      <h2 style="margin:0;">ODH (Olivia Dalager Hazard) Alert</h2>
+      <button onclick="hideODHPopup(true)" style="font-size: 16px;">✕</button>
+    </div>
+
+    <p style="margin-top: 12px;">
+      Hey Dave, is the DAQ Running?!
+    </p>
+
+    <img id="odhPopupImg"
+         src="static/images/ODH_high_res.jpg"
+         alt="ODH"
+         style="max-width: 100%; max-height: 70vh; width: auto; height: auto; object-fit: contain; border-radius: 8px; margin-top: 10px;" />
+
+    <div style="margin-top: 14px; display:flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="hideODHPopup(false)">Close</button>
+      <button onclick="hideODHPopup(true)">Don’t show again</button>
+    </div>
+  </div>
+</div>
 
   
 <div class="row">
