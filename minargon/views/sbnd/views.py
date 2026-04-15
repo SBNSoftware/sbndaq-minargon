@@ -1127,6 +1127,32 @@ def Software_Trigger():
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
 
+@app.route('/Cumulative_POT')
+def Cumulative_POT():
+    keys = ["tpc0:plane0:evd:image",
+             "tpc1:plane0:evd:image",
+             "tpc0:plane1:evd:image",
+             "tpc1:plane1:evd:image",
+             "tpc0:plane2:evd:image",
+             "tpc1:plane2:evd:image",]
+    images = []
+    for k in keys:
+        image = online_metrics.eventdisplay("online", k)
+        images.append(image)
+
+    current_time = datetime.now()
+    current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    current_time_in_utc = datetime.now(pytz.utc)
+    current_time_in_utc = current_time_in_utc.strftime("%Y-%m-%d %H:%M:%S")
+
+    args = {
+        "imgs": images,
+        "current_time": current_time,
+        "current_time_in_utc": current_time_in_utc
+    }
+
+    return render_template('sbnd/cumulative_pot.html', **args)
+
 
 @app.route('/Timing_status')
 def Timing_status():
