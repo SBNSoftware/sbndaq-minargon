@@ -1132,9 +1132,7 @@ def Cumulative_POT():
     keys = ["tpc0:plane0:evd:image",
              "tpc1:plane0:evd:image",
              "tpc0:plane1:evd:image",
-             "tpc1:plane1:evd:image",
-             "tpc0:plane2:evd:image",
-             "tpc1:plane2:evd:image",]
+             "tpc1:plane1:evd:image",]
     images = []
     for k in keys:
         image = online_metrics.eventdisplay("online", k)
