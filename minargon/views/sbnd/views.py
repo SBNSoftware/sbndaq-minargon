@@ -1123,19 +1123,23 @@ def Software_Trigger():
       "title": "Software Trigger",
       "include_timeseries": True,
       "include_histos": True,
-      "one_channel": True
+      "one_cannel": True
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
 
 @app.route('/Cumulative_POT')
 def Cumulative_POT():
-    keys = ["tpc0:plane0:evd:image",
-             "tpc1:plane0:evd:image",
-             "tpc0:plane1:evd:image",
-             "tpc1:plane1:evd:image",]
+    keys = ["cumulative_pot:daq_uptime:image",
+            "cumulative_pot:pot_collection_weekly:image",
+            "cumulative_pot:livetime_pot_cumulative_run2:image",
+            "cumulative_pot:livetime_pot_cumulative_run1-2:image",
+            #"tpc1:plane1:evd:image",
+            ]
+
+
     images = []
     for k in keys:
-        image = online_metrics.eventdisplay("online", k)
+        image = online_metrics.potdisplay("online", k)
         images.append(image)
 
     current_time = datetime.now()
