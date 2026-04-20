@@ -926,6 +926,16 @@ def eventdisplay(rconnect, key):
     encoded_img_data = base64.b64encode(temp_data.getvalue())
     return encoded_img_data.decode('utf-8')
 
+@app.route('/<rconnect>/potdisplay/<key>')
+@redis_route
+def potdisplay(rconnect, key):
+    image_data = rconnect.get(key)
+    image = Image.open(io.BytesIO(image_data))
+    temp_data = io.BytesIO()
+    image.save(temp_data, "PNG")
+    encoded_img_data = base64.b64encode(temp_data.getvalue())
+    return encoded_img_data.decode('utf-8')
+
 @app.route('/<rconnect>/get_daq_run_status/<key>')
 @redis_route
 def get_daq_run_status(rconnect, key='daq_run_status'):
