@@ -157,13 +157,13 @@
 
 	function checkODH() {
 
-		const ODHStartDate = new Date(2026, 1, 20, 19, 28, 0); //2026-Feb-20th-19:30:00
-		const ODHEndDate = new Date(2026, 1, 21, 0, 0 ,0); //2026-Feb-21st-00:00:00
+		const ODHStartDate = new Date(2026, 2, 20, 6, 45, 0); //2026-Mar-20th-06:45:00
+		const ODHEndDate = new Date(2026, 2, 20, 7, 0 ,0); //2026-Mar-20th-07:00:00
 		const ODHTurnsOnNowDates = [
 			  //new Date(2026, 1, 20, 14, 19, 00),
-  			  //new Date(2026, 1, 20, 14, 15, 0),
-  			  new Date(2026, 1, 20, 19, 30, 0),
-  			  new Date(2026, 1, 20, 20, 30, 0),
+  			  //new Date(2026, 1, 20, 14, 50, 0),
+  			  new Date(2026, 2, 20, 6, 45, 0),
+  			  new Date(2026, 2, 20, 6, 53, 0),
 			];
 		//Y M D H M S
 		// Month is 0-based (2 = March)
@@ -418,7 +418,7 @@
   </div>
   </div>
   <div id="odhControls">
-  	<button onclick="ODHDisable()">Hey Dave, is the DAQ Running?</button>
+  	<button onclick="ODHDisable()">Hey Andrzej, is the DAQ Running?</button>
   	<span id="isODHDisabled"></span>
   </div> 
   <br>
@@ -441,7 +441,7 @@
     </div>
 
     <p style="margin-top: 12px;">
-      Hey Dave, is the DAQ Running?!
+      Hey Andrzej, is the DAQ Running?!
     </p>
 
     <img id="odhPopupImg"
