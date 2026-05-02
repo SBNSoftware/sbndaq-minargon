@@ -1,796 +1,1736 @@
 {
-	"global_baseline_min": 20,
-	"global_baseline_max": 330,
-	"global_deadtime_min": 18000,
-	"global_deadtime_max": 60000,
-	"global_pullwindow_min": 47000000,
-	"global_pullwindow_max": 50000000,
-	"global_readoutrate_min": 50,
-	"global_readoutrate_max": 1750,
-	"global_missingt0_max": 0,
+        "global_baseline_min": 20,
+        "global_baseline_max": 330,
+        "global_deadtime_min": 18000,
+        "global_deadtime_max": 60000,
+        "global_pullwindow_min": 47000000,
+        "global_pullwindow_max": 50000000,
+        "global_readoutrate_min": 50,
+        "global_readoutrate_max": 1750,
+        "global_missingt0_max": 0,
         "global_missingt1_max": 0,
-        "4":
-	{
-	        "Readout rate": [ -1000, 100000000 ],
-	        "Baseline": [ -160, 180 ],
-	        "Pull window": [ -1000, 100000000 ]
-	},
-	"16":
-	{
-		"Readout rate": [ 1155, 1563 ],
-		"Baseline": [ 191, 211 ]
-	},
-	"18":
-	{
-		"Readout rate": [ 324, 439 ],
-		"Baseline": [ 109, 129 ]
-	},
-	"19":
-	{
-		"Readout rate": [ 271, 366 ],
-		"Baseline": [ 205, 225 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"24":
-	{
-		"Readout rate": [ 225, 304 ],
-		"Baseline": [ 168, 188 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-        "29":
-	{
-	        "Readout rate": [ -1000, 100000000 ],
-	        "Baseline": [ 181, 201 ],
-	        "Pull window": [ -1000, 100000000 ]
-	},
-	"33":
-	{
-		"Readout rate": [ 230, 311 ],
-		"Baseline": [ 213, 233 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"34":
-	{
-		"Readout rate": [ 224, 303 ],
-		"Baseline": [ 176, 196 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"35":
-	{
-		"Readout rate": [ 1158, 1566 ],
-		"Baseline": [ 103, 123 ]
-	},
-	"36":
-	{
-		"Readout rate": [ 1147, 1552 ],
-		"Baseline": [ 209, 229 ]
-	},
-	"39":
-	{
-		"Readout rate": [ 649, 878 ],
-		"Baseline": [ 142, 162 ]
-	},
-	"40":
-	{
-		"Readout rate": [ 668, 903 ],
-		"Baseline": [ 172, 192 ]
-	},
-	"42":
-	{
-		"Readout rate": [ 237, 321 ],
-		"Baseline": [ 171, 191 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"44":
-	{
-		"Readout rate": [ 245, 332 ],
-		"Baseline": [ 103, 123 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"45":
-	{
-		"Readout rate": [ 408, 552 ],
-		"Baseline": [ 152, 172 ]
-	},
-	"47":
-	{
-		"Readout rate": [ 948, 1283 ],
-		"Baseline": [ 88, 108 ]
-	},
-	"48":
-	{
-		"Readout rate": [ 907, 1227 ],
-		"Baseline": [ 157, 177 ]
-	},
-	"49":
-	{
-		"Readout rate": [ 993, 1344 ],
-		"Baseline": [ 217, 237 ]
-	},
-	"50":
-	{
-		"Readout rate": [ 468, 633 ],
-		"Baseline": [ 182, 202 ]
-	},
-	"51":
-	{
-		"Readout rate": [ 1166, 1578 ],
-		"Baseline": [ 119, 139 ]
-	},
-	"55":
-	{
-		"Readout rate": [ 250, 339 ],
-		"Baseline": [ 131, 151 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"56":
-	{
-		"Readout rate": [ 312, 423 ],
-		"Baseline": [ 150, 170 ]
-	},
-	"57":
-	{
-		"Readout rate": [ 230, 311 ],
-		"Baseline": [ 109, 129 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"58":
-	{
-		"Readout rate": [ 134, 210 ],
-		"Baseline": [ 84, 104 ],
-		"Deadtime": [ 18000, 200000 ],
-		"Pull window": [ 40000000, 50000000 ]
-	},
-	"59":
-	{
-		"Readout rate": [ 246, 333 ],
-		"Baseline": [ 175, 195 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"60":
-	{
-		"Readout rate": [ 307, 415 ],
-		"Baseline": [ 196, 216 ]
-	},
-	"61":
-	{
-		"Readout rate": [ 338, 458 ],
-		"Baseline": [ 73, 93 ]
-	},
-	"71":
-	{
-		"Readout rate": [ 1099, 1487 ],
-		"Baseline": [ 179, 199 ]
-	},
-	"72":
-	{
-		"Readout rate": [ 1131, 1530 ],
-		"Baseline": [ 142, 162 ]
-	},
-	"73":
-	{
-		"Readout rate": [ 70, 125 ],
-		"Baseline": [ 205, 225 ],
-		"Deadtime": [ 18000, 500000 ],
-		"Pull window": [ 40000000, 50000000 ]
-	},
-	"75":
-	{
-		"Readout rate": [ 1116, 1510 ],
-		"Baseline": [ 210, 230 ]
-	},
-	"77":
-	{
-		"Readout rate": [ 400, 541 ],
-		"Baseline": [ 107, 127 ]
-	},
-	"78":
-	{
-		"Readout rate": [ 100, 553 ],
-	        "Baseline": [ 217, 237 ],
-	        "Deadtime": [ 18000, 500000 ],
-	        "Pull window": [ 40000000, 50000000 ]
-	},
-	"79":
-	{
-		"Readout rate": [ 263, 356 ],
-		"Baseline": [ 171, 191 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"81":
-	{
-		"Readout rate": [ 386, 522 ],
-		"Baseline": [ 202, 222 ]
-	},
-	"82":
-	{
-		"Readout rate": [ 387, 524 ],
-		"Baseline": [ 162, 182 ]
-	},
-	"83":
-	{
-		"Readout rate": [ 356, 481 ],
-		"Baseline": [ 138, 158 ]
-	},
-	"84":
-	{
-		"Readout rate": [ 336, 454 ],
-		"Baseline": [ 77, 97 ]
-	},
-	"85":
-	{
-		"Readout rate": [ 427, 578 ],
-		"Baseline": [ 132, 152 ]
-	},
-	"86":
-	{
-		"Readout rate": [ 319, 432 ],
-		"Baseline": [ 229, 249 ]
-	},
-	"87":
-	{
-		"Readout rate": [ 420, 568 ],
-		"Baseline": [ 107, 127 ]
-	},
-	"88":
-	{
-		"Readout rate": [ 70, 125 ],
-		"Baseline": [ 158, 178 ],
-		"Deadtime": [ 18000, 500000 ],
-		"Pull window": [ 40000000, 50000000 ]
-	},
-	"90":
-	{
-		"Readout rate": [ 377, 510 ],
-		"Baseline": [ 191, 211 ]
-	},
-	"91":
-	{
-		"Readout rate": [ 361, 489 ],
-		"Baseline": [ 163, 183 ]
-	},
-	"93":
-	{
-		"Readout rate": [ 376, 509 ],
-		"Baseline": [ 133, 153 ]
-	},
-	"94":
-	{
-		"Readout rate": [ 355, 480 ],
-		"Baseline": [ 95, 115 ]
-	},
-	"95":
-	{
-		"Readout rate": [ 362, 490 ],
-		"Baseline": [ 167, 187 ]
-	},
-	"97":
-	{
-		"Readout rate": [ 308, 416 ],
-		"Baseline": [ 142, 162 ]
-	},
-	"98":
-	{
-		"Readout rate": [ 347, 470 ],
-		"Baseline": [ 156, 176 ]
-	},
-	"99":
-	{
-		"Readout rate": [ 359, 486 ],
-		"Baseline": [ 129, 149 ]
-	},
-	"100":
-	{
-		"Readout rate": [ 314, 424 ],
-		"Baseline": [ 184, 204 ]
-	},
-	"101":
-	{
-		"Readout rate": [ 337, 456 ],
-		"Baseline": [ 109, 129 ]
-	},
-	"102":
-	{
-		"Readout rate": [ 378, 511 ],
-		"Baseline": [ 104, 124 ]
-	},
-	"103":
-	{
-		"Readout rate": [ 320, 433 ],
-		"Baseline": [ 175, 195 ]
-	},
-	"104":
-	{
-		"Readout rate": [ 343, 464 ],
-		"Baseline": [ 136, 156 ]
-	},
-	"105":
-	{
-		"Readout rate": [ 967, 1308 ],
-		"Baseline": [ 190, 210 ]
-	},
-	"106":
-	{
-		"Readout rate": [ 901, 1219 ],
-		"Baseline": [ 140, 160 ]
-	},
-	"107":
-	{
-		"Readout rate": [ 916, 1239 ],
-		"Baseline": [ 150, 170 ]
-	},
-	"109":
-	{
-		"Readout rate": [ 906, 1226 ],
-		"Baseline": [ 261, 281 ]
-	},
-	"111":
-	{
-		"Readout rate": [ 897, 1214 ],
-		"Baseline": [ 163, 183 ]
-	},
-	"114":
-	{
-		"Readout rate": [ 935, 1265 ],
-		"Baseline": [ 123, 143 ]
-	},
-	"115":
-	{
-		"Readout rate": [ 968, 1310 ],
-		"Baseline": [ 137, 157 ]
-	},
-	"116":
-	{
-		"Readout rate": [ 962, 1302 ],
-		"Baseline": [ 222, 242 ]
-	},
-	"117":
-	{
-		"Readout rate": [ 927, 1254 ],
-		"Baseline": [ 73, 93 ]
-	},
-	"118":
-	{
-		"Readout rate": [ 930, 1259 ],
-		"Baseline": [ 121, 141 ]
-	},
-	"119":
-	{
-		"Readout rate": [ 934, 1264 ],
-		"Baseline": [ 155, 175 ]
-	},
-	"120":
-	{
-		"Readout rate": [ 236, 320 ],
-		"Baseline": [ 176, 196 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"121":
-	{
-		"Readout rate": [ 676, 915 ],
-		"Baseline": [ 176, 196 ]
-	},
-	"123":
-	{
-		"Readout rate": [ 482, 653 ],
-		"Baseline": [ 186, 206 ]
-	},
-	"125":
-	{
-		"Readout rate": [ 444, 600 ],
-		"Baseline": [ 171, 191 ]
-	},
-	"126":
-	{
-		"Readout rate": [ 486, 658 ],
-		"Baseline": [ 111, 131 ]
-	},
-	"127":
-	{
-		"Readout rate": [ 680, 920 ],
-		"Baseline": [ 114, 134 ]
-	},
-	"128":
-	{
-		"Readout rate": [ 661, 894 ],
-		"Baseline": [ 278, 298 ]
-	},
-	"129":
-	{
-		"Readout rate": [ 490, 662 ],
-		"Baseline": [ 218, 238 ]
-	},
-	"130":
-	{
-		"Readout rate": [ 237, 320 ],
-		"Baseline": [ 196, 216 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"131":
-	{
-		"Readout rate": [ 231, 313 ],
-		"Baseline": [ 167, 187 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"132":
-	{
-		"Readout rate": [ 331, 448 ],
-		"Baseline": [ 245, 265 ]
-	},
-	"133":
-	{
-		"Readout rate": [ 319, 432 ],
-		"Baseline": [ 171, 191 ]
-	},
-	"134":
-	{
-		"Readout rate": [ 357, 483 ],
-		"Baseline": [ 149, 169 ]
-	},
-	"135":
-	{
-		"Readout rate": [ 346, 468 ],
-		"Baseline": [ 165, 185 ]
-	},
-	"136":
-	{
-		"Readout rate": [ 352, 477 ],
-		"Baseline": [ 134, 154 ]
-	},
-	"138":
-	{
-		"Readout rate": [ 240, 324 ],
-		"Baseline": [ 126, 146 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"141":
-	{
-		"Readout rate": [ 1026, 1388 ],
-		"Baseline": [ 199, 219 ]
-	},
-	"143":
-	{
-		"Readout rate": [ 321, 435 ],
-		"Baseline": [ 125, 145 ]
-	},
-	"144":
-	{
-		"Readout rate": [ 983, 1330 ],
-		"Baseline": [ 64, 84 ]
-	},
-	"145":
-	{
-		"Readout rate": [ 895, 1212 ],
-		"Baseline": [ 168, 188 ]
-	},
-	"146":
-	{
-		"Readout rate": [ 248, 336 ],
-		"Baseline": [ 113, 133 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"147":
-	{
-		"Readout rate": [ 240, 325 ],
-		"Baseline": [ 152, 172 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"148":
-	{
-		"Readout rate": [ 338, 457 ],
-		"Baseline": [ 158, 178 ]
-	},
-	"149":
-	{
-		"Readout rate": [ 239, 323 ],
-		"Baseline": [ 154, 174 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"150":
-	{
-		"Readout rate": [ 334, 451 ],
-		"Baseline": [ 152, 172 ]
-	},
-	"151":
-	{
-		"Readout rate": [ 337, 457 ],
-		"Baseline": [ 190, 210 ]
-	},
-	"152":
-	{
-		"Readout rate": [ 363, 491 ],
-		"Baseline": [ 118, 138 ]
-	},
-	"153":
-	{
-		"Readout rate": [ 288, 389 ],
-		"Baseline": [ 187, 207 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"155":
-	{
-		"Readout rate": [ 253, 343 ],
-		"Baseline": [ 70, 90 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"156":
-	{
-		"Readout rate": [ 340, 460 ],
-		"Baseline": [ 165, 185 ]
-	},
-	"157":
-	{
-		"Readout rate": [ 345, 467 ],
-		"Baseline": [ 163, 183 ]
-	},
-	"158":
-	{
-		"Readout rate": [ 280, 379 ],
-		"Baseline": [ 172, 192 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"159":
-	{
-		"Readout rate": [ 230, 310 ],
-		"Baseline": [ 62, 82 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"160":
-	{
-		"Readout rate": [ 231, 313 ],
-		"Baseline": [ 150, 170 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"162":
-	{
-		"Readout rate": [ 317, 429 ],
-		"Baseline": [ 185, 205 ]
-	},
-	"163":
-	{
-		"Readout rate": [ 313, 423 ],
-		"Baseline": [ 120, 140 ]
-	},
-	"164":
-	{
-		"Readout rate": [ 318, 430 ],
-		"Baseline": [ 143, 163 ]
-	},
-	"165":
-	{
-		"Readout rate": [ 320, 434 ],
-		"Baseline": [ 162, 182 ]
-	},
-	"166":
-	{
-		"Readout rate": [ 297, 402 ],
-		"Baseline": [ 125, 145 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"168":
-	{
-		"Readout rate": [ 283, 383 ],
-		"Baseline": [ 185, 205 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"169":
-	{
-		"Readout rate": [ 308, 416 ],
-		"Baseline": [ 141, 161 ]
-	},
-	"170":
-	{
-		"Readout rate": [ 326, 441 ],
-		"Baseline": [ 173, 193 ]
-	},
-	"171":
-	{
-		"Readout rate": [ 286, 386 ],
-		"Baseline": [ 230, 250 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"172":
-	{
-		"Readout rate": [ 236, 319 ],
-		"Baseline": [ 154, 174 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"173":
-	{
-		"Readout rate": [ 195, 272 ],
-		"Baseline": [ 176, 196 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"174":
-	{
-		"Readout rate": [ 323, 437 ],
-		"Baseline": [ 187, 207 ]
-	},
-	"176":
-	{
-		"Readout rate": [ 198, 267 ],
-		"Baseline": [ 147, 167 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"178":
-	{
-		"Readout rate": [ 1021, 1381 ],
-		"Baseline": [ 185, 205 ]
-	},
-	"179":
-	{
-		"Readout rate": [ 1033, 1397 ],
-		"Baseline": [ 204, 224 ]
-	},
-	"180":
-	{
-		"Readout rate": [ 978, 1323 ],
-		"Baseline": [ 136, 156 ]
-	},
-	"182":
-	{
-		"Readout rate": [ 100, 164 ],
-		"Baseline": [ 186, 206 ],
-		"Deadtime": [ 18000, 200000 ],
-		"Pull window": [ 40000000, 50000000 ]
-	},
-	"183":
-	{
-		"Readout rate": [ 1125, 1522 ],
-		"Baseline": [ 161, 181 ]
-	},
-	"184":
-	{
-		"Readout rate": [ 1131, 1531 ],
-		"Baseline": [ 151, 171 ]
-	},
-	"185":
-	{
-		"Readout rate": [ 1135, 1536 ],
-		"Baseline": [ 171, 191 ]
-	},
-	"187":
-	{
-		"Readout rate": [ 1091, 1476 ],
-		"Baseline": [ 150, 170 ]
-	},
-	"197":
-	{
-		"Readout rate": [ 422, 571 ],
-		"Baseline": [ 135, 155 ]
-	},
-	"198":
-	{
-		"Readout rate": [ 434, 588 ],
-		"Baseline": [ 154, 174 ]
-	},
-	"199":
-	{
-		"Readout rate": [ 377, 511 ],
-		"Baseline": [ 168, 188 ]
-	},
-	"200":
-	{
-		"Readout rate": [ 432, 584 ],
-		"Baseline": [ 176, 196 ]
-	},
-	"202":
-	{
-		"Readout rate": [ 325, 440 ],
-		"Baseline": [ 179, 199 ]
-	},
-	"203":
-	{
-		"Readout rate": [ 316, 428 ],
-		"Baseline": [ 230, 250 ]
-	},
-	"204":
-	{
-		"Readout rate": [ 387, 524 ],
-		"Baseline": [ 135, 155 ]
-	},
-	"205":
-	{
-		"Readout rate": [ 1130, 1529 ],
-		"Baseline": [ 210, 230 ]
-	},
-	"206":
-	{
-		"Readout rate": [ 324, 438 ],
-		"Baseline": [ 160, 180 ]
-	},
-	"207":
-	{
-		"Readout rate": [ 277, 374 ],
-		"Baseline": [ 154, 174 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"209":
-	{
-		"Readout rate": [ 1142, 1545 ],
-		"Baseline": [ 105, 125 ]
-	},
-	"210":
-	{
-		"Readout rate": [ 1133, 1533 ],
-		"Baseline": [ 133, 153 ]
-	},
-	"211":
-	{
-		"Readout rate": [ 1138, 1540 ],
-		"Baseline": [ 109, 129 ]
-	},
-	"212":
-	{
-		"Readout rate": [ 1144, 1548 ],
-		"Baseline": [ 78, 98 ]
-	},
-	"213":
-	{
-		"Readout rate": [ 1130, 1529 ],
-		"Baseline": [ 163, 183 ]
-	},
-	"216":
-	{
-		"Readout rate": [ 1101, 1489 ],
-		"Baseline": [ 158, 178 ]
-	},
-	"220":
-	{
-		"Readout rate": [ 328, 443 ],
-		"Baseline": [ 86, 106 ]
-	},
-	"222":
-	{
-		"Readout rate": [ 274, 371 ],
-		"Baseline": [ 136, 156 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	},
-	"223":
-	{
-		"Readout rate": [ 1135, 1536 ],
-		"Baseline": [ 98, 118 ]
-	},
-	"228":
-	{
-		"Readout rate": [ 1150, 1555 ],
-		"Baseline": [ 243, 263 ]
-	},
-	"238":
-	{
-		"Readout rate": [ 256, 346 ],
-		"Baseline": [ 91, 111 ],
-		"Deadtime": [ 18000, 100000 ],
-		"Pull window": [ 45000000, 50000000 ]
-	}
+        "4": {
+                "Readout rate": [
+                        -1000,
+                        100000000
+                ],
+                "Baseline": [
+                        -160,
+                        180
+                ],
+                "Pull window": [
+                        -1000,
+                        100000000
+                ]
+        },
+        "16": {
+                "Readout rate": [
+                        1087,
+                        1631
+                ],
+                "Baseline": [
+                        191,
+                        211
+                ]
+        },
+        "18": {
+                "Readout rate": [
+                        305,
+                        458
+                ],
+                "Baseline": [
+                        109,
+                        129
+                ]
+        },
+        "19": {
+                "Readout rate": [
+                        255,
+                        382
+                ],
+                "Baseline": [
+                        205,
+                        225
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "24": {
+                "Readout rate": [
+                        212,
+                        317
+                ],
+                "Baseline": [
+                        168,
+                        188
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "29": {
+                "Readout rate": [
+                        -1000,
+                        100000000
+                ],
+                "Baseline": [
+                        181,
+                        201
+                ],
+                "Pull window": [
+                        -1000,
+                        100000000
+                ]
+        },
+        "33": {
+                "Readout rate": [
+                        216,
+                        325
+                ],
+                "Baseline": [
+                        213,
+                        233
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "34": {
+                "Readout rate": [
+                        211,
+                        316
+                ],
+                "Baseline": [
+                        176,
+                        196
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "35": {
+                "Readout rate": [
+                        1090,
+                        1634
+                ],
+                "Baseline": [
+                        103,
+                        123
+                ]
+        },
+        "36": {
+                "Readout rate": [
+                        1080,
+                        1619
+                ],
+                "Baseline": [
+                        209,
+                        229
+                ]
+        },
+        "39": {
+                "Readout rate": [
+                        611,
+                        916
+                ],
+                "Baseline": [
+                        142,
+                        162
+                ]
+        },
+        "40": {
+                "Readout rate": [
+                        628,
+                        943
+                ],
+                "Baseline": [
+                        172,
+                        192
+                ]
+        },
+        "42": {
+                "Readout rate": [
+                        223,
+                        335
+                ],
+                "Baseline": [
+                        171,
+                        191
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "44": {
+                "Readout rate": [
+                        231,
+                        346
+                ],
+                "Baseline": [
+                        103,
+                        123
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "45": {
+                "Readout rate": [
+                        384,
+                        576
+                ],
+                "Baseline": [
+                        152,
+                        172
+                ]
+        },
+        "47": {
+                "Readout rate": [
+                        892,
+                        1339
+                ],
+                "Baseline": [
+                        88,
+                        108
+                ]
+        },
+        "48": {
+                "Readout rate": [
+                        854,
+                        1280
+                ],
+                "Baseline": [
+                        157,
+                        177
+                ]
+        },
+        "49": {
+                "Readout rate": [
+                        935,
+                        1402
+                ],
+                "Baseline": [
+                        217,
+                        237
+                ]
+        },
+        "50": {
+                "Readout rate": [
+                        440,
+                        661
+                ],
+                "Baseline": [
+                        182,
+                        202
+                ]
+        },
+        "51": {
+                "Readout rate": [
+                        1098,
+                        1646
+                ],
+                "Baseline": [
+                        119,
+                        139
+                ]
+        },
+        "55": {
+                "Readout rate": [
+                        236,
+                        353
+                ],
+                "Baseline": [
+                        131,
+                        151
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "56": {
+                "Readout rate": [
+                        294,
+                        441
+                ],
+                "Baseline": [
+                        150,
+                        170
+                ]
+        },
+        "57": {
+                "Readout rate": [
+                        216,
+                        325
+                ],
+                "Baseline": [
+                        109,
+                        129
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "58": {
+                "Readout rate": [
+                        134,
+                        210
+                ],
+                "Baseline": [
+                        84,
+                        104
+                ],
+                "Deadtime": [
+                        18000,
+                        200000
+                ],
+                "Pull window": [
+                        40000000,
+                        50000000
+                ]
+        },
+        "59": {
+                "Readout rate": [
+                        232,
+                        347
+                ],
+                "Baseline": [
+                        175,
+                        195
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "60": {
+                "Readout rate": [
+                        289,
+                        433
+                ],
+                "Baseline": [
+                        196,
+                        216
+                ]
+        },
+        "61": {
+                "Readout rate": [
+                        318,
+                        478
+                ],
+                "Baseline": [
+                        73,
+                        93
+                ]
+        },
+        "71": {
+                "Readout rate": [
+                        1034,
+                        1552
+                ],
+                "Baseline": [
+                        179,
+                        199
+                ]
+        },
+        "72": {
+                "Readout rate": [
+                        1064,
+                        1597
+                ],
+                "Baseline": [
+                        142,
+                        162
+                ]
+        },
+        "73": {
+                "Readout rate": [
+                        70,
+                        125
+                ],
+                "Baseline": [
+                        205,
+                        225
+                ],
+                "Deadtime": [
+                        18000,
+                        500000
+                ],
+                "Pull window": [
+                        40000000,
+                        50000000
+                ]
+        },
+        "75": {
+                "Readout rate": [
+                        1050,
+                        1576
+                ],
+                "Baseline": [
+                        210,
+                        230
+                ]
+        },
+        "77": {
+                "Readout rate": [
+                        376,
+                        565
+                ],
+                "Baseline": [
+                        107,
+                        127
+                ]
+        },
+        "78": {
+                "Readout rate": [
+                        100,
+                        553
+                ],
+                "Baseline": [
+                        217,
+                        237
+                ],
+                "Deadtime": [
+                        18000,
+                        500000
+                ],
+                "Pull window": [
+                        40000000,
+                        50000000
+                ]
+        },
+        "79": {
+                "Readout rate": [
+                        248,
+                        371
+                ],
+                "Baseline": [
+                        171,
+                        191
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "81": {
+                "Readout rate": [
+                        363,
+                        545
+                ],
+                "Baseline": [
+                        202,
+                        222
+                ]
+        },
+        "82": {
+                "Readout rate": [
+                        364,
+                        547
+                ],
+                "Baseline": [
+                        162,
+                        182
+                ]
+        },
+        "83": {
+                "Readout rate": [
+                        335,
+                        502
+                ],
+                "Baseline": [
+                        138,
+                        158
+                ]
+        },
+        "84": {
+                "Readout rate": [
+                        316,
+                        474
+                ],
+                "Baseline": [
+                        77,
+                        97
+                ]
+        },
+        "85": {
+                "Readout rate": [
+                        402,
+                        603
+                ],
+                "Baseline": [
+                        132,
+                        152
+                ]
+        },
+        "86": {
+                "Readout rate": [
+                        300,
+                        451
+                ],
+                "Baseline": [
+                        229,
+                        249
+                ]
+        },
+        "87": {
+                "Readout rate": [
+                        -1,
+                        10
+                ],
+                "Baseline": [
+                        107,
+                        127
+                ],
+	        "Deadtime": [
+		        100000,
+            		100000000
+	         ],
+                "Pull window": [
+	         	0,
+          		35000000
+	         ]
+        },
+        "88": {
+                "Readout rate": [
+                        70,
+                        125
+                ],
+                "Baseline": [
+                        158,
+                        178
+                ],
+                "Deadtime": [
+                        18000,
+                        500000
+                ],
+                "Pull window": [
+                        40000000,
+                        50000000
+                ]
+        },
+        "90": {
+                "Readout rate": [
+                        355,
+                        532
+                ],
+                "Baseline": [
+                        191,
+                        211
+                ]
+        },
+        "91": {
+                "Readout rate": [
+                        340,
+                        510
+                ],
+                "Baseline": [
+                        163,
+                        183
+                ]
+        },
+        "93": {
+                "Readout rate": [
+                        354,
+                        531
+                ],
+                "Baseline": [
+                        143,
+                        163
+                ]
+        },
+        "94": {
+                "Readout rate": [
+                        334,
+                        501
+                ],
+                "Baseline": [
+                        95,
+                        115
+                ]
+        },
+        "95": {
+                "Readout rate": [
+                        341,
+                        511
+                ],
+                "Baseline": [
+                        167,
+                        187
+                ]
+        },
+        "97": {
+                "Readout rate": [
+                        290,
+                        434
+                ],
+                "Baseline": [
+                        142,
+                        162
+                ]
+        },
+        "98": {
+                "Readout rate": [
+                        327,
+                        490
+                ],
+                "Baseline": [
+                        156,
+                        176
+                ]
+        },
+        "99": {
+                "Readout rate": [
+                        338,
+                        507
+                ],
+                "Baseline": [
+                        129,
+                        149
+                ]
+        },
+        "100": {
+                "Readout rate": [
+                        295,
+                        443
+                ],
+                "Baseline": [
+                        184,
+                        204
+                ]
+        },
+        "101": {
+                "Readout rate": [
+                        317,
+                        476
+                ],
+                "Baseline": [
+                        109,
+                        129
+                ]
+        },
+        "102": {
+                "Readout rate": [
+                        356,
+                        533
+                ],
+                "Baseline": [
+                        104,
+                        124
+                ]
+        },
+        "103": {
+                "Readout rate": [
+                        301,
+                        452
+                ],
+                "Baseline": [
+                        175,
+                        195
+                ]
+        },
+        "104": {
+                "Readout rate": [
+                        323,
+                        484
+                ],
+                "Baseline": [
+                        136,
+                        156
+                ]
+        },
+        "105": {
+                "Readout rate": [
+                        910,
+                        1365
+                ],
+                "Baseline": [
+                        190,
+                        210
+                ]
+        },
+        "106": {
+                "Readout rate": [
+                        848,
+                        1272
+                ],
+                "Baseline": [
+                        140,
+                        160
+                ]
+        },
+        "107": {
+                "Readout rate": [
+                        862,
+                        1293
+                ],
+                "Baseline": [
+                        150,
+                        170
+                ]
+        },
+        "109": {
+                "Readout rate": [
+                        853,
+                        1279
+                ],
+                "Baseline": [
+                        261,
+                        281
+                ]
+        },
+        "111": {
+                "Readout rate": [
+                        844,
+                        1267
+                ],
+                "Baseline": [
+                        163,
+                        183
+                ]
+        },
+        "114": {
+                "Readout rate": [
+                        880,
+                        1320
+                ],
+                "Baseline": [
+                        123,
+                        143
+                ]
+        },
+        "115": {
+                "Readout rate": [
+                        911,
+                        1367
+                ],
+                "Baseline": [
+                        137,
+                        157
+                ]
+        },
+        "116": {
+                "Readout rate": [
+                        906,
+                        1358
+                ],
+                "Baseline": [
+                        222,
+                        242
+                ]
+        },
+        "117": {
+                "Readout rate": [
+                        872,
+                        1309
+                ],
+                "Baseline": [
+                        73,
+                        93
+                ]
+        },
+        "118": {
+                "Readout rate": [
+                        876,
+                        1313
+                ],
+                "Baseline": [
+                        121,
+                        141
+                ]
+        },
+        "119": {
+                "Readout rate": [
+                        879,
+                        1319
+                ],
+                "Baseline": [
+                        155,
+                        175
+                ]
+        },
+        "120": {
+                "Readout rate": [
+                        222,
+                        334
+                ],
+                "Baseline": [
+                        176,
+                        196
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "121": {
+                "Readout rate": [
+                        636,
+                        955
+                ],
+                "Baseline": [
+                        176,
+                        196
+                ]
+        },
+        "123": {
+                "Readout rate": [
+                        454,
+                        681
+                ],
+                "Baseline": [
+                        186,
+                        206
+                ]
+        },
+        "125": {
+                "Readout rate": [
+                        418,
+                        626
+                ],
+                "Baseline": [
+                        171,
+                        191
+                ]
+        },
+        "126": {
+                "Readout rate": [
+                        458,
+                        686
+                ],
+                "Baseline": [
+                        111,
+                        131
+                ]
+        },
+        "127": {
+                "Readout rate": [
+                        640,
+                        960
+                ],
+                "Baseline": [
+                        114,
+                        134
+                ]
+        },
+        "128": {
+                "Readout rate": [
+                        622,
+                        933
+                ],
+                "Baseline": [
+                        278,
+                        298
+                ]
+        },
+        "129": {
+                "Readout rate": [
+                        461,
+                        691
+                ],
+                "Baseline": [
+                        218,
+                        238
+                ]
+        },
+        "130": {
+                "Readout rate": [
+                        223,
+                        334
+                ],
+                "Baseline": [
+                        196,
+                        216
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "131": {
+                "Readout rate": [
+                        218,
+                        326
+                ],
+                "Baseline": [
+                        167,
+                        187
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "132": {
+                "Readout rate": [
+                        312,
+                        467
+                ],
+                "Baseline": [
+                        245,
+                        265
+                ]
+        },
+        "133": {
+                "Readout rate": [
+                        300,
+                        451
+                ],
+                "Baseline": [
+                        171,
+                        191
+                ]
+        },
+        "134": {
+                "Readout rate": [
+                        336,
+                        504
+                ],
+                "Baseline": [
+                        149,
+                        169
+                ]
+        },
+        "135": {
+                "Readout rate": [
+                        326,
+                        488
+                ],
+                "Baseline": [
+                        165,
+                        185
+                ]
+        },
+        "136": {
+                "Readout rate": [
+                        332,
+                        497
+                ],
+                "Baseline": [
+                        134,
+                        154
+                ]
+        },
+        "138": {
+                "Readout rate": [
+                        226,
+                        338
+                ],
+                "Baseline": [
+                        126,
+                        146
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "141": {
+                "Readout rate": [
+                        966,
+                        1448
+                ],
+                "Baseline": [
+                        199,
+                        219
+                ]
+        },
+        "143": {
+                "Readout rate": [
+                        302,
+                        454
+                ],
+                "Baseline": [
+                        125,
+                        145
+                ]
+        },
+        "144": {
+                "Readout rate": [
+                        925,
+                        1388
+                ],
+                "Baseline": [
+                        64,
+                        84
+                ]
+        },
+        "145": {
+                "Readout rate": [
+                        843,
+                        1264
+                ],
+                "Baseline": [
+                        168,
+                        188
+                ]
+        },
+        "146": {
+                "Readout rate": [
+                        234,
+                        350
+                ],
+                "Baseline": [
+                        113,
+                        133
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "147": {
+                "Readout rate": [
+                        226,
+                        339
+                ],
+                "Baseline": [
+                        152,
+                        172
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "148": {
+                "Readout rate": [
+                        318,
+                        477
+                ],
+                "Baseline": [
+                        158,
+                        178
+                ]
+        },
+        "149": {
+                "Readout rate": [
+                        225,
+                        337
+                ],
+                "Baseline": [
+                        154,
+                        174
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "150": {
+                "Readout rate": [
+                        314,
+                        471
+                ],
+                "Baseline": [
+                        152,
+                        172
+                ]
+        },
+        "151": {
+                "Readout rate": [
+                        318,
+                        476
+                ],
+                "Baseline": [
+                        190,
+                        210
+                ]
+        },
+        "152": {
+                "Readout rate": [
+                        342,
+                        512
+                ],
+                "Baseline": [
+                        118,
+                        138
+                ]
+        },
+        "153": {
+                "Readout rate": [
+                        271,
+                        406
+                ],
+                "Baseline": [
+                        187,
+                        207
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "155": {
+                "Readout rate": [
+                        238,
+                        358
+                ],
+                "Baseline": [
+                        70,
+                        90
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "156": {
+                "Readout rate": [
+                        320,
+                        480
+                ],
+                "Baseline": [
+                        165,
+                        185
+                ]
+        },
+        "157": {
+                "Readout rate": [
+                        325,
+                        487
+                ],
+                "Baseline": [
+                        163,
+                        183
+                ]
+        },
+        "158": {
+                "Readout rate": [
+                        264,
+                        395
+                ],
+                "Baseline": [
+                        172,
+                        192
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "159": {
+                "Readout rate": [
+                        212,
+                        318
+                ],
+                "Baseline": [
+                        62,
+                        82
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "160": {
+                "Readout rate": [
+                        218,
+                        326
+                ],
+                "Baseline": [
+                        150,
+                        170
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "162": {
+                "Readout rate": [
+                        298,
+                        448
+                ],
+                "Baseline": [
+                        185,
+                        205
+                ]
+        },
+        "163": {
+                "Readout rate": [
+                        294,
+                        442
+                ],
+                "Baseline": [
+                        120,
+                        140
+                ]
+        },
+        "164": {
+                "Readout rate": [
+                        299,
+                        449
+                ],
+                "Baseline": [
+                        143,
+                        163
+                ]
+        },
+        "165": {
+                "Readout rate": [
+                        302,
+                        452
+                ],
+                "Baseline": [
+                        162,
+                        182
+                ]
+        },
+        "166": {
+                "Readout rate": [
+                        280,
+                        419
+                ],
+                "Baseline": [
+                        125,
+                        145
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "168": {
+                "Readout rate": [
+                        266,
+                        400
+                ],
+                "Baseline": [
+                        185,
+                        205
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "169": {
+                "Readout rate": [
+                        290,
+                        434
+                ],
+                "Baseline": [
+                        141,
+                        161
+                ]
+        },
+        "170": {
+                "Readout rate": [
+                        307,
+                        460
+                ],
+                "Baseline": [
+                        173,
+                        193
+                ]
+        },
+        "171": {
+                "Readout rate": [
+                        269,
+                        403
+                ],
+                "Baseline": [
+                        230,
+                        250
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "172": {
+                "Readout rate": [
+                        222,
+                        333
+                ],
+                "Baseline": [
+                        154,
+                        174
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "173": {
+                "Readout rate": [
+                        189,
+                        284
+                ],
+                "Baseline": [
+                        176,
+                        196
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "174": {
+                "Readout rate": [
+                        304,
+                        456
+                ],
+                "Baseline": [
+                        187,
+                        207
+                ]
+        },
+        "176": {
+                "Readout rate": [
+                        186,
+                        279
+                ],
+                "Baseline": [
+                        147,
+                        167
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "178": {
+                "Readout rate": [
+                        961,
+                        1441
+                ],
+                "Baseline": [
+                        185,
+                        205
+                ]
+        },
+        "179": {
+                "Readout rate": [
+                        972,
+                        1458
+                ],
+                "Baseline": [
+                        204,
+                        224
+                ]
+        },
+        "180": {
+                "Readout rate": [
+                        920,
+                        1381
+                ],
+                "Baseline": [
+                        136,
+                        156
+                ]
+        },
+        "182": {
+                "Readout rate": [
+                        100,
+                        164
+                ],
+                "Baseline": [
+                        186,
+                        206
+                ],
+                "Deadtime": [
+                        18000,
+                        200000
+                ],
+                "Pull window": [
+                        40000000,
+                        50000000
+                ]
+        },
+        "183": {
+                "Readout rate": [
+                        1059,
+                        1588
+                ],
+                "Baseline": [
+                        161,
+                        181
+                ]
+        },
+        "184": {
+                "Readout rate": [
+                        1065,
+                        1597
+                ],
+                "Baseline": [
+                        151,
+                        171
+                ]
+        },
+        "185": {
+                "Readout rate": [
+                        1068,
+                        1603
+                ],
+                "Baseline": [
+                        171,
+                        191
+                ]
+        },
+        "187": {
+                "Readout rate": [
+                        1027,
+                        1540
+                ],
+                "Baseline": [
+                        150,
+                        170
+                ]
+        },
+        "197": {
+                "Readout rate": [
+                        397,
+                        596
+                ],
+                "Baseline": [
+                        135,
+                        155
+                ]
+        },
+        "198": {
+                "Readout rate": [
+                        409,
+                        613
+                ],
+                "Baseline": [
+                        154,
+                        174
+                ]
+        },
+        "199": {
+                "Readout rate": [
+                        355,
+                        533
+                ],
+                "Baseline": [
+                        168,
+                        188
+                ]
+        },
+        "200": {
+                "Readout rate": [
+                        406,
+                        610
+                ],
+                "Baseline": [
+                        176,
+                        196
+                ]
+        },
+        "202": {
+                "Readout rate": [
+                        306,
+                        459
+                ],
+                "Baseline": [
+                        179,
+                        199
+                ]
+        },
+        "203": {
+                "Readout rate": [
+                        298,
+                        446
+                ],
+                "Baseline": [
+                        230,
+                        250
+                ]
+        },
+        "204": {
+                "Readout rate": [
+                        364,
+                        547
+                ],
+                "Baseline": [
+                        135,
+                        155
+                ]
+        },
+        "205": {
+                "Readout rate": [
+                        1064,
+                        1595
+                ],
+                "Baseline": [
+                        210,
+                        230
+                ]
+        },
+        "206": {
+                "Readout rate": [
+                        305,
+                        457
+                ],
+                "Baseline": [
+                        160,
+                        180
+                ]
+        },
+        "207": {
+                "Readout rate": [
+                        260,
+                        391
+                ],
+                "Baseline": [
+                        154,
+                        174
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "209": {
+                "Readout rate": [
+                        1075,
+                        1612
+                ],
+                "Baseline": [
+                        105,
+                        125
+                ]
+        },
+        "210": {
+                "Readout rate": [
+                        1066,
+                        1600
+                ],
+                "Baseline": [
+                        133,
+                        153
+                ]
+        },
+        "211": {
+                "Readout rate": [
+                        1071,
+                        1607
+                ],
+                "Baseline": [
+                        109,
+                        129
+                ]
+        },
+        "212": {
+                "Readout rate": [
+                        1077,
+                        1615
+                ],
+                "Baseline": [
+                        78,
+                        98
+                ]
+        },
+        "213": {
+                "Readout rate": [
+                        1064,
+                        1595
+                ],
+                "Baseline": [
+                        163,
+                        183
+                ]
+        },
+        "216": {
+                "Readout rate": [
+                        1036,
+                        1554
+                ],
+                "Baseline": [
+                        158,
+                        178
+                ]
+        },
+        "220": {
+                "Readout rate": [
+                        308,
+                        463
+                ],
+                "Baseline": [
+                        86,
+                        106
+                ]
+        },
+        "222": {
+                "Readout rate": [
+                        258,
+                        387
+                ],
+                "Baseline": [
+                        136,
+                        156
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        },
+        "223": {
+                "Readout rate": [
+                        1068,
+                        1603
+                ],
+                "Baseline": [
+                        98,
+                        118
+                ]
+        },
+        "228": {
+                "Readout rate": [
+                        1082,
+                        1623
+                ],
+                "Baseline": [
+                        243,
+                        263
+                ]
+        },
+        "238": {
+                "Readout rate": [
+                        241,
+                        361
+                ],
+                "Baseline": [
+                        91,
+                        111
+                ],
+                "Deadtime": [
+                        18000,
+                        100000
+                ],
+                "Pull window": [
+                        45000000,
+                        50000000
+                ]
+        }
 }

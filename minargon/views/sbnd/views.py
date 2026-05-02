@@ -46,7 +46,7 @@ CRT_MAPS = {
 "South Wall": sorted([60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173]),
 "East Wall": sorted([160, 222, 220, 81, 85, 143, 162, 133, 132, 44, 147, 146, 131, 79, 206, 204, 200, 18]),
 "West Wall": sorted([174, 148, 163, 164, 165, 55, 120, 42, 138, 130, 197, 199, 202, 19, 198, 45, 203, 207]),
-"Bottom Wall": sorted([82, 86, 90, 91, 99, 100, 93, 94, 95, 87, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101, 4, 29]),
+"Bottom Wall": sorted([82, 86, 90, 91, 99, 100, 93, 94, 95, 97, 98, 77, 78, 83, 84, 104, 103, 102, 101, 4, 29]),
 "Top-Low Wall": sorted([111, 107, 106, 115, 105, 123, 50, 125, 126, 129, 114, 118, 48, 145, 119, 223, 36, 51, 71, 187, 16, 205, 35, 228, 75]),
 "Top-High Wall": sorted([121, 40, 39, 128, 127, 178, 144, 180, 141, 179, 109, 116, 47, 49, 117, 185, 184, 183, 72, 216, 213, 212, 211, 210, 209])
 }
@@ -1123,9 +1123,37 @@ def Software_Trigger():
       "title": "Software Trigger",
       "include_timeseries": True,
       "include_histos": True,
-      "one_channel": True
+      "one_cannel": True
     }
     return render_template('sbnd/beam_metrics.html',**render_args)
+
+@app.route('/Cumulative_POT')
+def Cumulative_POT():
+    keys = ["cumulative_pot:daq_uptime:image",
+            "cumulative_pot:pot_collection_weekly:image",
+            "cumulative_pot:livetime_pot_cumulative_run2:image",
+            "cumulative_pot:livetime_pot_cumulative_run1-2:image",
+            #"tpc1:plane1:evd:image",
+            ]
+
+
+    images = []
+    for k in keys:
+        image = online_metrics.potdisplay("online", k)
+        images.append(image)
+
+    current_time = datetime.now()
+    current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    current_time_in_utc = datetime.now(pytz.utc)
+    current_time_in_utc = current_time_in_utc.strftime("%Y-%m-%d %H:%M:%S")
+
+    args = {
+        "imgs": images,
+        "current_time": current_time,
+        "current_time_in_utc": current_time_in_utc
+    }
+
+    return render_template('sbnd/cumulative_pot.html', **args)
 
 
 @app.route('/Timing_status')
