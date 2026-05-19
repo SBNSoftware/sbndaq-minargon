@@ -138,8 +138,10 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
         	if (rms > {{ tpc_rms_max }} || rms === 0) {   // Show channels with high rms or 0 rms
 		          show = true;
 	          } 
-            	if (short_chs.includes(ch[i])) {   // Only show known high noise ch if > 150 or < 50
-                	if (rms > 50 && rms < 150){
+                if (short_chs.includes(ch[i])) {   // Only show known high noise ch if > 150 or < 50
+		    // Edit: modifying high noise limit to 200 ADC. See
+		    // https://shortbaseline.slack.com/archives/C04HV24T8BC/p1779125042412739?thread_ts=1779110559.408079&cid=C04HV24T8BC
+                	if (rms > 50 && rms < 200){
 				show = false;
 		        }     
                 	else if (rms <= 50) {
@@ -156,7 +158,7 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
 		        else {
 		        	show = false;
 		        }
-            	} 
+            	}
 
            	if (show) {
                 	table.innerHTML += `
