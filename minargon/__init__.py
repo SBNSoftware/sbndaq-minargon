@@ -58,6 +58,7 @@ from .tools import ListConverter, StreamConverter
 app.url_map.converters['list'] = ListConverter
 app.url_map.converters['stream'] = StreamConverter
 
+'''
 # load in the hardwaredb
 try:
     #from . import hardwaredb
@@ -66,7 +67,7 @@ except Exception as e:
     print("Uh oh! Could not import the Hardware DB:")
     print(e)
     exit(1)
-
+'''
 
 from minargon.hardwaredb import HWSelectorConverter, HWSelectorListConverter
 app.url_map.converters["hw_selector"] = HWSelectorConverter
