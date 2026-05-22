@@ -58,17 +58,19 @@ from .tools import ListConverter, StreamConverter
 app.url_map.converters['list'] = ListConverter
 app.url_map.converters['stream'] = StreamConverter
 
-from .hardwaredb import HWSelectorConverter, HWSelectorListConverter
-app.url_map.converters["hw_selector"] = HWSelectorConverter
-app.url_map.converters["hw_selector_list"] = HWSelectorListConverter
 # load in the hardwaredb
-print("TRYING TO LOAD THE HARDWARE DB")
 try:
-    from . import hardwaredb
+    #from . import hardwaredb
+    import minargon.hardwaredb as hardwaredb
 except Exception as e:
     print("Uh oh! Could not import the Hardware DB:")
     print(e)
     exit(1)
+
+
+from minargon.hardwaredb import HWSelectorConverter, HWSelectorListConverter
+app.url_map.converters["hw_selector"] = HWSelectorConverter
+app.url_map.converters["hw_selector_list"] = HWSelectorListConverter
 
 # routes
 if app.config["FRONT_END"] == "sbnd":
