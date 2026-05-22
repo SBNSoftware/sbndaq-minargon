@@ -5,7 +5,7 @@
 {{ super() }}
 <div class="container">
 <div class="row">
-<h1 class="hcenter">
+<h1 class="hcenter" style="margin-top: 20px;">
   TPC Status
 </h1>
 </div>
@@ -27,6 +27,21 @@
 <h4 class="hcenter" style="color:red; margin-top: 20px;">
 Upper limit on RMS set at {{ tpc_rms_max }}  
 </h4>
+</div>
+<div class="row">
+<h5 class="hcenter" style="color:green;">
+Known shorted channels ( {{ short_chs }} ) set upper limit to 150 rms
+</h5>
+</div>
+<div class="row">
+<h5 class="hcenter" style="color:green;">
+Known noisy-shorted channels ( {{ noisy_short_chs }} ) set upper limit to 200 rms
+</h5>
+</div>
+<div class="row">
+<h5 class="hcenter" style="color:blue;">
+  Dead channels: {{ dead_ch_list }} set upper limit to 0 rms
+</h5>
 </div>
 <br>
 <br>
