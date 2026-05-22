@@ -780,6 +780,7 @@ updateDisplay();
 var BAD_PLANES = new Set();
 var TPC_ON = false;
 var short_chs = {{ short_chs }};
+var noisy_short_chs = {{ noisy_short_chs }}  ;
 var dead_chs = {{ dead_chs }};
 var TPC_status = 0;
 {% for tpc_plane in tpc_planes %}
@@ -806,7 +807,8 @@ var TPC_status = 0;
        
         // Skip the max rms requirement for noisy wires on west induction planes
         var skip1 = short_chs.includes(ch[i]);
-        if (!skip1 && rms > {{ tpc_rms_max }}) {
+	var skip2 = noisy_short_chs.includes(ch[i]);
+        if (!skip1 && !skip2 && rms > {{ tpc_rms_max }}) {
             plane_has_bad_rms = true;
             break; // Exit the loop early since we found a bad RMS value
         }
