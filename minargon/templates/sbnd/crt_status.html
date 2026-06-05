@@ -159,6 +159,9 @@ import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 var config = {{config|tojson|safe}};
 var feb_specific_limits = {{feb_specific_limits|tojson|safe}};
 
+var crt_off_febs_list = {{ crt_off_febs_list|tojson|safe }};
+var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
+
 // setup each plane poll
 {% for crt in crts %}
   {% set channels = channels[loop.index0]|tojson %}
@@ -316,6 +319,20 @@ var buffer = new Data.D3DataBuffer(poll, 1, [
                        readoutrate_isbad[ind] || missingt0_isbad[ind] || missingt1_isbad[ind] );
 
       } // check any specific limits
+
+      //if a FEB is OFF, set the bad variables back to good so they don't show up red
+      var feb = Number(channels[ind]);
+
+      if (OFF_CRT_FEBS.has(feb)) {
+        isbad[ind] = true;
+	baseline_isbad[ind] = false;
+	deadtime_isbad[ind] = false;
+	pullwindow_isbad[ind] = false;
+	readoutrate_isbad[ind] = false;
+	missingt0_isbad[ind] = false;
+	missingt1_isbad[ind] = false;
+      }
+
 
       if (isbad[ind]) {
         //c = 'style="background-color: red"';

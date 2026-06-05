@@ -873,6 +873,9 @@ let BAD_CRT_SETS = [
 var crt_config = {{crt_config|tojson|safe}};
 var crt_feb_specific_limits = {{crt_feb_specific_limits|tojson|safe}};
 
+var crt_off_febs_list = {{ crt_off_febs_list|tojson|safe }};
+var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
+
 {% for crt in crts %}
   {% set crt_channels = crt_channels[loop.index0]|tojson %}
   {
@@ -891,6 +894,14 @@ var crt_feb_specific_limits = {{crt_feb_specific_limits|tojson|safe}};
       var readoutrate_data = data.slice(5*crt_channels.length);
 
       for (var i = 0; i < crt_channels.length; i++) {
+
+	//Skip if the FEB is off according to the json
+	var feb = Number(crt_channels[i]);
+        var channel_str = String(feb);
+
+        if (OFF_CRT_FEBS.has(feb)) {
+          continue;
+        }
 
         // Get data
 
@@ -934,7 +945,6 @@ var crt_feb_specific_limits = {{crt_feb_specific_limits|tojson|safe}};
 	  missingt1_feb_specific = "Missing T1" in limit_dict;
         }
 
-	var channel_str = String(crt_channels[i]);
 
         var check_baseline_min = {{crt_baseline_min}};
         var check_baseline_max = {{crt_baseline_max}};

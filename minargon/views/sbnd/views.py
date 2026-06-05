@@ -128,6 +128,8 @@ CRT_MISSINGT1_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_missingt1_max"]
 CRT_READOUTRATE_ALARM_MIN = CRT_FEB_SPECIFIC_LIMITS["global_readoutrate_min"]
 CRT_READOUTRATE_ALARM_MAX = CRT_FEB_SPECIFIC_LIMITS["global_readoutrate_max"]
 
+CRT_OFF_FEBS_LIST = CRT_FEB_SPECIFIC_LIMITS["off_febs"]
+
 PMT_RMS_ALARM_MIN = 1.2
 PMT_RMS_ALARM_MAX = 3.2
 
@@ -272,6 +274,7 @@ def introduction():
       "crt_missingt1_max": CRT_MISSINGT1_ALARM_MAX,
       "crt_readoutrate_min": CRT_READOUTRATE_ALARM_MIN,
       "crt_readoutrate_max": CRT_READOUTRATE_ALARM_MAX,
+      "crt_off_febs_list": CRT_OFF_FEBS_LIST,
       "pmts": PMTS,
       "pmt_config": pmt_config,
       "pmt_channels": PMT_CHANNELS,
@@ -547,6 +550,7 @@ def CRT_status():
       "channels": CRT_boards, #channels mean BOARD here
       "crts": CRTS,
       "feb_specific_limits": CRT_FEB_SPECIFIC_LIMITS,
+      "crt_off_febs_list": CRT_OFF_FEBS_LIST,
       "baseline_min": CRT_BASELINE_ALARM_MIN,
       "baseline_max": CRT_BASELINE_ALARM_MAX,
       "deadtime_min": CRT_DEADTIME_ALARM_MIN,
