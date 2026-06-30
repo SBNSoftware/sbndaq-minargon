@@ -145,13 +145,17 @@
                 }
             }
             
+            //delete the following line when resetting the alarm
+	    alarmReason = "Alarm is manually disabled while TPC is off.";
+
             localStorage.setItem("alarmReason", alarmReason);
             alarmReasonElement.textContent = alarmReason;
 
-            if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
-                document.getElementById("alarmSound").play();
-                alarmTriggered = true;
-            } 
+            //to reset the alarm, enable the following four lines
+            //if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
+            //    document.getElementById("alarmSound").play();
+            //    alarmTriggered = true;
+            //} 
             
         }
 
