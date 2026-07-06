@@ -115,7 +115,8 @@
               }
         }
 
-        function testAlarm() {
+       function testAlarm() {
+	  document.body.style.backgroundColor = "red";
           let alarmSound = document.getElementById("alarmSound");
           alarmSound.play()
             .then(() => console.log("Test alarm playing!"))
@@ -144,14 +145,21 @@
                     alarmReason = "Alarm triggered: DAQ Status is not running.";
                 }
             }
-            
+
+	    //delete the following line when resetting the alarm
+            alarmReason = "Alarm is manually disabled while TPC is off.";
+
             localStorage.setItem("alarmReason", alarmReason);
             alarmReasonElement.textContent = alarmReason;
 
-            if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
-                document.getElementById("alarmSound").play();
-                alarmTriggered = true;
-            } 
+	   //to reset the alarm, enable the following four lines
+           // if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
+	   //	document.body.style.backgroundColor = "red";
+           //     document.getElementById("alarmSound").play();
+           //     alarmTriggered = true;
+           // }
+
+	    
             
         }
 
@@ -248,6 +256,7 @@
 	}
 
         function disableAlarm() {
+	    document.body.style.backgroundColor = "";
             document.getElementById("alarmSound").pause();
             alarmTriggered = false;
             alarmDisabled = true;  // Prevent alarm from playing again
@@ -265,6 +274,7 @@
             localStorage.setItem("alarmDisabled", "false");
             localStorage.removeItem("disableTimestamp");
             localStorage.setItem("resetTimestamp", timestamp);
+	    document.body.style.backgroundColor = "";
             updateLastDisabledTime();
             updateLastResetTime();
             setIsAlarmDisabled();
