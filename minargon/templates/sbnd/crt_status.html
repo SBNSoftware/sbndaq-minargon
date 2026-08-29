@@ -190,209 +190,343 @@ var data_link = config_controller.data_link(0, ["baseline", "Deadtime", "PullWin
 // Turn that DataLink into a DataBuffer
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
 var buffer = new Data.D3DataBuffer(poll, 1, [
-  function(data) {
+
+
+function(data) {
+
     var channels = {{channels}};
-    var isbad = [];
-    var baseline_isbad = [];
-    var deadtime_isbad = [];
-    var pullwindow_isbad = [];
-    var readoutrate_isbad = [];
-    var missingt0_isbad = [];
-    var missingt1_isbad = [];
-    var baseline_data = data.slice(0, channels.length);
-    var deadtime_data = data.slice(channels.length, 2*channels.length);
-    var pullwindow_data = data.slice(2*channels.length, 3*channels.length);
-    var readoutrate_data = data.slice(3*channels.length, 4*channels.length);
-    var missingt0_data = data.slice(4*channels.length, 5*channels.length);
-    var missingt1_data = data.slice(5*channels.length, 6*channels.length);
 
-    var baselines = [];
-    var deadtimes = [];
-    var pullwindows = [];
-    var readoutrates = [];
-    var missingt0s = [];
-    var missingt1s = [];
-    for (var i = 0; i < channels.length; i++) {
-      var baseline = -1;
-      var deadtime = -1;
-      var pullwindow = -1;
-      var readoutrate = -1;
-      var missingt0 = -1;
-      var missingt1 = -1;
-      if (baseline_data[i].size > 0) {
-        var baseline = baseline_data[i].get_last()[1];
-      }
-      if (deadtime_data[i].size > 0) {
-        var deadtime = deadtime_data[i].get_last()[1];
-      }
-      if (pullwindow_data[i].size > 0) {
-        var pullwindow = pullwindow_data[i].get_last()[1];
-      }
-      if (readoutrate_data[i].size > 0) {
-        var readoutrate = readoutrate_data[i].get_last()[1];
-      }
-      if (missingt0_data[i].size > 0) {
-        var missingt0 = missingt0_data[i].get_last()[1];
-      }
-      if (missingt1_data[i].size > 0) {
-        var missingt1 = missingt1_data[i].get_last()[1];
-      }
-      baselines.push(baseline);
-      deadtimes.push(deadtime);
-      pullwindows.push(pullwindow);
-      readoutrates.push(readoutrate);
-      missingt0s.push(missingt0);
-      missingt1s.push(missingt1);
+    // ============================================================
+    // 1. Split incoming data by quantity
+    // ============================================================
 
-      var baseline_bad = ((baseline < {{baseline_min}}) || (baseline > {{baseline_max}}));
-      var deadtime_bad = ((deadtime < {{deadtime_min}}) || (deadtime > {{deadtime_max}}));
-      var pullwindow_bad = ((pullwindow < {{pullwindow_min}}) || (pullwindow > {{pullwindow_max}}));
-      var readoutrate_bad = ((readoutrate < {{readoutrate_min}}) || (readoutrate > {{readoutrate_max}}));
-      var missingt0_bad = ((missingt0 > {{missingt0_max}}));
-      var missingt1_bad = ((missingt1 > {{missingt1_max}}));
+    var n = channels.length;
 
-      var bad = ( baseline_bad || deadtime_bad || pullwindow_bad || readoutrate_bad ||
-                  missingt0_bad || missingt1_bad );
+    var baseline_data    = data.slice(0 * n, 1 * n);
+    var deadtime_data    = data.slice(1 * n, 2 * n);
+    var pullwindow_data  = data.slice(2 * n, 3 * n);
+    var readoutrate_data = data.slice(3 * n, 4 * n);
+    var missingt0_data   = data.slice(4 * n, 5 * n);
+    var missingt1_data   = data.slice(5 * n, 6 * n);
 
-      isbad.push(bad);
-      baseline_isbad.push(baseline_bad);
-      deadtime_isbad.push(deadtime_bad);
-      pullwindow_isbad.push(pullwindow_bad);
-      readoutrate_isbad.push(readoutrate_bad);
-      missingt0_isbad.push(missingt0_bad);
-      missingt1_isbad.push(missingt1_bad);
+
+    // ============================================================
+    // 2. Helper function for getting the latest value
+    // ============================================================
+
+    function getLastValue(buffer) {
+        return buffer.size > 0 ? buffer.get_last()[1] : -1;
     }
+
+
+    // ============================================================
+    // 3. Storage for measured values
+    // ============================================================
+
+    var baselines    = [];
+    var deadtimes    = [];
+    var pullwindows  = [];
+    var readoutrates = [];
+    var missingt0s   = [];
+    var missingt1s   = [];
+
+
+    // ============================================================
+    // 4. Store final status for each FEB
+    //
+    //    feb_status[feb] is the single source of truth for
+    //    alarm information.
+    // ============================================================
+
+    var feb_status = {};
+
+
+    // ============================================================
+    // 5. Read values and evaluate alarms
+    // ============================================================
+
+    for (var i = 0; i < n; i++) {
+
+        var feb = Number(channels[i]);
+
+        // --------------------------------------------------------
+        // Get latest values
+        // --------------------------------------------------------
+
+        var baseline    = getLastValue(baseline_data[i]);
+        var deadtime    = getLastValue(deadtime_data[i]);
+        var pullwindow  = getLastValue(pullwindow_data[i]);
+        var readoutrate = getLastValue(readoutrate_data[i]);
+        var missingt0   = getLastValue(missingt0_data[i]);
+        var missingt1   = getLastValue(missingt1_data[i]);
+
+        // Store measured values for table
+        baselines.push(baseline);
+        deadtimes.push(deadtime);
+        pullwindows.push(pullwindow);
+        readoutrates.push(readoutrate);
+        missingt0s.push(missingt0);
+        missingt1s.push(missingt1);
+
+
+        // --------------------------------------------------------
+        // Evaluate global alarm limits
+        // --------------------------------------------------------
+
+        var baseline_bad =
+            baseline < {{baseline_min}} ||
+            baseline > {{baseline_max}};
+
+        var deadtime_bad =
+            deadtime < {{deadtime_min}} ||
+            deadtime > {{deadtime_max}};
+
+        var pullwindow_bad =
+            pullwindow < {{pullwindow_min}} ||
+            pullwindow > {{pullwindow_max}};
+
+        var readoutrate_bad =
+            readoutrate < {{readoutrate_min}} ||
+            readoutrate > {{readoutrate_max}};
+
+        var missingt0_bad =
+            missingt0 > {{missingt0_max}};
+
+        var missingt1_bad =
+            missingt1 > {{missingt1_max}};
+
+
+        // --------------------------------------------------------
+        // Apply FEB-specific limits
+        // --------------------------------------------------------
+
+        if (feb in feb_specific_limits) {
+
+            var limit_dict = feb_specific_limits[feb];
+
+            if ("Baseline" in limit_dict) {
+                const [min, max] = limit_dict["Baseline"];
+                baseline_bad = baseline < min || baseline > max;
+            }
+
+            if ("Deadtime" in limit_dict) {
+                const [min, max] = limit_dict["Deadtime"];
+                deadtime_bad = deadtime < min || deadtime > max;
+            }
+
+            if ("Pull window" in limit_dict) {
+                const [min, max] = limit_dict["Pull window"];
+                pullwindow_bad = pullwindow < min || pullwindow > max;
+            }
+
+            if ("Readout rate" in limit_dict) {
+                const [min, max] = limit_dict["Readout rate"];
+                readoutrate_bad = readoutrate < min || readoutrate > max;
+            }
+
+            if ("Missing T0" in limit_dict) {
+                const [min, max] = limit_dict["Missing T0"];
+                missingt0_bad = missingt0 < min || missingt0 > max;
+            }
+
+            if ("Missing T1" in limit_dict) {
+                const [min, max] = limit_dict["Missing T1"];
+                missingt1_bad = missingt1 < min || missingt1 > max;
+            }
+        }
+
+
+        // --------------------------------------------------------
+        // Store individual alarm states
+        // --------------------------------------------------------
+
+        feb_status[feb] = {
+            baseline:    baseline_bad,
+            deadtime:    deadtime_bad,
+            pullwindow:  pullwindow_bad,
+            readoutrate: readoutrate_bad,
+            missingt0:   missingt0_bad,
+            missingt1:   missingt1_bad
+        };
+
+
+        // --------------------------------------------------------
+        // Overall FEB alarm
+        // --------------------------------------------------------
+
+        feb_status[feb].alarm =
+            feb_status[feb].baseline ||
+            feb_status[feb].deadtime ||
+            feb_status[feb].pullwindow ||
+            feb_status[feb].readoutrate ||
+            feb_status[feb].missingt0 ||
+            feb_status[feb].missingt1;
+
+
+        // --------------------------------------------------------
+        // Handle FEBs that are intentionally OFF
+        //
+        // The FEB is considered unavailable/alarm, but individual
+        // monitoring quantities should not appear as red.
+        // --------------------------------------------------------
+
+        if (OFF_CRT_FEBS.has(feb)) {
+
+            feb_status[feb].alarm = true;
+
+            feb_status[feb].baseline = false;
+            feb_status[feb].deadtime = false;
+            feb_status[feb].pullwindow = false;
+            feb_status[feb].readoutrate = false;
+            feb_status[feb].missingt0 = false;
+            feb_status[feb].missingt1 = false;
+        }
+    }
+
+
+    // ============================================================
+    // 6. Build table
+    // ============================================================
 
     var header = `
         <thead>
-        <tr>
-          <th style="text-align: center;"> Board </th>
-          <th style="text-align: center;"> Baseline [ADC] </th>
-      <th style="text-align: center;"> Deadtime [us] </th>
-      <th style="text-align: center;"> Pull window [ms] </th>
-          <th style="text-align: center;"> Readout rate [Hz] </th>
-      <th style="text-align: center;"> Missing T0 resets </th>
-      <th style="text-align: center;"> Missing T1 resets </th>
-        </tr>
+            <tr>
+                <th>Board</th>
+                <th>Baseline [ADC]</th>
+                <th>Deadtime [us]</th>
+                <th>Pull window [ms]</th>
+                <th>Readout rate [Hz]</th>
+                <th>Missing T0 resets</th>
+                <th>Missing T1 resets</th>
+            </tr>
         </thead>
-        <tbody>`;
+        <tbody>
+    `;
 
     var table_html = header;
 
-    for (var ind = 0; ind < channels.length; ind++) {
-      var c = 'style="text-align:center;"'; // overall board 
-      var bs = 'style="text-align:center;"'; // baseline cell
-      var dt = 'style="text-align:center;"'; // deadtime cell
-      var pw = 'style="text-align:center;"'; // pullwindow cell
-      var rr = 'style="text-align:center;"'; // readoutrate cell
-      var m0 = 'style="text-align:center;"'; // missingt0 cell
-      var m1 = 'style="text-align:center;"'; // missingt1 cell
 
-      // But we may have FEB specific limits. Check against the map
-      if( Number(channels[ind]) in feb_specific_limits ) {
+    // ============================================================
+    // 7. Table styling
+    // ============================================================
 
-        var baseline    = baselines[ind];
-        var deadtime    = deadtimes[ind];
-        var pullwindow  = pullwindows[ind];
-        var readoutrate = readoutrates[ind];
-        var missingt0   = missingt0s[ind];
-        var missingt1   = missingt1s[ind];
+    var normal_style =
+        'style="text-align:center;"';
 
-        var limit_dict = feb_specific_limits[channels[ind]];
-        // Check all the properties that could be had
-        if( "Baseline" in limit_dict ) {
-	    var bmin = limit_dict["Baseline"][0];
-	    var bmax = limit_dict["Baseline"][1];
-            baseline_isbad[ind] = ((baseline < bmin) || (baseline > bmax));
-        } // check baseline specific limits  
-        if( "Deadtime" in limit_dict ) {
-	    var bmin = limit_dict["Deadtime"][0];
-	    var bmax = limit_dict["Deadtime"][1];
-            deadtime_isbad[ind] = ((deadtime < bmin) || (deadtime > bmax));
-        } // check deadtime specific limits  
-        if( "Pull window" in limit_dict ) {
-	    var bmin = limit_dict["Pull window"][0];
-	    var bmax = limit_dict["Pull window"][1];
-            pullwindow_isbad[ind] = ((pullwindow < bmin) || (pullwindow > bmax));
-        } // check pullwindow specific limits  
-        if( "Readout rate" in limit_dict ) {
-	    var bmin = limit_dict["Readout rate"][0];
-	    var bmax = limit_dict["Readout rate"][1];
-            readoutrate_isbad[ind] = ((readoutrate < bmin) || (readoutrate > bmax));
-        } // check readoutrate specific limits  
-        if( "Missing T0" in limit_dict ) {
-	    var bmax = limit_dict["Missing T0"][0];
-            missingt0_isbad[ind] = ((missingt0 > bmax));
-        }
-        if( "Missing T1" in limit_dict ) {
-	    var bmax = limit_dict["Missing T1"][0];
-            missingt1_isbad[ind] = ((missingt1 > bmax));
-        }
+    var alarm_style =
+        'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
 
-        isbad[ind] = ( baseline_isbad[ind] || deadtime_isbad[ind] || pullwindow_isbad[ind] ||
-                       readoutrate_isbad[ind] || missingt0_isbad[ind] || missingt1_isbad[ind] );
-
-      } // check any specific limits
-
-      //if a FEB is OFF, set the bad variables back to good so they don't show up red
-      var feb = Number(channels[ind]);
-
-      if (OFF_CRT_FEBS.has(feb)) {
-        isbad[ind] = true;
-	baseline_isbad[ind] = false;
-	deadtime_isbad[ind] = false;
-	pullwindow_isbad[ind] = false;
-	readoutrate_isbad[ind] = false;
-	missingt0_isbad[ind] = false;
-	missingt1_isbad[ind] = false;
-      }
+    var board_alarm_style =
+        'style="text-align:center; background-color: rgba(0, 105, 150, 0.5);"';
 
 
-      if (isbad[ind]) {
-        //c = 'style="background-color: red"';
-        c = 'style="text-align:center; background-color: rgba(0, 105, 150, 0.5);"';
-      }
-      if (baseline_isbad[ind]) {
-        //bs = 'style="background-color: red"';
-        bs = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
-      }
-      if (deadtime_isbad[ind]) {
-        //dt = 'style="background-color: red"';
-        dt = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
-      }
-      if (pullwindow_isbad[ind]) {
-        //pw = 'style="background-color: red"';
-        pw = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
-      }
-      if (readoutrate_isbad[ind]) {
-        //rr = 'style="background-color: red"';
-        rr = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
-      }
-      if (missingt0_isbad[ind]) {
-        //m0 = 'style="background-color: red"';
-        m0 = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
-      }
-      if (missingt1_isbad[ind]) {
-        //m1 = 'style="background-color: red"';
-        m1 = 'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
-      }
-      var row = `
-          <tr>
-            <th ${c}><a href="CRT_board_snapshot?board_no=${channels[ind]}">${channels[ind]}</a></th>
-            <th ` + bs + `>` + baselines[ind].toFixed(2) +  `</th>
-        <th ` + dt + `>` + (deadtimes[ind]/1000.0).toFixed(3) +  `</th>
-            <th ` + pw + `>` + (pullwindows[ind]/1000000.0).toFixed(6) +  `</th>
-            <th ` + rr + `>` + readoutrates[ind].toFixed(0) +  `</th>
-        <th ` + m0 + `>` + missingt0s[ind].toFixed(0) +  `</th>
-        <th ` + m1 + `>` + missingt1s[ind].toFixed(0) +  `</th>
-          </tr>`;
-      table_html = table_html.concat(row);
+    // ============================================================
+    // 8. Generate one row per FEB
+    // ============================================================
+
+    for (var i = 0; i < n; i++) {
+
+        var feb = Number(channels[i]);
+
+        var status = feb_status[feb];
+
+
+        // --------------------------------------------------------
+        // Determine cell styles
+        // --------------------------------------------------------
+
+        var board_style =
+            status.alarm ? board_alarm_style : normal_style;
+
+        var baseline_style =
+            status.baseline ? alarm_style : normal_style;
+
+        var deadtime_style =
+            status.deadtime ? alarm_style : normal_style;
+
+        var pullwindow_style =
+            status.pullwindow ? alarm_style : normal_style;
+
+        var readoutrate_style =
+            status.readoutrate ? alarm_style : normal_style;
+
+        var missingt0_style =
+            status.missingt0 ? alarm_style : normal_style;
+
+        var missingt1_style =
+            status.missingt1 ? alarm_style : normal_style;
+
+
+        // --------------------------------------------------------
+        // Generate table row
+        // --------------------------------------------------------
+
+        var row = `
+            <tr>
+                <th ${board_style}>
+                    <a href="CRT_board_snapshot?board_no=${feb}">
+                        ${feb}
+                    </a>
+                </th>
+
+                <th ${baseline_style}>
+                    ${baselines[i].toFixed(2)}
+                </th>
+
+                <th ${deadtime_style}>
+                    ${(deadtimes[i] / 1000).toFixed(3)}
+                </th>
+
+                <th ${pullwindow_style}>
+                    ${(pullwindows[i] / 1000000).toFixed(6)}
+                </th>
+
+                <th ${readoutrate_style}>
+                    ${readoutrates[i].toFixed(0)}
+                </th>
+
+                <th ${missingt0_style}>
+                    ${missingt0s[i].toFixed(0)}
+                </th>
+
+                <th ${missingt1_style}>
+                    ${missingt1s[i].toFixed(0)}
+                </th>
+            </tr>
+        `;
+
+        table_html += row;
     }
-    table_html = table_html + "</tbody>";
 
-    $("#{{crt | replace(' ', '-') | replace(';', '')}}").html(table_html);
 
-  }
+    // ============================================================
+    // 9. Finish and display table
+    // ============================================================
+
+    table_html += "</tbody>";
+
+    $("#{{crt | replace(' ', '-') | replace(';', '')}}")
+        .html(table_html);
+
+
+    // ============================================================
+    // 10. Future 3D map update
+    // ============================================================
+    //
+    // Later, this can simply become:
+    //
+    // updateCRTMap(feb_status);
+    //
+    // The 3D map can then use:
+    //
+    // feb_status[feb].alarm
+    //
+    // without knowing anything about the alarm calculations above.
+    //
+    // ============================================================
+
+}
+
 ]);
 
 buffer.start();
