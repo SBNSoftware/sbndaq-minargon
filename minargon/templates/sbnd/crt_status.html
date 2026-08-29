@@ -161,6 +161,7 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
     </div>
 
 </section>
+<div id="feb-alarm-tooltip"></div>
 
 {%endblock%}
 
@@ -191,16 +192,15 @@ var data_link = config_controller.data_link(0, ["baseline", "Deadtime", "PullWin
 var poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
 var buffer = new Data.D3DataBuffer(poll, 1, [
 
-
 function(data) {
 
     var channels = {{channels}};
+    var n = channels.length;
+
 
     // ============================================================
     // 1. Split incoming data by quantity
     // ============================================================
-
-    var n = channels.length;
 
     var baseline_data    = data.slice(0 * n, 1 * n);
     var deadtime_data    = data.slice(1 * n, 2 * n);
@@ -211,7 +211,7 @@ function(data) {
 
 
     // ============================================================
-    // 2. Helper function for getting the latest value
+    // 2. Helper function
     // ============================================================
 
     function getLastValue(buffer) {
@@ -220,7 +220,7 @@ function(data) {
 
 
     // ============================================================
-    // 3. Storage for measured values
+    // 3. Storage
     // ============================================================
 
     var baselines    = [];
@@ -230,24 +230,186 @@ function(data) {
     var missingt0s   = [];
     var missingt1s   = [];
 
-
-    // ============================================================
-    // 4. Store final status for each FEB
+    // Final alarm status for each FEB.
     //
-    //    feb_status[feb] is the single source of truth for
-    //    alarm information.
-    // ============================================================
-
+    // Example:
+    //
+    // feb_status[1234] = {
+    //     alarm: true,
+    //     baseline: false,
+    //     deadtime: true,
+    //     ...
+    // };
+    //
     var feb_status = {};
 
 
     // ============================================================
-    // 5. Read values and evaluate alarms
+    // 4. Create tooltip
+    // ============================================================
+
+    var tooltip = document.getElementById("feb-alarm-tooltip");
+
+    if (!tooltip) {
+
+        tooltip = document.createElement("div");
+
+        tooltip.id = "feb-alarm-tooltip";
+
+        tooltip.style.display = "none";
+        tooltip.style.position = "fixed";
+        tooltip.style.zIndex = "10000";
+        tooltip.style.background = "rgba(30, 30, 30, 0.95)";
+        tooltip.style.color = "white";
+        tooltip.style.padding = "10px 14px";
+        tooltip.style.borderRadius = "6px";
+        tooltip.style.fontFamily = "Arial, sans-serif";
+        tooltip.style.fontSize = "13px";
+        tooltip.style.lineHeight = "1.5";
+        tooltip.style.pointerEvents = "none";
+        tooltip.style.whiteSpace = "nowrap";
+        tooltip.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.35)";
+
+        document.body.appendChild(tooltip);
+    }
+
+
+    // ============================================================
+    // 5. Tooltip functions
+    // ============================================================
+
+    function showFEBTooltip(feb, status, limit_dict, event) {
+
+        function alarmLabel(is_bad) {
+
+            return is_bad
+                ? ' <span style="color:#ff4444; font-weight:bold;">← ALARM</span>'
+                : '';
+        }
+
+
+        // --------------------------------------------------------
+        // Global limits
+        // --------------------------------------------------------
+
+        var baseline_min = {{baseline_min}};
+        var baseline_max = {{baseline_max}};
+
+        var deadtime_min = {{deadtime_min}};
+        var deadtime_max = {{deadtime_max}};
+
+        var pullwindow_min = {{pullwindow_min}};
+        var pullwindow_max = {{pullwindow_max}};
+
+        var readoutrate_min = {{readoutrate_min}};
+        var readoutrate_max = {{readoutrate_max}};
+
+        var missingt0_min = 0;
+        var missingt0_max = {{missingt0_max}};
+
+        var missingt1_min = 0;
+        var missingt1_max = {{missingt1_max}};
+
+
+        // --------------------------------------------------------
+        // FEB-specific limits override global limits
+        // --------------------------------------------------------
+
+        if (limit_dict) {
+
+            if ("Baseline" in limit_dict) {
+                [baseline_min, baseline_max] =
+                    limit_dict["Baseline"];
+            }
+
+            if ("Deadtime" in limit_dict) {
+                [deadtime_min, deadtime_max] =
+                    limit_dict["Deadtime"];
+            }
+
+            if ("Pull window" in limit_dict) {
+                [pullwindow_min, pullwindow_max] =
+                    limit_dict["Pull window"];
+            }
+
+            if ("Readout rate" in limit_dict) {
+                [readoutrate_min, readoutrate_max] =
+                    limit_dict["Readout rate"];
+            }
+
+            if ("Missing T0" in limit_dict) {
+                [missingt0_min, missingt0_max] =
+                    limit_dict["Missing T0"];
+            }
+
+            if ("Missing T1" in limit_dict) {
+                [missingt1_min, missingt1_max] =
+                    limit_dict["Missing T1"];
+            }
+        }
+
+
+        // --------------------------------------------------------
+        // Build tooltip
+        // --------------------------------------------------------
+
+        tooltip.innerHTML = `
+            <strong>FEB ${feb}</strong><br>
+
+            Baseline:
+            ${baseline_min} – ${baseline_max} ADC
+            ${alarmLabel(status.baseline)}<br>
+
+            Deadtime:
+            ${(deadtime_min / 1000).toFixed(1)} –
+            ${(deadtime_max / 1000).toFixed(1)} us
+            ${alarmLabel(status.deadtime)}<br>
+
+            Pull window:
+            ${(pullwindow_min / 1000000).toFixed(1)} –
+            ${(pullwindow_max / 1000000).toFixed(1)} ms
+            ${alarmLabel(status.pullwindow)}<br>
+
+            Readout rate:
+            ${readoutrate_min} – ${readoutrate_max} Hz
+            ${alarmLabel(status.readoutrate)}<br>
+
+            Missing T0:
+            ≤ ${missingt0_max}
+            ${alarmLabel(status.missingt0)}<br>
+
+            Missing T1:
+            ≤ ${missingt1_max}
+            ${alarmLabel(status.missingt1)}
+        `;
+
+        tooltip.style.display = "block";
+
+        moveFEBTooltip(event);
+    }
+
+
+    function moveFEBTooltip(event) {
+
+        tooltip.style.left = (event.clientX + 15) + "px";
+        tooltip.style.top = (event.clientY + 15) + "px";
+    }
+
+
+    function hideFEBTooltip() {
+
+        tooltip.style.display = "none";
+    }
+
+
+    // ============================================================
+    // 6. Read values and evaluate alarms
     // ============================================================
 
     for (var i = 0; i < n; i++) {
 
         var feb = Number(channels[i]);
+
 
         // --------------------------------------------------------
         // Get latest values
@@ -260,7 +422,11 @@ function(data) {
         var missingt0   = getLastValue(missingt0_data[i]);
         var missingt1   = getLastValue(missingt1_data[i]);
 
-        // Store measured values for table
+
+        // --------------------------------------------------------
+        // Store values
+        // --------------------------------------------------------
+
         baselines.push(baseline);
         deadtimes.push(deadtime);
         pullwindows.push(pullwindow);
@@ -270,7 +436,7 @@ function(data) {
 
 
         // --------------------------------------------------------
-        // Evaluate global alarm limits
+        // Global alarm limits
         // --------------------------------------------------------
 
         var baseline_bad =
@@ -297,7 +463,7 @@ function(data) {
 
 
         // --------------------------------------------------------
-        // Apply FEB-specific limits
+        // FEB-specific limits
         // --------------------------------------------------------
 
         if (feb in feb_specific_limits) {
@@ -316,42 +482,48 @@ function(data) {
 
             if ("Pull window" in limit_dict) {
                 const [min, max] = limit_dict["Pull window"];
-                pullwindow_bad = pullwindow < min || pullwindow > max;
+                pullwindow_bad =
+                    pullwindow < min || pullwindow > max;
             }
 
             if ("Readout rate" in limit_dict) {
                 const [min, max] = limit_dict["Readout rate"];
-                readoutrate_bad = readoutrate < min || readoutrate > max;
+                readoutrate_bad =
+                    readoutrate < min || readoutrate > max;
             }
 
             if ("Missing T0" in limit_dict) {
                 const [min, max] = limit_dict["Missing T0"];
-                missingt0_bad = missingt0 < min || missingt0 > max;
+                missingt0_bad =
+                    missingt0 < min || missingt0 > max;
             }
 
             if ("Missing T1" in limit_dict) {
                 const [min, max] = limit_dict["Missing T1"];
-                missingt1_bad = missingt1 < min || missingt1 > max;
+                missingt1_bad =
+                    missingt1 < min || missingt1 > max;
             }
         }
 
 
         // --------------------------------------------------------
-        // Store individual alarm states
+        // Store final status
         // --------------------------------------------------------
 
         feb_status[feb] = {
-            baseline:    baseline_bad,
-            deadtime:    deadtime_bad,
-            pullwindow:  pullwindow_bad,
+
+            baseline: baseline_bad,
+            deadtime: deadtime_bad,
+            pullwindow: pullwindow_bad,
             readoutrate: readoutrate_bad,
-            missingt0:   missingt0_bad,
-            missingt1:   missingt1_bad
+            missingt0: missingt0_bad,
+            missingt1: missingt1_bad
+
         };
 
 
         // --------------------------------------------------------
-        // Overall FEB alarm
+        // Overall alarm
         // --------------------------------------------------------
 
         feb_status[feb].alarm =
@@ -364,10 +536,7 @@ function(data) {
 
 
         // --------------------------------------------------------
-        // Handle FEBs that are intentionally OFF
-        //
-        // The FEB is considered unavailable/alarm, but individual
-        // monitoring quantities should not appear as red.
+        // OFF FEB
         // --------------------------------------------------------
 
         if (OFF_CRT_FEBS.has(feb)) {
@@ -385,19 +554,19 @@ function(data) {
 
 
     // ============================================================
-    // 6. Build table
+    // 7. Build table header
     // ============================================================
 
     var header = `
         <thead>
             <tr>
-                <th>Board</th>
-                <th>Baseline [ADC]</th>
-                <th>Deadtime [us]</th>
-                <th>Pull window [ms]</th>
-                <th>Readout rate [Hz]</th>
-                <th>Missing T0 resets</th>
-                <th>Missing T1 resets</th>
+                <th style="text-align:center;">Board</th>
+                <th style="text-align:center;">Baseline [ADC]</th>
+                <th style="text-align:center;">Deadtime [us]</th>
+                <th style="text-align:center;">Pull window [ms]</th>
+                <th style="text-align:center;">Readout rate [Hz]</th>
+                <th style="text-align:center;">Missing T0 resets</th>
+                <th style="text-align:center;">Missing T1 resets</th>
             </tr>
         </thead>
         <tbody>
@@ -407,33 +576,28 @@ function(data) {
 
 
     // ============================================================
-    // 7. Table styling
+    // 8. Table styles
     // ============================================================
 
     var normal_style =
         'style="text-align:center;"';
 
     var alarm_style =
-        'style="text-align:center; background-color: rgba(255, 0, 0, 0.75);"';
+        'style="text-align:center; background-color:rgba(255,0,0,0.75);"';
 
     var board_alarm_style =
-        'style="text-align:center; background-color: rgba(0, 105, 150, 0.5);"';
+        'style="text-align:center; background-color:rgba(0,105,150,0.5);"';
 
 
     // ============================================================
-    // 8. Generate one row per FEB
+    // 9. Generate table rows
     // ============================================================
 
     for (var i = 0; i < n; i++) {
 
         var feb = Number(channels[i]);
-
         var status = feb_status[feb];
 
-
-        // --------------------------------------------------------
-        // Determine cell styles
-        // --------------------------------------------------------
 
         var board_style =
             status.alarm ? board_alarm_style : normal_style;
@@ -458,40 +622,46 @@ function(data) {
 
 
         // --------------------------------------------------------
-        // Generate table row
+        // IMPORTANT:
+        // Do NOT put // comments inside this template literal.
         // --------------------------------------------------------
 
         var row = `
             <tr>
-                <th ${board_style}>
+
+                <th ${board_style} class="feb-cell"
+                    data-feb="${feb}">
+
                     <a href="CRT_board_snapshot?board_no=${feb}">
                         ${feb}
                     </a>
+
                 </th>
 
-                <th ${baseline_style}>
+                <td ${baseline_style}>
                     ${baselines[i].toFixed(2)}
-                </th>
+                </td>
 
-                <th ${deadtime_style}>
+                <td ${deadtime_style}>
                     ${(deadtimes[i] / 1000).toFixed(3)}
-                </th>
+                </td>
 
-                <th ${pullwindow_style}>
+                <td ${pullwindow_style}>
                     ${(pullwindows[i] / 1000000).toFixed(6)}
-                </th>
+                </td>
 
-                <th ${readoutrate_style}>
+                <td ${readoutrate_style}>
                     ${readoutrates[i].toFixed(0)}
-                </th>
+                </td>
 
-                <th ${missingt0_style}>
+                <td ${missingt0_style}>
                     ${missingt0s[i].toFixed(0)}
-                </th>
+                </td>
 
-                <th ${missingt1_style}>
+                <td ${missingt1_style}>
                     ${missingt1s[i].toFixed(0)}
-                </th>
+                </td>
+
             </tr>
         `;
 
@@ -500,28 +670,61 @@ function(data) {
 
 
     // ============================================================
-    // 9. Finish and display table
+    // 10. Display table
     // ============================================================
 
     table_html += "</tbody>";
 
-    $("#{{crt | replace(' ', '-') | replace(';', '')}}")
-        .html(table_html);
+    var table_id =
+        "{{crt | replace(' ', '-') | replace(';', '')}}";
+
+    $("#" + table_id).html(table_html);
 
 
     // ============================================================
-    // 10. Future 3D map update
+    // 11. Add FEB hover events
     // ============================================================
-    //
-    // Later, this can simply become:
+
+    var table = document.getElementById(table_id);
+
+    if (table) {
+
+        table.querySelectorAll(".feb-cell").forEach(function(cell) {
+
+            var feb = Number(cell.dataset.feb);
+
+            cell.addEventListener("mouseenter", function(event) {
+
+                showFEBTooltip(
+                    feb,
+                    feb_status[feb],
+                    feb_specific_limits[feb] || null,
+                    event
+                );
+
+            });
+
+            cell.addEventListener("mousemove", function(event) {
+
+                moveFEBTooltip(event);
+
+            });
+
+            cell.addEventListener("mouseleave", function() {
+
+                hideFEBTooltip();
+
+            });
+
+        });
+    }
+
+
+    // ============================================================
+    // 12. Future 3D map
+    // ============================================================
     //
     // updateCRTMap(feb_status);
-    //
-    // The 3D map can then use:
-    //
-    // feb_status[feb].alarm
-    //
-    // without knowing anything about the alarm calculations above.
     //
     // ============================================================
 
