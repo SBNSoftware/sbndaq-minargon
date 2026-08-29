@@ -167,6 +167,9 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
 
 {% block script %}
 <script defer type="module">
+
+var DEBUG_ALARM = false;
+
 import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
 import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
 import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
@@ -176,6 +179,10 @@ var feb_specific_limits = {{feb_specific_limits|tojson|safe}};
 
 var crt_off_febs_list = {{ crt_off_febs_list|tojson|safe }};
 var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
+
+if(DEBUG_ALARM){
+    console.log("OFF_CRT_FEBS:", OFF_CRT_FEBS);
+}
 
 // setup each plane poll
 {% for crt in crts %}
@@ -196,6 +203,7 @@ function(data) {
 
     var channels = {{channels}};
     var n = channels.length;
+
 
 
     // ============================================================
@@ -534,12 +542,26 @@ function(data) {
             feb_status[feb].missingt0 ||
             feb_status[feb].missingt1;
 
-
+        if (DEBUG_ALARM) {
+            console.log(
+                "FEB", feb,
+                "Alarm:", feb_status[feb].alarm,
+                "Baseline:", feb_status[feb].baseline,
+                "Deadtime:", feb_status[feb].deadtime,
+                "Pull window:", feb_status[feb].pullwindow,
+                "Readout rate:", feb_status[feb].readoutrate,
+                "Missing T0:", feb_status[feb].missingt0,
+                "Missing T1:", feb_status[feb].missingt1
+            );
+        }
         // --------------------------------------------------------
         // OFF FEB
         // --------------------------------------------------------
 
         if (OFF_CRT_FEBS.has(feb)) {
+			if(DEBUG_ALARM){
+				console.log("FEB ",feb," OFF:", OFF_CRT_FEBS.has(feb));
+			}
 
             feb_status[feb].alarm = true;
 
@@ -597,6 +619,16 @@ function(data) {
 
         var feb = Number(channels[i]);
         var status = feb_status[feb];
+		var is_off = OFF_CRT_FEBS.has(feb);
+
+		if(DEBUG_ALARM){
+			console.log(
+			    "ALARM CHECK: TABLE:",
+			    "FEB =", feb,
+			    "status =", status,
+			    "status.alarm =", status.alarm
+			);
+		}
 
 
         var board_style =
@@ -633,7 +665,7 @@ function(data) {
                     data-feb="${feb}">
 
                     <a href="CRT_board_snapshot?board_no=${feb}">
-                        ${feb}
+						${feb}${is_off ? " (OFF)" : ""}
                     </a>
 
                 </th>
