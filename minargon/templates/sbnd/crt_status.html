@@ -1,14 +1,28 @@
 {% import "stream_options_macro.html" | common as stream_options %}
 {% extends "layout.html" | front_ended %}
+
 {% block title %}CRT Status{% endblock %}
+
+{% block head %}
+{{ super() }}
+    <!-- General CRT styles -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/crt_style/crt_general.css') }}">
+
+    <!-- 3D map styles -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/crt_style/map3d.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/crt_style/compass.css') }}">
+{% endblock %}
+
+
 {% block body %}
 {{ super() }}
 <div class="container">
-<div class="row">
-<h1 class="hcenter">
-CRT Status
-</h1>
-</div>
+  <div class="row">
+    <h1 class="hcenter">CRT Status</h1>
+  </div>
 
 {% if eventmeta_key %}
 <div class="row">
@@ -33,9 +47,7 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T0 events
 Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt1_max}}</span>
 </h4>
 </div>
-<br>
-
-<br>
+<br><br>
 
 {% for crt in crts %}
 {% if loop.index0 % 1 == 0 %}
@@ -47,14 +59,15 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
       </h3>
       <table class="table table-striped" id="{{ crt | replace(' ', '-') | replace(';', '')}}">
         <thead>
-        <tr>
-          <th style="text-align: center;"> Board </th>
-          <th style="text-align: center;"> Baseline </th>
-          <th style="text-align: center;"> Deadtime </th>
-          <th style="text-align: center;"> Readout rate </th>
-          <th style="text-align: center;"> MissingT0 </th>
-          <th style="text-align: center;"> MissingT1 </th>
-        </tr>
+		<tr>
+		<th>Board</th>
+		<th>Baseline [ADC]</th>
+		<th>Deadtime [us]</th>
+		<th>Pull window [ms]</th>
+		<th>Readout rate [Hz]</th>
+		<th>Missing T0 resets</th>
+		<th>Missing T1 resets</th>
+		</tr>
         </thead>
       </table>
 	  <!-- Image is no needed, so remove the block
@@ -72,7 +85,8 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
 
 <!-- develop the 3d map below -->
 <hr>
-<section id="crtmap-section" style="position: relative; padding: 10px; box-sizing: border-box; background: #fafafa; width: 70vw; aspect-ratio: 1/1; ">
+
+<section id="crtmap-section" class="crt-map-section">
     <div style="
     position: absolute;
     top: 10px;
@@ -91,8 +105,6 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
     Black boxes indicate the CRT modules, labeled with the attached FEB number.
     </div>
     </div>
-    <link rel="stylesheet" href="static/css/crt_style/compass.css">
-    <link rel="stylesheet" href="static/css/crt_style/map3d.css">
     <!--Load CRT modules --> 
     <script>
         const FEBjsonURL = "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
