@@ -179,6 +179,7 @@ var feb_specific_limits = {{feb_specific_limits|tojson|safe}};
 
 var crt_off_febs_list = {{ crt_off_febs_list|tojson|safe }};
 var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
+//source: sbnd-deploy/minargon/views/sbnd/crt_limits.json
 
 if(DEBUG_ALARM){
     console.log("OFF_CRT_FEBS:", OFF_CRT_FEBS);
