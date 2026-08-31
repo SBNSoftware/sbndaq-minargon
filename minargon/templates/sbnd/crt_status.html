@@ -114,7 +114,7 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
 	    window.OFF_CRT_FEBS =
 	        new Set({{ crt_off_febs_list|tojson|safe }}.map(Number));
 	
-	    window.FEB_STATUS = {};
+	    window.CRT_FEB_STATUS = {};
 	
 	    const FEBjsonURL =
 	        "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
@@ -586,7 +586,7 @@ function(data) {
     }
 
 	// Make the completed FEB status available to the 3D map.
-    window.FEB_STATUS = feb_status;
+    window.CRT_FEB_STATUS = feb_status;
 
     // ============================================================
     // 7. Build table header
