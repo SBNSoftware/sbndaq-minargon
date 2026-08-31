@@ -73,3 +73,18 @@
     transform-origin: center;
     transition: transform 0.3s ease;
 }
+
+
+/* ============================================================
+   FEB status styles
+   ============================================================ */
+
+.module.feb-alarm {
+    background-color: #B71C1C;
+    border-color: #FF5252;
+}
+
+.module.feb-offline {
+    background-color: #0D47A1;
+    border-color: #40C4FF;
+}

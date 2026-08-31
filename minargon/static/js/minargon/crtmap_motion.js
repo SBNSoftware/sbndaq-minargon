@@ -85,11 +85,28 @@ async function loadCubeConfig() {
 }
 
 
+function updateFEBMapStatus(feb, status) {
+
+    const module = document.querySelector(
+        `.module[data-feb="${feb}"]`
+    );
+
+    if (!module) {
+        return;
+    }
+
+    // Placeholder for alarm/offline styling.
+    //
+    // Do not change current appearance yet.
+}
+
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
     FEBs.forEach(module => {
         const faceElement = document.createElement('div');
-        faceElement.classList.add('module', module.FEB);
+		faceElement.classList.add('module');
+		faceElement.dataset.feb = module.FEB;
+
 		faceElement.style.width = `${module.dimensionW}px`;
 		faceElement.style.height = `${module.dimensionH}px`;
 
