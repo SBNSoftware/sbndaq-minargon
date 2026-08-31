@@ -101,14 +101,24 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     ">
     <div style="font-size: 22px; font-weight: bold;">CRT 3D Viewer</div>
-    <div style="font-size: 14px; margin-top: 4px;">
-    Black boxes indicate the CRT modules, labeled with the attached FEB number.
+		<div style="font-size: 14px; margin-top: 4px;">
+			Black boxes indicate the CRT modules, labeled with the attached FEB number.
+		</div>
     </div>
-    </div>
-    <!--Load CRT modules --> 
-    <script>
-        const FEBjsonURL = "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
-    </script>
+	<!-- Load CRT modules -->
+	<script>
+	    // ============================================================
+	    // CRT status shared with the 3D map
+	    // ============================================================
+	
+	    window.OFF_CRT_FEBS =
+	        new Set({{ crt_off_febs_list|tojson|safe }}.map(Number));
+	
+	    window.FEB_STATUS = {};
+	
+	    const FEBjsonURL =
+	        "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
+	</script>
 
 
     
@@ -162,8 +172,9 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
 
 </section>
 <div id="feb-alarm-tooltip"></div>
-
 {%endblock%}
+
+
 
 {% block script %}
 <script defer type="module">
@@ -176,10 +187,9 @@ import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
 
 var config = {{config|tojson|safe}};
 var feb_specific_limits = {{feb_specific_limits|tojson|safe}};
-
-var crt_off_febs_list = {{ crt_off_febs_list|tojson|safe }};
-var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
+var OFF_CRT_FEBS = window.OFF_CRT_FEBS;
 //source: sbnd-deploy/minargon/views/sbnd/crt_limits.json
+
 
 if(DEBUG_ALARM){
     console.log("OFF_CRT_FEBS:", OFF_CRT_FEBS);
@@ -575,6 +585,8 @@ function(data) {
         }
     }
 
+	// Make the completed FEB status available to the 3D map.
+    window.FEB_STATUS = feb_status;
 
     // ============================================================
     // 7. Build table header
