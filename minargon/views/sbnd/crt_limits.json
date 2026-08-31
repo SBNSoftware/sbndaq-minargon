@@ -9,7 +9,7 @@
         "global_readoutrate_max": 1750,
         "global_missingt0_max": 0,
         "global_missingt1_max": 0,
-	"off_febs": [19, 42, 55, 120, 130, 138, 165, 197, 199, 202, 83, 84, 101, 102, 103, 104],
+	"off_febs": [33, 34, 59, 61, 166, 169, 171, 176],
         "4": {
                 "Readout rate": [
                         -1000,
