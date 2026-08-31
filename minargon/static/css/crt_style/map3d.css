@@ -79,12 +79,12 @@
    FEB status styles
    ============================================================ */
 
-.module.feb-alarm {
+.CRTmodule.feb-alarm {
     background-color: #B71C1C;
     border-color: #FF5252;
 }
 
-.module.feb-offline {
+.CRTmodule.feb-offline {
     background-color: #0D47A1;
     border-color: #40C4FF;
 }
