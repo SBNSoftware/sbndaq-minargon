@@ -38,14 +38,14 @@
 {% endif %}
 
 <div class="row">
-<h4 class="hcenter" style="color:black; margin-top: 20px;">
-Limits on CRT <span style="font-weight: bold; color:#448ee4">baseline</span> are between <span style="font-weight:bold; color:#fd411e">{{baseline_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{baseline_max}}</span> ADC <br>
-Limits on CRT <span style="font-weight: bold; color:#448ee4">deadtime</span> are between <span style="font-weight:bold; color:#fd411e">{{deadtime_min/1000.0}}</span> and <span style="font-weight:bold; color:#fd411e">{{deadtime_max/1000.0}}</span> us <br>
-Limits on CRT <span style="font-weight: bold; color:#448ee4">pull window</span> are between <span style="font-weight:bold; color:#fd411e">{{pullwindow_min/1000000.0}}</span> and <span style="font-weight:bold; color:#fd411e">{{pullwindow_max/1000000.0}}</span> ms <br>
-Limits on CRT <span style="font-weight: bold; color:#448ee4">readout rate</span> are between <span style="font-weight:bold; color:#fd411e">{{readoutrate_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{readoutrate_max}}</span> Hz <br>
-Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T0 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt0_max}}</span> <br>
-Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt1_max}}</span>
-</h4>
+  <h4 class="hcenter" style="color:black; margin-top: 20px;">
+    Limits on CRT <span style="font-weight: bold; color:#448ee4">baseline</span> are between <span style="font-weight:bold; color:#fd411e">{{baseline_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{baseline_max}}</span> ADC <br>
+    Limits on CRT <span style="font-weight: bold; color:#448ee4">deadtime</span> are between <span style="font-weight:bold; color:#fd411e">{{deadtime_min/1000.0}}</span> and <span style="font-weight:bold; color:#fd411e">{{deadtime_max/1000.0}}</span> us <br>
+    Limits on CRT <span style="font-weight: bold; color:#448ee4">pull window</span> are between <span style="font-weight:bold; color:#fd411e">{{pullwindow_min/1000000.0}}</span> and <span style="font-weight:bold; color:#fd411e">{{pullwindow_max/1000000.0}}</span> ms <br>
+    Limits on CRT <span style="font-weight: bold; color:#448ee4">readout rate</span> are between <span style="font-weight:bold; color:#fd411e">{{readoutrate_min}}</span> and <span style="font-weight:bold; color:#fd411e">{{readoutrate_max}}</span> Hz <br>
+    Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T0 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt0_max}}</span> <br>
+    Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events</span> is <span style="font-weight:bold; color:#fd411e">{{missingt1_max}}</span>
+  </h4>
 </div>
 <br><br>
 
@@ -101,9 +101,16 @@ Max allowed CRT <span style="font-weight: bold; color:#448ee4">missing T1 events
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     ">
     <div style="font-size: 22px; font-weight: bold;">CRT 3D Viewer</div>
+<!--		
 		<div style="font-size: 14px; margin-top: 4px;">
-			Black boxes indicate the CRT modules, labeled with the attached FEB number.
+			CHECK Black boxes indicate the CRT modules, labeled with the attached FEB number.
 		</div>
+-->
+        <div style="font-size: 14px; margin-top: 4px;">
+            <span style="color:#000000;">Black</span> = Normal,
+            <span style="color:#D32F2F;">Red</span> = Alarm,
+            <span style="color:#1565C0;">Blue</span> = Offline.
+        </div>
     </div>
 	<!-- Load CRT modules -->
 	<script>
@@ -546,12 +553,18 @@ function(data) {
         // --------------------------------------------------------
 
         feb_status[feb].alarm =
-            feb_status[feb].baseline ||
-            feb_status[feb].deadtime ||
-            feb_status[feb].pullwindow ||
-            feb_status[feb].readoutrate ||
-            feb_status[feb].missingt0 ||
-            feb_status[feb].missingt1;
+            !OFF_CRT_FEBS.has(feb) &&
+            (
+                feb_status[feb].baseline ||
+                feb_status[feb].deadtime ||
+                feb_status[feb].pullwindow ||
+                feb_status[feb].readoutrate ||
+                feb_status[feb].missingt0 ||
+                feb_status[feb].missingt1
+            );
+        
+        feb_status[feb].offline =
+            OFF_CRT_FEBS.has(feb);
 
         if (DEBUG_ALARM) {
             console.log(
@@ -573,7 +586,7 @@ function(data) {
 			if(DEBUG_ALARM){
 				console.log("FEB ",feb," OFF:", OFF_CRT_FEBS.has(feb));
 			}
-
+			feb_status[feb].offline = true;
             feb_status[feb].alarm = true;
 
             feb_status[feb].baseline = false;
@@ -582,11 +595,21 @@ function(data) {
             feb_status[feb].readoutrate = false;
             feb_status[feb].missingt0 = false;
             feb_status[feb].missingt1 = false;
-        }
+        } else {
+			feb_status[feb].offline = false;
+		}
     }
 
 	// Make the completed FEB status available to the 3D map.
-    window.CRT_FEB_STATUS = feb_status;
+//    window.CRT_FEB_STATUS = feb_status;
+    window.CRT_FEB_STATUS = {
+        ...window.CRT_FEB_STATUS, //... means take every property and copy into new object
+        ...feb_status
+    };
+    
+    if (typeof updateCRTMapStatus === "function") {
+        updateCRTMapStatus();
+    }
 
     // ============================================================
     // 7. Build table header

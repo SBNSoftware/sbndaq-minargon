@@ -84,7 +84,6 @@ async function loadCubeConfig() {
 //    createCubeFacesRt(crtSp,  '                        ', '               '); // TextRotation & ModuleRotation
 }
 
-
 function updateFEBMapStatus(feb, status) {
 
     const module = document.querySelector(
@@ -95,17 +94,56 @@ function updateFEBMapStatus(feb, status) {
         return;
     }
 
-    // Placeholder for alarm/offline styling.
-    //
-    // Do not change current appearance yet.
+    module.classList.remove(
+        'feb-normal',
+        'feb-alarm',
+        'feb-offline'
+    );
+
+    const isOffline =
+        window.OFF_CRT_FEBS &&
+        window.OFF_CRT_FEBS.has(Number(feb));
+
+    if (isOffline) {
+
+        module.classList.add('feb-offline');
+
+    } else if (status && status.alarm) {
+
+        module.classList.add('feb-alarm');
+
+    } else {
+
+        module.classList.add('feb-normal');
+    }
+}
+
+function updateCRTMapStatus() {
+
+    const statuses = window.CRT_FEB_STATUS || {};
+
+    document.querySelectorAll('.module[data-feb]').forEach(module => {
+
+        const feb = Number(module.dataset.feb);
+        const status = statuses[feb];
+
+        updateFEBMapStatus(feb, status);
+    });
 }
 
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
     FEBs.forEach(module => {
         const faceElement = document.createElement('div');
-		faceElement.classList.add('module');
-		faceElement.dataset.feb = module.FEB;
+        faceElement.classList.add('module');
+        faceElement.dataset.feb = module.FEB;
+
+        // Initial state.
+        // The actual alarm state will be applied once CRT_FEB_STATUS is populated.
+        updateFEBMapStatus(
+            Number(module.FEB),
+            window.CRT_FEB_STATUS[Number(module.FEB)]
+        );
 
 		faceElement.style.width = `${module.dimensionW}px`;
 		faceElement.style.height = `${module.dimensionH}px`;
@@ -205,3 +243,5 @@ document.addEventListener('wheel', (e) => {
 		}, {passive: false} );
 
 loadCubeConfig();
+
+window.updateCRTMapStatus = updateCRTMapStatus;
