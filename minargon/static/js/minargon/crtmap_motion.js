@@ -133,74 +133,90 @@ function updateCRTMapStatus() {
 
     const febNumbers = new Set();
 
-    document
-        .querySelectorAll('.module[data-feb]')
-        .forEach(module => {
-            febNumbers.add(Number(module.dataset.feb));
-        });
+	document
+		.querySelectorAll('.module[data-feb]')
+		.forEach(module => {
 
-    febNumbers.forEach(feb => {
+			const feb = Number(module.dataset.feb);
 
-        const status = statuses[feb];
+			if (!Number.isNaN(feb)) {
+			febNumbers.add(feb);
+		}
+	});
 
-        updateFEBMapStatus(feb, status);
-    });
+	// Apply one FEB status to every physical module
+	// associated with that FEB number.
+	febNumbers.forEach(feb => {
+
+		const status = statuses[feb];
+
+			updateFEBMapStatus(feb, status);
+	});
 }
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
 
-    FEBs.forEach(module => {
+    FEBs.forEach((module, index) => {
 
         const faceElement = document.createElement('div');
 
         faceElement.classList.add('module');
-        faceElement.dataset.feb = module.FEB;
 
+        // FEB number = status/color identity.
+        // It is intentionally NOT required to be unique.
+        faceElement.dataset.feb = Number(module.FEB);
 
-		faceElement.style.width  = `${module.dimensionW}px`;
-		faceElement.style.height = `${module.dimensionH}px`;
+        // Unique physical 3D-module identity.
+        faceElement.dataset.moduleId =
+            `${module.group || 'unknown'}-${module.FEB}-${index}`;
+
+        faceElement.style.width = `${module.dimensionW}px`;
+        faceElement.style.height = `${module.dimensionH}px`;
 
         // Add link and text
         const link = document.createElement('a');
 
-        link.href = "CRT_board_snapshot?board_no="+module.FEB; //module.linkUrl;
-        link.textContent = 'F'+module.FEB;
+        link.href =
+            "CRT_board_snapshot?board_no=" + module.FEB;
+
+        link.textContent = 'F' + module.FEB;
+
         link.style.fontSize = '60px';
         link.style.color = 'white';
 
-        //Modifications based on FEB group
-		//Translate the top-left corner to the destinated location
-		let Tx = -module.CoMx - module.dimensionW/2 ;
-		let Ty = -module.CoMy - module.dimensionH/2 ;
-		let Tz = -module.CoMz;
+        // Translate the module to its physical position.
+        let Tx = -module.CoMx - module.dimensionW / 2;
+        let Ty = -module.CoMy - module.dimensionH / 2;
+        let Tz = -module.CoMz;
 
+        let transformStr =
+            `translateX(${Tx}px) ` +
+            `translateY(${Ty}px) ` +
+            `translateZ(${Tz}px)`;
 
-		let transformStr = `translateX(${Tx}px) translateY(${Ty}px) translateZ(${Tz}px)`;
-		//X: left-->right Y: down-->up Z: s-->N
-		if( TextRotation !=="") {link.style.transform = TextRotation;} 
-		if( ModuleRotation !=="") {transformStr += ModuleRotation;}
+        if (TextRotation !== "") {
+            link.style.transform = TextRotation;
+        }
 
-		faceElement.style.transform = transformStr;
+        if (ModuleRotation !== "") {
+            transformStr += ModuleRotation;
+        }
 
-		cube.appendChild(faceElement);
-		faceElement.appendChild(link);
+        faceElement.style.transform = transformStr;
 
-        // Initial state.
-        // The actual alarm state will be applied once CRT_FEB_STATUS is populated.
+        cube.appendChild(faceElement);
+        faceElement.appendChild(link);
+
+        // Apply the status associated with the FEB number.
         updateFEBMapStatus(
             Number(module.FEB),
-            window.CRT_FEB_STATUS[Number(module.FEB)]
+            window.CRT_FEB_STATUS
+                ? window.CRT_FEB_STATUS[Number(module.FEB)]
+                : undefined
         );
-
-		/*
-		console.log("\nFEB: " + module.FEB);
-		  console.log("width: " + module.dimensionW);
-		  console.log("height: " + module.dimensionH);
-		  console.log("ymax: " + (Ty));
-		  console.log("transform: ", transformStr);
-		  */
-	});
+    });
 }
+
 
 // Start dragging
 document.addEventListener('mousedown', (e) => {
