@@ -79,9 +79,13 @@ async function loadCubeConfig() {
     createCubeFacesRt(crtB,  'rotate(180deg) scaleX(-1)', 'rotateX(90deg)'); // TextRotation & ModuleRotation
     createCubeFacesRt(crtBB, 'rotate(90deg)           ', 'rotateX(90deg)'); // TextRotation & ModuleRotation
 
+	// Apply any CRT statuses that arrived before the 3D map finished loading.
+	updateCRTMapStatus();
+
 
 //    const crtSp = config.AllFEB.filter(item =>  (item.FEB === 166 || item.FEB===61|| item.FEB===135) ) ;
 //    createCubeFacesRt(crtSp,  '                        ', '               '); // TextRotation & ModuleRotation
+
 }
 
 function updateFEBMapStatus(feb, status) {
@@ -121,16 +125,27 @@ function updateFEBMapStatus(feb, status) {
 function updateCRTMapStatus() {
 
     const statuses = window.CRT_FEB_STATUS || {};
+    const modules = document.querySelectorAll('.module[data-feb]');
 
-    document.querySelectorAll('.module[data-feb]').forEach(module => {
+//    console.log(
+//        "3D MAP UPDATE:",
+//        "modules =", modules.length,
+//        "statuses =", Object.keys(statuses).length
+//    );
+
+    modules.forEach(module => {
 
         const feb = Number(module.dataset.feb);
         const status = statuses[feb];
 
+//        console.log(
+//            "FEB", feb,
+//            "status =", status
+//        );
+
         updateFEBMapStatus(feb, status);
     });
 }
-
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
     FEBs.forEach(module => {
@@ -138,12 +153,6 @@ function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
         faceElement.classList.add('module');
         faceElement.dataset.feb = module.FEB;
 
-        // Initial state.
-        // The actual alarm state will be applied once CRT_FEB_STATUS is populated.
-        updateFEBMapStatus(
-            Number(module.FEB),
-            window.CRT_FEB_STATUS[Number(module.FEB)]
-        );
 
 		faceElement.style.width = `${module.dimensionW}px`;
 		faceElement.style.height = `${module.dimensionH}px`;
@@ -171,6 +180,13 @@ function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
 
 		cube.appendChild(faceElement);
 		faceElement.appendChild(link);
+
+        // Initial state.
+        // The actual alarm state will be applied once CRT_FEB_STATUS is populated.
+        updateFEBMapStatus(
+            Number(module.FEB),
+            window.CRT_FEB_STATUS[Number(module.FEB)]
+        );
 
 		/*
 		console.log("\nFEB: " + module.FEB);

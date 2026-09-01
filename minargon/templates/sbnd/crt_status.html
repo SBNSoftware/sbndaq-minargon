@@ -607,8 +607,8 @@ function(data) {
         ...feb_status
     };
     
-    if (typeof updateCRTMapStatus === "function") {
-        updateCRTMapStatus();
+    if (typeof window.updateCRTMapStatus === "function") {
+        window.updateCRTMapStatus();
     }
 
     // ============================================================
