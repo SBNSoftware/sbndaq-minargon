@@ -32,7 +32,7 @@ section.addEventListener('mouseenter', () => {
   });
   section.addEventListener('mouseleave', () => {
     isMouseInside = false;
-	});
+    });
 
 
 ////show compass
@@ -79,8 +79,8 @@ async function loadCubeConfig() {
     createCubeFacesRt(crtB,  'rotate(180deg) scaleX(-1)', 'rotateX(90deg)'); // TextRotation & ModuleRotation
     createCubeFacesRt(crtBB, 'rotate(90deg)           ', 'rotateX(90deg)'); // TextRotation & ModuleRotation
 
-	// Apply any CRT statuses that arrived before the 3D map finished loading.
-	updateCRTMapStatus();
+    // Apply any CRT statuses that arrived before the 3D map finished loading.
+    updateCRTMapStatus();
 
 
 //    const crtSp = config.AllFEB.filter(item =>  (item.FEB === 166 || item.FEB===61|| item.FEB===135) ) ;
@@ -133,25 +133,25 @@ function updateCRTMapStatus() {
 
     const febNumbers = new Set();
 
-	document
-		.querySelectorAll('.module[data-feb]')
-		.forEach(module => {
+    document
+        .querySelectorAll('.module[data-feb]')
+        .forEach(module => {
 
-			const feb = Number(module.dataset.feb);
+            const feb = Number(module.dataset.feb);
 
-			if (!Number.isNaN(feb)) {
-			febNumbers.add(feb);
-		}
-	});
+            if (!Number.isNaN(feb)) {
+            febNumbers.add(feb);
+        }
+    });
 
-	// Apply one FEB status to every physical module
-	// associated with that FEB number.
-	febNumbers.forEach(feb => {
+    // Apply one FEB status to every physical module
+    // associated with that FEB number.
+    febNumbers.forEach(feb => {
 
-		const status = statuses[feb];
+        const status = statuses[feb];
 
-			updateFEBMapStatus(feb, status);
-	});
+            updateFEBMapStatus(feb, status);
+    });
 }
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
@@ -220,63 +220,63 @@ function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
 
 // Start dragging
 document.addEventListener('mousedown', (e) => {
-		isDragging = true;
-		startX = e.clientX;
-		startY = e.clientY;
-		});
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        });
 
 
 // Dragging
 document.addEventListener('mousemove', (e) => {
-		if (!isDragging) return;
+        if (!isDragging) return;
 
-		const deltaX = e.clientX - startX;
-		const deltaY = e.clientY - startY;
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
-		//rotationX -= deltaY * 0.5; // Adjust sensitivity with multiplier
-		//rotationY += deltaX * 0.5;
+        //rotationX -= deltaY * 0.5; // Adjust sensitivity with multiplier
+        //rotationY += deltaX * 0.5;
 
-		rotationX = Math.max(-90, Math.min(90, rotationX - deltaY * 0.5)); // Clamp rotationX
-		rotationY += deltaX * 0.5;
+        rotationX = Math.max(-90, Math.min(90, rotationX - deltaY * 0.5)); // Clamp rotationX
+        rotationY += deltaX * 0.5;
 
-		//Aids for the arrow compass
-		//onCubeRotationUpdate(rotationX, rotationY);
-		arrow.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        //Aids for the arrow compass
+        //onCubeRotationUpdate(rotationX, rotationY);
+        arrow.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 
-		cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 
-		startX = e.clientX;
-		startY = e.clientY;
-		});
+        startX = e.clientX;
+        startY = e.clientY;
+        });
 
 // Stop dragging
 document.addEventListener('mouseup', () => {
-		isDragging = false;
-		});
+        isDragging = false;
+        });
 
 // Optional: Stop dragging when the mouse leaves the window
 document.addEventListener('mouseleave', () => {
-		isDragging = false;
-		});
+        isDragging = false;
+        });
 
 // Reset button functionality
 resetButton.addEventListener('click', () => {
-		rotationX = 0;
-		rotationY = 0;
-		cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
-	});
+        rotationX = 0;
+        rotationY = 0;
+        cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+    });
 
 // Zoom in/out on scroll
 document.addEventListener('wheel', (e) => {
-		if( !isMouseInside) return;
-		e.preventDefault();
+        if( !isMouseInside) return;
+        e.preventDefault();
 
-		const delta = Math.sign(e.deltaY);
-		zoomLevel += delta * -0.04;
-		zoomLevel = Math.min(Math.max(zoomLevel, zoom_min ), zoom_max); // Clamp zoom level between 0.05 and 2
-		// Update only the scale via CSS variable
-		sceneWrapper.style.setProperty('--zoom', zoomLevel);
-		}, {passive: false} );
+        const delta = Math.sign(e.deltaY);
+        zoomLevel += delta * -0.04;
+        zoomLevel = Math.min(Math.max(zoomLevel, zoom_min ), zoom_max); // Clamp zoom level between 0.05 and 2
+        // Update only the scale via CSS variable
+        sceneWrapper.style.setProperty('--zoom', zoomLevel);
+        }, {passive: false} );
 
 loadCubeConfig();
 

@@ -59,22 +59,22 @@
       </h3>
       <table class="table table-striped" id="{{ crt | replace(' ', '-') | replace(';', '')}}">
         <thead>
-		<tr>
-		<th>Board</th>
-		<th>Baseline [ADC]</th>
-		<th>Deadtime [us]</th>
-		<th>Pull window [ms]</th>
-		<th>Readout rate [Hz]</th>
-		<th>Missing T0 resets</th>
-		<th>Missing T1 resets</th>
-		</tr>
+        <tr>
+        <th>Board</th>
+        <th>Baseline [ADC]</th>
+        <th>Deadtime [us]</th>
+        <th>Pull window [ms]</th>
+        <th>Readout rate [Hz]</th>
+        <th>Missing T0 resets</th>
+        <th>Missing T1 resets</th>
+        </tr>
         </thead>
       </table>
-	  <!-- Image is no needed, so remove the block
+      <!-- Image is no needed, so remove the block
       <img src="static/images/crtmaps/{{ crt.lower().replace(' ', '_') }}.png" 
            alt="{{ crt }}"
        style="width: 100%; height: auto; margin-top: 10px;">
-	   -->
+       -->
     </div>
     {% if loop.index0 % 1 == 0 %}
   </div>
@@ -101,31 +101,26 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     ">
     <div style="font-size: 22px; font-weight: bold;">CRT 3D Viewer</div>
-<!--		
-		<div style="font-size: 14px; margin-top: 4px;">
-			CHECK Black boxes indicate the CRT modules, labeled with the attached FEB number.
-		</div>
--->
         <div style="font-size: 14px; margin-top: 4px;">
             <span style="color:#000000;">Black</span> = Normal,
             <span style="color:#D32F2F;">Red</span> = Alarm,
             <span style="color:#1565C0;">Blue</span> = Offline.
         </div>
     </div>
-	<!-- Load CRT modules -->
-	<script>
-	    // ============================================================
-	    // CRT status shared with the 3D map
-	    // ============================================================
-	
-	    window.OFF_CRT_FEBS =
-	        new Set({{ crt_off_febs_list|tojson|safe }}.map(Number));
-	
-	    window.CRT_FEB_STATUS = {};
-	
-	    const FEBjsonURL =
-	        "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
-	</script>
+    <!-- Load CRT modules -->
+    <script>
+        // ============================================================
+        // CRT status shared with the 3D map
+        // ============================================================
+    
+        window.OFF_CRT_FEBS =
+            new Set({{ crt_off_febs_list|tojson|safe }}.map(Number));
+    
+        window.CRT_FEB_STATUS = {};
+    
+        const FEBjsonURL =
+            "{{ url_for('static', filename='css/crt_style/crtmap_FEBList.json') }}";
+    </script>
 
 
     
@@ -161,17 +156,17 @@
     <script src="{{ url_for('static', filename='js/minargon/crtmap_motion.js') }}"></script>
 
     <div style="
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background-color: rgba(100, 100, 100, 0.6); 
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    z-index: 1000;
-    ">
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background-color: rgba(100, 100, 100, 0.6); 
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        z-index: 1000;
+        ">
         <strong>Instructions:</strong><br>
         Scroll to zoom.<br>
         Left click and drag to rotate.
@@ -583,10 +578,10 @@ function(data) {
         // --------------------------------------------------------
 
         if (OFF_CRT_FEBS.has(feb)) {
-			if(DEBUG_ALARM){
-				console.log("FEB ",feb," OFF:", OFF_CRT_FEBS.has(feb));
-			}
-			feb_status[feb].offline = true;
+            if(DEBUG_ALARM){
+                console.log("FEB ",feb," OFF:", OFF_CRT_FEBS.has(feb));
+            }
+            feb_status[feb].offline = true;
             feb_status[feb].alarm = true;
 
             feb_status[feb].baseline = false;
@@ -596,11 +591,11 @@ function(data) {
             feb_status[feb].missingt0 = false;
             feb_status[feb].missingt1 = false;
         } else {
-			feb_status[feb].offline = false;
-		}
+            feb_status[feb].offline = false;
+        }
     }
 
-	// Make the completed FEB status available to the 3D map.
+    // Make the completed FEB status available to the 3D map.
 //    window.CRT_FEB_STATUS = feb_status;
     window.CRT_FEB_STATUS = {
         ...window.CRT_FEB_STATUS, //... means take every property and copy into new object
@@ -655,16 +650,16 @@ function(data) {
 
         var feb = Number(channels[i]);
         var status = feb_status[feb];
-		var is_off = OFF_CRT_FEBS.has(feb);
+        var is_off = OFF_CRT_FEBS.has(feb);
 
-		if(DEBUG_ALARM){
-			console.log(
-			    "ALARM CHECK: TABLE:",
-			    "FEB =", feb,
-			    "status =", status,
-			    "status.alarm =", status.alarm
-			);
-		}
+        if(DEBUG_ALARM){
+            console.log(
+                "ALARM CHECK: TABLE:",
+                "FEB =", feb,
+                "status =", status,
+                "status.alarm =", status.alarm
+            );
+        }
 
 
         var board_style =
@@ -701,7 +696,7 @@ function(data) {
                     data-feb="${feb}">
 
                     <a href="CRT_board_snapshot?board_no=${feb}">
-						${feb}${is_off ? " (OFF)" : ""}
+                        ${feb}${is_off ? " (OFF)" : ""}
                     </a>
 
                 </th>
