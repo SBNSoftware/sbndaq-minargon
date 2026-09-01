@@ -79,27 +79,17 @@
    FEB status styles
    ============================================================ */
 
-/*
-.module {
-    background-color: #000000;
-    border: 2px solid #555555;
-}
-*/
-
-/* Normal FEB */
 .module.feb-normal {
-    background-color: #000000;
+    background-color: rgba(0, 0, 0, 0.7);
     border-color: #666666;
 }
 
-/* Alarm FEB */
 .module.feb-alarm {
-    background-color: #D32F2F;
+    background-color: rgba(211, 47, 47, 0.7);
     border-color: #FF6B6B;
 }
 
-/* Offline FEB */
 .module.feb-offline {
-    background-color: #1565C0;
+    background-color: rgba(21, 101, 192, 0.7);
     border-color: #64B5F6;
 }
