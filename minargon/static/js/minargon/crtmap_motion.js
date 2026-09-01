@@ -90,75 +90,79 @@ async function loadCubeConfig() {
 
 function updateFEBMapStatus(feb, status) {
 
-    const module = document.querySelector(
+    const modules = document.querySelectorAll(
         `.module[data-feb="${feb}"]`
     );
 
-    if (!module) {
+    if (modules.length === 0) {
         return;
     }
-
-    module.classList.remove(
-        'feb-normal',
-        'feb-alarm',
-        'feb-offline'
-    );
 
     const isOffline =
         window.OFF_CRT_FEBS &&
         window.OFF_CRT_FEBS.has(Number(feb));
 
-    if (isOffline) {
+    modules.forEach(module => {
 
-        module.classList.add('feb-offline');
+        // Remove previous state
+        module.classList.remove(
+            'feb-normal',
+            'feb-alarm',
+            'feb-offline'
+        );
 
-    } else if (status && status.alarm) {
+        // Offline takes priority
+        if (isOffline) {
 
-        module.classList.add('feb-alarm');
+            module.classList.add('feb-offline');
 
-    } else {
+        } else if (status && status.alarm) {
 
-        module.classList.add('feb-normal');
-    }
+            module.classList.add('feb-alarm');
+
+        } else {
+
+            module.classList.add('feb-normal');
+        }
+    });
 }
 
 function updateCRTMapStatus() {
 
     const statuses = window.CRT_FEB_STATUS || {};
-    const modules = document.querySelectorAll('.module[data-feb]');
 
-//    console.log(
-//        "3D MAP UPDATE:",
-//        "modules =", modules.length,
-//        "statuses =", Object.keys(statuses).length
-//    );
+    const febNumbers = new Set();
 
-    modules.forEach(module => {
+    document
+        .querySelectorAll('.module[data-feb]')
+        .forEach(module => {
+            febNumbers.add(Number(module.dataset.feb));
+        });
 
-        const feb = Number(module.dataset.feb);
+    febNumbers.forEach(feb => {
+
         const status = statuses[feb];
-
-//        console.log(
-//            "FEB", feb,
-//            "status =", status
-//        );
 
         updateFEBMapStatus(feb, status);
     });
 }
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
+
     FEBs.forEach(module => {
+
         const faceElement = document.createElement('div');
+
         faceElement.classList.add('module');
         faceElement.dataset.feb = module.FEB;
 
 
-		faceElement.style.width = `${module.dimensionW}px`;
+		faceElement.style.width  = `${module.dimensionW}px`;
 		faceElement.style.height = `${module.dimensionH}px`;
 
         // Add link and text
         const link = document.createElement('a');
+
         link.href = "CRT_board_snapshot?board_no="+module.FEB; //module.linkUrl;
         link.textContent = 'F'+module.FEB;
         link.style.fontSize = '60px';
