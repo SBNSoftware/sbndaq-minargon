@@ -11,6 +11,81 @@
   tb. th, tb td {text-align: left;}
 </style>
 
+<img id="febrickAlarm"
+     src="static/images/febrick.png"
+     style="
+	    position:fixed;
+	    width:64px;
+	    height:auto;
+	    display:none;
+	    z-index:99999;
+	    pointer-events:none;
+	    ">
+
+<script>
+let febrickAnimation = null;
+let febrickX = 100;
+let febrickY = 100;
+let febrickVX = 5;
+let febrickVY = 4;
+
+function startfebrick() {
+    const febrick = document.getElementById("febrickAlarm");
+
+    // Don't start a second animation if one is already running
+    if (febrickAnimation !== null) {
+        return;
+    }
+
+    febrick.style.display = "block";
+
+    // Start at a random position
+    febrickX = Math.random() * (window.innerWidth - febrick.offsetWidth);
+    febrickY = Math.random() * (window.innerHeight - febrick.offsetHeight);
+
+    function movefebrick() {
+        febrickX += febrickVX;
+        febrickY += febrickVY;
+
+        // Left/right edges
+        if (febrickX <= 0) {
+            febrickX = 0;
+            febrickVX = Math.abs(febrickVX);
+        } else if (febrickX + febrick.offsetWidth >= window.innerWidth) {
+            febrickX = window.innerWidth - febrick.offsetWidth;
+            febrickVX = -Math.abs(febrickVX);
+        }
+
+        // Top/bottom edges
+        if (febrickY <= 0) {
+            febrickY = 0;
+            febrickVY = Math.abs(febrickVY);
+        } else if (febrickY + febrick.offsetHeight >= window.innerHeight) {
+            febrickY = window.innerHeight - febrick.offsetHeight;
+            febrickVY = -Math.abs(febrickVY);
+        }
+
+        febrick.style.left = `${febrickX}px`;
+        febrick.style.top = `${febrickY}px`;
+
+        febrickAnimation = requestAnimationFrame(movefebrick);
+    }
+
+    febrickAnimation = requestAnimationFrame(movefebrick);
+}
+
+function stopfebrick() {
+    const febrick = document.getElementById("febrickAlarm");
+
+    if (febrickAnimation !== null) {
+        cancelAnimationFrame(febrickAnimation);
+        febrickAnimation = null;
+    }
+
+    febrick.style.display = "none";
+}
+</script>
+
 <!-- <div class="col-md-8 hcenter"> -->
 <div class="container">
 
@@ -116,7 +191,8 @@
         }
 
        function testAlarm() {
-	  document.body.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+	   document.body.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+	   startfebrick();
           let alarmSound = document.getElementById("alarmSound");
           alarmSound.play()
             .then(() => console.log("Test alarm playing!"))
@@ -254,6 +330,7 @@
 
         function disableAlarm() {
 	    document.body.style.backgroundColor = "";
+	    stopfebrick();
             document.getElementById("alarmSound").pause();
             alarmTriggered = false;
             alarmDisabled = true;  // Prevent alarm from playing again
