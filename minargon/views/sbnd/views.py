@@ -93,7 +93,6 @@ DRIFTHV_ALARM_LIMITS = {
                 "isp": [91.5, 300.5],
                 "scheme": [-1, 2]
                 }
-
 #DRIFTHV_ALARM_LIMITS = {
 #                "vmon": [0.0, 1.0, 0.0, 1.0],
 #                "imon": [2.6, 3.2, 2.5, 3.3],
@@ -101,7 +100,6 @@ DRIFTHV_ALARM_LIMITS = {
 #                "isp": [91.5, 300.5],
 #                "scheme": [-1, 2]
 #                }
-
 
 VMon_LO = DRIFTHV_ALARM_LIMITS["vmon"][0]
 VMon_HI = DRIFTHV_ALARM_LIMITS["vmon"][1]
