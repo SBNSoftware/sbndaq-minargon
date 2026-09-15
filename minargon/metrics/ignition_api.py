@@ -78,6 +78,11 @@ def make_connection(connection_name, config):
     database_name = config["name"]
     host = config["host"]
     port = config["port"]
+
+    print("TRYING CONNECTION TO HOST", host, "AT PORT", port)
+    print("psycopg2.__version__ =", psycopg2.__version__)
+    print("psycopg2.__libpq_version__ =", psycopg2.__libpq_version__)
+    
     try:
         with open(key) as f:
             u = (f.readline()).strip()
@@ -160,7 +165,7 @@ def ignition_querymaker(pv, start_t, stop_t, n_data, month):
     }
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{YEAR}_{MONTH} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{YEAR}_{MONTH} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%value%'
@@ -194,7 +199,7 @@ def get_ignition_last_value_pv(connection, year, month, group, pv):
     database = connection[1]["name"]
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -237,7 +242,7 @@ def get_ignition_30min_value_pv(connection, year, month, group, pv):
     stop = str(int(stop_t))
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -245,6 +250,7 @@ def get_ignition_30min_value_pv(connection, year, month, group, pv):
     AND d.t_stamp BETWEEN {} AND {}
     ORDER BY d.t_stamp""".format(year, month, group, pv, start, stop)
 
+    print(query)
     cursor.execute(query)
     dbrows = cursor.fetchall()
     cursor.close()
@@ -290,7 +296,7 @@ def cryo_ps_series(connection, month, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -337,9 +343,8 @@ def cryo_ps_step(connection, month, pv):
     this_year = current_time.year
     year = str(this_year)
 
-
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%{}%'
@@ -411,7 +416,7 @@ def drifthv_ps_series(connection, pv):
     n_data = 1000
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
@@ -470,7 +475,7 @@ def drifthv_ps_step(connection, pv):
     month_2digit = str(this_month).zfill(2)
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
-    FROM cryo_prd.sqlt_data_1_{}_{} d, cryo_prd.sqlth_te s
+    FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
     AND s.tagpath LIKE '%sbnd%'
     AND s.tagpath LIKE '%drifthv%'
