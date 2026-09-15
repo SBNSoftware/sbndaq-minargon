@@ -32,7 +32,7 @@ section.addEventListener('mouseenter', () => {
   });
   section.addEventListener('mouseleave', () => {
     isMouseInside = false;
-	});
+    });
 
 
 ////show compass
@@ -79,112 +79,205 @@ async function loadCubeConfig() {
     createCubeFacesRt(crtB,  'rotate(180deg) scaleX(-1)', 'rotateX(90deg)'); // TextRotation & ModuleRotation
     createCubeFacesRt(crtBB, 'rotate(90deg)           ', 'rotateX(90deg)'); // TextRotation & ModuleRotation
 
+    // Apply any CRT statuses that arrived before the 3D map finished loading.
+    updateCRTMapStatus();
+
 
 //    const crtSp = config.AllFEB.filter(item =>  (item.FEB === 166 || item.FEB===61|| item.FEB===135) ) ;
 //    createCubeFacesRt(crtSp,  '                        ', '               '); // TextRotation & ModuleRotation
+
 }
 
+function updateFEBMapStatus(feb, status) {
 
+    const modules = document.querySelectorAll(
+        `.module[data-feb="${feb}"]`
+    );
+
+    if (modules.length === 0) {
+        return;
+    }
+
+    const isOffline =
+        window.OFF_CRT_FEBS &&
+        window.OFF_CRT_FEBS.has(Number(feb));
+
+    modules.forEach(module => {
+
+        // Remove previous state
+        module.classList.remove(
+            'feb-normal',
+            'feb-alarm',
+            'feb-offline'
+        );
+
+        // Offline takes priority
+        if (isOffline) {
+
+            module.classList.add('feb-offline');
+
+        } else if (status && status.alarm) {
+
+            module.classList.add('feb-alarm');
+
+        } else {
+
+            module.classList.add('feb-normal');
+        }
+    });
+}
+
+function updateCRTMapStatus() {
+
+    const statuses = window.CRT_FEB_STATUS || {};
+
+    const febNumbers = new Set();
+
+    document
+        .querySelectorAll('.module[data-feb]')
+        .forEach(module => {
+
+            const feb = Number(module.dataset.feb);
+
+            if (!Number.isNaN(feb)) {
+            febNumbers.add(feb);
+        }
+    });
+
+    // Apply one FEB status to every physical module
+    // associated with that FEB number.
+    febNumbers.forEach(feb => {
+
+        const status = statuses[feb];
+
+            updateFEBMapStatus(feb, status);
+    });
+}
 
 function createCubeFacesRt(FEBs, TextRotation, ModuleRotation) {
-    FEBs.forEach(module => {
+
+    FEBs.forEach((module, index) => {
+
         const faceElement = document.createElement('div');
-        faceElement.classList.add('module', module.FEB);
-		faceElement.style.width = `${module.dimensionW}px`;
-		faceElement.style.height = `${module.dimensionH}px`;
+
+        faceElement.classList.add('module');
+
+        // FEB number = status/color identity.
+        // It is intentionally NOT required to be unique.
+        faceElement.dataset.feb = Number(module.FEB);
+
+        // Unique physical 3D-module identity.
+        faceElement.dataset.moduleId =
+            `${module.group || 'unknown'}-${module.FEB}-${index}`;
+
+        faceElement.style.width = `${module.dimensionW}px`;
+        faceElement.style.height = `${module.dimensionH}px`;
 
         // Add link and text
         const link = document.createElement('a');
-        link.href = "CRT_board_snapshot?board_no="+module.FEB; //module.linkUrl;
-        link.textContent = 'F'+module.FEB;
+
+        link.href =
+            "CRT_board_snapshot?board_no=" + module.FEB;
+
+        link.textContent = 'F' + module.FEB;
+
         link.style.fontSize = '60px';
         link.style.color = 'white';
 
-        //Modifications based on FEB group
-		//Translate the top-left corner to the destinated location
-		let Tx = -module.CoMx - module.dimensionW/2 ;
-		let Ty = -module.CoMy - module.dimensionH/2 ;
-		let Tz = -module.CoMz;
+        // Translate the module to its physical position.
+        let Tx = -module.CoMx - module.dimensionW / 2;
+        let Ty = -module.CoMy - module.dimensionH / 2;
+        let Tz = -module.CoMz;
 
+        let transformStr =
+            `translateX(${Tx}px) ` +
+            `translateY(${Ty}px) ` +
+            `translateZ(${Tz}px)`;
 
-		let transformStr = `translateX(${Tx}px) translateY(${Ty}px) translateZ(${Tz}px)`;
-		//X: left-->right Y: down-->up Z: s-->N
-		if( TextRotation !=="") {link.style.transform = TextRotation;} 
-		if( ModuleRotation !=="") {transformStr += ModuleRotation;}
+        if (TextRotation !== "") {
+            link.style.transform = TextRotation;
+        }
 
-		faceElement.style.transform = transformStr;
+        if (ModuleRotation !== "") {
+            transformStr += ModuleRotation;
+        }
 
-		cube.appendChild(faceElement);
-		faceElement.appendChild(link);
+        faceElement.style.transform = transformStr;
 
-		/*
-		console.log("\nFEB: " + module.FEB);
-		  console.log("width: " + module.dimensionW);
-		  console.log("height: " + module.dimensionH);
-		  console.log("ymax: " + (Ty));
-		  console.log("transform: ", transformStr);
-		  */
-	});
+        cube.appendChild(faceElement);
+        faceElement.appendChild(link);
+
+        // Apply the status associated with the FEB number.
+        updateFEBMapStatus(
+            Number(module.FEB),
+            window.CRT_FEB_STATUS
+                ? window.CRT_FEB_STATUS[Number(module.FEB)]
+                : undefined
+        );
+    });
 }
+
 
 // Start dragging
 document.addEventListener('mousedown', (e) => {
-		isDragging = true;
-		startX = e.clientX;
-		startY = e.clientY;
-		});
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        });
 
 
 // Dragging
 document.addEventListener('mousemove', (e) => {
-		if (!isDragging) return;
+        if (!isDragging) return;
 
-		const deltaX = e.clientX - startX;
-		const deltaY = e.clientY - startY;
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
-		//rotationX -= deltaY * 0.5; // Adjust sensitivity with multiplier
-		//rotationY += deltaX * 0.5;
+        //rotationX -= deltaY * 0.5; // Adjust sensitivity with multiplier
+        //rotationY += deltaX * 0.5;
 
-		rotationX = Math.max(-90, Math.min(90, rotationX - deltaY * 0.5)); // Clamp rotationX
-		rotationY += deltaX * 0.5;
+        rotationX = Math.max(-90, Math.min(90, rotationX - deltaY * 0.5)); // Clamp rotationX
+        rotationY += deltaX * 0.5;
 
-		//Aids for the arrow compass
-		//onCubeRotationUpdate(rotationX, rotationY);
-		arrow.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        //Aids for the arrow compass
+        //onCubeRotationUpdate(rotationX, rotationY);
+        arrow.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 
-		cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
 
-		startX = e.clientX;
-		startY = e.clientY;
-		});
+        startX = e.clientX;
+        startY = e.clientY;
+        });
 
 // Stop dragging
 document.addEventListener('mouseup', () => {
-		isDragging = false;
-		});
+        isDragging = false;
+        });
 
 // Optional: Stop dragging when the mouse leaves the window
 document.addEventListener('mouseleave', () => {
-		isDragging = false;
-		});
+        isDragging = false;
+        });
 
 // Reset button functionality
 resetButton.addEventListener('click', () => {
-		rotationX = 0;
-		rotationY = 0;
-		cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
-	});
+        rotationX = 0;
+        rotationY = 0;
+        cube.style.transform = `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+    });
 
 // Zoom in/out on scroll
 document.addEventListener('wheel', (e) => {
-		if( !isMouseInside) return;
-		e.preventDefault();
+        if( !isMouseInside) return;
+        e.preventDefault();
 
-		const delta = Math.sign(e.deltaY);
-		zoomLevel += delta * -0.04;
-		zoomLevel = Math.min(Math.max(zoomLevel, zoom_min ), zoom_max); // Clamp zoom level between 0.05 and 2
-		// Update only the scale via CSS variable
-		sceneWrapper.style.setProperty('--zoom', zoomLevel);
-		}, {passive: false} );
+        const delta = Math.sign(e.deltaY);
+        zoomLevel += delta * -0.04;
+        zoomLevel = Math.min(Math.max(zoomLevel, zoom_min ), zoom_max); // Clamp zoom level between 0.05 and 2
+        // Update only the scale via CSS variable
+        sceneWrapper.style.setProperty('--zoom', zoomLevel);
+        }, {passive: false} );
 
 loadCubeConfig();
+
+window.updateCRTMapStatus = updateCRTMapStatus;

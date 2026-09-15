@@ -1,0 +1,34 @@
+/* 3D map Section Layout */
+.crt-map-section {
+    position: relative;
+    padding: 10px;
+    box-sizing: border-box;
+    background: #fafafa;
+    width: 70vw;
+    height: 70vh;
+    min-height: 600px;
+}
+
+/* table pop-up message box */
+
+#feb-alarm-tooltip {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+
+    padding: 10px 14px;
+    border-radius: 6px;
+
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+
+    pointer-events: none;
+    white-space: nowrap;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
