@@ -11,8 +11,17 @@
   tb. th, tb td {text-align: left;}
 </style>
 
-<img id="febrickAlarm"
-     src="static/images/febrick.png"
+<img id="febrickAlarm" src="static/images/febrick.png"
+     style="
+	    position:fixed;
+	    width:64px;
+	    height:auto;
+	    display:none;
+	    z-index:99999;
+	    pointer-events:none;
+	    ">
+
+<img id="evilClippyAlarm" src="static/images/evil_clippy.png"
      style="
 	    position:fixed;
 	    width:64px;
@@ -28,9 +37,12 @@ let febrickX = 100;
 let febrickY = 100;
 let febrickVX = 5;
 let febrickVY = 4;
+let eclipX = 0;
+let eclipY = 0;
 
 function startfebrick() {
-    const febrick = document.getElementById("febrickAlarm");
+    const febrick    = document.getElementById("febrickAlarm");
+    const evilClippy = document.getElementById("evilClippyAlarm");
 
     // Don't start a second animation if one is already running
     if (febrickAnimation !== null) {
@@ -38,10 +50,15 @@ function startfebrick() {
     }
 
     febrick.style.display = "block";
+    evilClippy.style.display = "block";
 
     // Start at a random position
     febrickX = Math.random() * (window.innerWidth - febrick.offsetWidth);
     febrickY = Math.random() * (window.innerHeight - febrick.offsetHeight);
+
+    // Clippy chases Febrick.
+    eclipX = febrickX - 150;
+    eclipY = febrickY - 100;
 
     function movefebrick() {
         febrickX += febrickVX;
@@ -65,8 +82,14 @@ function startfebrick() {
             febrickVY = -Math.abs(febrickVY);
         }
 
+	// Clippy follows behind
+	eclipX = febrickX - febrickVX * 25;
+	eclipY = febrickY - febrickVY * 25;
+
         febrick.style.left = `${febrickX}px`;
         febrick.style.top = `${febrickY}px`;
+	evilClippy.style.left = `${eclipX}px`;
+        evilClippy.style.top = `${eclipY}px`;
 
         febrickAnimation = requestAnimationFrame(movefebrick);
     }
@@ -83,6 +106,7 @@ function stopfebrick() {
     }
 
     febrick.style.display = "none";
+    evilClippy.style.display = "none";
 }
 </script>
 
@@ -134,7 +158,9 @@ function stopfebrick() {
     <br>
     <span id="lastResetTime"></span>  <!-- Display last reset time -->
     
-    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio> 
+    <!--<audio id="alarmSound" src="static/audio/0096.mp3" loop></audio> -->
+    <!--<audio id="alarmSound" src="static/audio/nopleaseno.mp3" loop> -->
+    <audio id="alarmSound" src="static/audio/omgitshappening.mp3" loop>
     <audio id="ODHSound" src="static/audio/ODHAlarm_final.mp3" loop></audio>
 
     <script>
