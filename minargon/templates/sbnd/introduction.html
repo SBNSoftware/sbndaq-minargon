@@ -39,6 +39,8 @@ let febrickVX = 5;
 let febrickVY = 4;
 let eclipX = 0;
 let eclipY = 0;
+let posHistory = [];
+const CLIPPY_LAG_FRAMES = 15;
 
 function startfebrick() {
     const febrick    = document.getElementById("febrickAlarm");
@@ -55,10 +57,11 @@ function startfebrick() {
     // Start at a random position
     febrickX = Math.random() * (window.innerWidth - febrick.offsetWidth);
     febrickY = Math.random() * (window.innerHeight - febrick.offsetHeight);
+    posHistory = [];
 
-    // Clippy chases Febrick.
-    eclipX = febrickX - 150;
-    eclipY = febrickY - 100;
+    // Clippy chases Febrick. He starts at the same coordinates.
+    eclipX = febrickX;
+    eclipY = febrickY;
 
     function movefebrick() {
         febrickX += febrickVX;
@@ -82,9 +85,13 @@ function startfebrick() {
             febrickVY = -Math.abs(febrickVY);
         }
 
-	// Clippy follows behind
-	eclipX = febrickX - febrickVX * 25;
-	eclipY = febrickY - febrickVY * 25;
+	// Clippy follows behind, at the position Febrick was at LAG_FRAMES frames ago
+	// shift() ensures the array is only LAG_FRAMES + 1 elements big, max.
+	posHistory.push({x: febrickX, y: febrickY});
+	if(posHistory.length > CLIPPY_LAG_FRAMES + 1) posHistory.shift();
+	const lagPos = posHistory[0];
+	eclipX = lagPos.x;
+	eclipY = lagPos.y;
 
         febrick.style.left = `${febrickX}px`;
         febrick.style.top = `${febrickY}px`;
@@ -99,6 +106,7 @@ function startfebrick() {
 
 function stopfebrick() {
     const febrick = document.getElementById("febrickAlarm");
+    const evilClippy = document.getElementById("evilClippyAlarm");
 
     if (febrickAnimation !== null) {
         cancelAnimationFrame(febrickAnimation);
