@@ -267,6 +267,7 @@ def introduction():
     daq_status = online_metrics.get_daq_run_status("online",'daq_run_status')
 
     render_args = {
+      "PYTHON_VERSION": "%d.%d" % (sys.version_info.major, sys.version_info.minor),
       "daq_status": daq_status, 
       "crt_config": crt_config,
       "crt_channels": crt_channels, #channels mean BOARD here

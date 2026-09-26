@@ -11,11 +11,119 @@
   tb. th, tb td {text-align: left;}
 </style>
 
+<img id="febrickAlarm" src="static/images/febrick.png"
+     style="
+	    position:fixed;
+	    width:64px;
+	    height:auto;
+	    display:none;
+	    z-index:99999;
+	    pointer-events:none;
+	    ">
+
+<img id="evilClippyAlarm" src="static/images/evil_clippy.png"
+     style="
+	    position:fixed;
+	    width:64px;
+	    height:auto;
+	    display:none;
+	    z-index:99999;
+	    pointer-events:none;
+	    ">
+
+<script>
+let febrickAnimation = null;
+let febrickX = 100;
+let febrickY = 100;
+let febrickVX = 5;
+let febrickVY = 4;
+let eclipX = 0;
+let eclipY = 0;
+let posHistory = [];
+const CLIPPY_LAG_FRAMES = 15;
+
+function startfebrick() {
+    const febrick    = document.getElementById("febrickAlarm");
+    const evilClippy = document.getElementById("evilClippyAlarm");
+
+    // Don't start a second animation if one is already running
+    if (febrickAnimation !== null) {
+        return;
+    }
+
+    febrick.style.display = "block";
+    evilClippy.style.display = "block";
+
+    // Start at a random position
+    febrickX = Math.random() * (window.innerWidth - febrick.offsetWidth);
+    febrickY = Math.random() * (window.innerHeight - febrick.offsetHeight);
+    posHistory = [];
+
+    // Clippy chases Febrick. He starts at the same coordinates.
+    eclipX = febrickX;
+    eclipY = febrickY;
+
+    function movefebrick() {
+        febrickX += febrickVX;
+        febrickY += febrickVY;
+
+        // Left/right edges
+        if (febrickX <= 0) {
+            febrickX = 0;
+            febrickVX = Math.abs(febrickVX);
+        } else if (febrickX + febrick.offsetWidth >= window.innerWidth) {
+            febrickX = window.innerWidth - febrick.offsetWidth;
+            febrickVX = -Math.abs(febrickVX);
+        }
+
+        // Top/bottom edges
+        if (febrickY <= 0) {
+            febrickY = 0;
+            febrickVY = Math.abs(febrickVY);
+        } else if (febrickY + febrick.offsetHeight >= window.innerHeight) {
+            febrickY = window.innerHeight - febrick.offsetHeight;
+            febrickVY = -Math.abs(febrickVY);
+        }
+
+	// Clippy follows behind, at the position Febrick was at LAG_FRAMES frames ago
+	// shift() ensures the array is only LAG_FRAMES + 1 elements big, max.
+	posHistory.push({x: febrickX, y: febrickY});
+	if(posHistory.length > CLIPPY_LAG_FRAMES + 1) posHistory.shift();
+	const lagPos = posHistory[0];
+	eclipX = lagPos.x;
+	eclipY = lagPos.y;
+
+        febrick.style.left = `${febrickX}px`;
+        febrick.style.top = `${febrickY}px`;
+	evilClippy.style.left = `${eclipX}px`;
+        evilClippy.style.top = `${eclipY}px`;
+
+        febrickAnimation = requestAnimationFrame(movefebrick);
+    }
+
+    febrickAnimation = requestAnimationFrame(movefebrick);
+}
+
+function stopfebrick() {
+    const febrick = document.getElementById("febrickAlarm");
+    const evilClippy = document.getElementById("evilClippyAlarm");
+
+    if (febrickAnimation !== null) {
+        cancelAnimationFrame(febrickAnimation);
+        febrickAnimation = null;
+    }
+
+    febrick.style.display = "none";
+    evilClippy.style.display = "none";
+}
+</script>
+
 <!-- <div class="col-md-8 hcenter"> -->
 <div class="container">
 
 <div class="row">
-<h1>SBND Online Monitoring</h1>
+  <h1>SBND Online Monitoring (python {{PYTHON_VERSION}})</h1>
+  <h2>John is testing at DQM meeting...</h2>
 </div>
 <br>
 
@@ -59,7 +167,10 @@
     <br>
     <span id="lastResetTime"></span>  <!-- Display last reset time -->
     
-    <audio id="alarmSound" src="static/audio/0096.mp3" loop></audio> 
+    <!--<audio id="alarmSound" src="static/audio/0096.mp3" loop></audio> -->
+    <!--<audio id="alarmSound" src="static/audio/nopleaseno.mp3" loop> -->
+      <!--<audio id="alarmSound" src="static/audio/omgitshappening.mp3" loop>-->
+	<audio id="alarmSound" src="static/audio/weewoo.mp3" loop>
     <audio id="ODHSound" src="static/audio/ODHAlarm_final.mp3" loop></audio>
 
     <script>
@@ -116,7 +227,8 @@
         }
 
        function testAlarm() {
-	  document.body.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+	   document.body.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+	   startfebrick();
           let alarmSound = document.getElementById("alarmSound");
           alarmSound.play()
             .then(() => console.log("Test alarm playing!"))
@@ -254,6 +366,7 @@
 
         function disableAlarm() {
 	    document.body.style.backgroundColor = "";
+	    stopfebrick();
             document.getElementById("alarmSound").pause();
             alarmTriggered = false;
             alarmDisabled = true;  // Prevent alarm from playing again
