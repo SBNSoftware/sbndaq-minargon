@@ -9,7 +9,7 @@
         "global_readoutrate_max": 1750,
         "global_missingt0_max": 0,
         "global_missingt1_max": 0,
-      	"off_febs": [],
+    "off_febs": [33, 34, 59, 61, 166, 169, 171, 176],
         "4": {
                 "Readout rate": [
                         -1000,
@@ -328,8 +328,8 @@
                         325
                 ],
                 "Baseline": [
-                        119,
-                        139
+                        109,
+                        129
                 ],
                 "Deadtime": [
                         18000,
@@ -546,8 +546,8 @@
                         125
                 ],
                 "Baseline": [
-                        158,
-                        178
+                        148,
+                        168
                 ],
                 "Deadtime": [
                         18000,
@@ -670,7 +670,7 @@
         },
         "103": {
                 "Readout rate": [
-                        301,
+                        152,
                         452
                 ],
                 "Baseline": [
