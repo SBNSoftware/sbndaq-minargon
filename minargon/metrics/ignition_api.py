@@ -164,6 +164,10 @@ def ignition_querymaker(pv, start_t, stop_t, n_data, month):
         "STOP": str(stop_t/1000.),
     }
 
+    # REMOVE BEFORE FLIGHT
+    if int(query_builder["YEAR"]) == 2026 and int(query_builder["MONTH"]) == 10: # NO data
+        query_builder["MONTH"] = "09" # Default to September
+
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM sqlt_data_1_{YEAR}_{MONTH} d, sqlth_te s
     WHERE d.tagid=s.id
@@ -197,6 +201,10 @@ def ignition_query(pv, start_t, stop_t, n_data, connection, month):
 def get_ignition_last_value_pv(connection, year, month, group, pv):
     cursor = connection[0].cursor()
     database = connection[1]["name"]
+
+    # REMOVE BEFORE FLIGHT
+    if(int(year) == 2026 and int(month) == 10): # no data, august 2026
+        month = "09"
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM sqlt_data_1_{}_{} d, sqlth_te s
@@ -240,6 +248,10 @@ def get_ignition_30min_value_pv(connection, year, month, group, pv):
     awindow = str(int(awindow_hr))+"hr "+str(int(awindow_min))+"min"
     start = str(start)
     stop = str(int(stop_t))
+
+    # REMOVE BEFORE FLIGHT
+    if(int(year) == 2026 and int(month) == 10): # no data, august 2026
+        month = "09"
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM sqlt_data_1_{}_{} d, sqlth_te s
@@ -294,6 +306,10 @@ def cryo_ps_series(connection, month, pv):
 
     n_data = args['n_data']    # Number of data points
     n_data = 1000
+
+    # REMOVE BEFORE FLIGHT
+    if(int(year) == 2026 and int(month_2digit) == 10): # no data, august 2026
+        month_2digit = "09"
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM sqlt_data_1_{}_{} d, sqlth_te s
@@ -415,6 +431,10 @@ def drifthv_ps_series(connection, pv):
     n_data = args['n_data']    # Number of data points
     n_data = 1000
 
+    # REMOVE BEFORE FLIGHT
+    if(int(year) == 2026 and int(month_2digit) == 10): # no data, august 2026
+       month_2digit = "09"
+
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM sqlt_data_1_{}_{} d, sqlth_te s
     WHERE d.tagid=s.id
@@ -473,6 +493,10 @@ def drifthv_ps_step(connection, pv):
     this_month = current_time.month
     current_timestamp = time.mktime(current_time.timetuple())
     month_2digit = str(this_month).zfill(2)
+
+    # REMOVE BEFORE FLIGHT
+    if(int(year) == 2026 and int(month_2digit) == 10): # no data, august 2026
+       month_2digit = "09"
 
     query = """SELECT d.tagid, COALESCE((d.intvalue::numeric)::text, (trunc(d.floatvalue::numeric,3))::text), d.t_stamp
     FROM sqlt_data_1_{}_{} d, sqlth_te s
