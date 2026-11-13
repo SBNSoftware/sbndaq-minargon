@@ -1,8 +1,4 @@
 """HLT2/HLT4 gate count helpers.
-
-Public API:
-    get_hlt_p_values() -> {hlt_id: p or None}      (introduction page)
-    get_hlt_images()   -> {hlt_id: base64 JPEG}    (hlt_gate_count page)
 """
 from __future__ import absolute_import
 
@@ -21,9 +17,9 @@ HLT_STREAMS = {
     2: 'HLT_ID:2:HLT_gate_count:nozero',
     4: 'HLT_ID:4:HLT_gate_count:nozero',
 }
-HLT_WINDOW_S = {2: 24 * 3600, 4: 2 * 24 * 3600}   # time window used for each HLT
-HLT_MIN_N = 30                                    # minimum number of gates to trust the MLE
-HLT_N_DATA = 1000                                 # entries read from Redis per stream
+HLT_WINDOW_S = {2: 24 * 3600, 4: 2 * 24 * 3600}   
+HLT_MIN_N = 30                                    
+HLT_N_DATA = 1000                                 
 
 
 # ----------------------------------------------------------------------------
@@ -70,7 +66,7 @@ def _plot(values, hlt_id):
         p, err = _mle(values)
         if p is not None:
             pk = p * (1 - p) ** (bin_centers - 1)
-            label = rf'$p(1-p)^{{k-1}}$ | p=${p:.3f} \pm {err:.3f}$'
+            label = r'$p(1-p)^{k-1}$ | p=$%.3f \pm %.3f$' % (p, err)
             ax.plot(bin_centers, pk, lw=1, color='red', label=label)
             ax.hist(values, bins=bins, density=True, label='Data (N=%d)' % len(values))
             ax.legend()
