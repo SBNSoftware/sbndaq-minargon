@@ -21,6 +21,8 @@ from minargon.tools import parseiso
 from minargon.metrics import online_metrics
 from six.moves import range
 
+from minargon.online.hlt_helpers import get_hlt_p_values, get_hlt_images
+
 # Channel mappings
 
 TPC_CHANNELS = [list(range(0, 1984)),
@@ -111,6 +113,24 @@ IMon_LO = DRIFTHV_ALARM_LIMITS["imon"][0]
 IMon_HI = DRIFTHV_ALARM_LIMITS["imon"][1]
 IMon_LOLO = DRIFTHV_ALARM_LIMITS["imon"][2]
 IMon_HIHI = DRIFTHV_ALARM_LIMITS["imon"][3]
+
+
+HLT_GATE_COUNT_ALARM_LIMITS = {
+                "hlt2": [0.085, 0.095, 0.10, 0.08],
+                "hlt4": [0.018, 0.0235, 0.016, 0.026],
+                }
+
+hlt2_LO = HLT_GATE_COUNT_ALARM_LIMITS["hlt2"][0]
+hlt2_HI = HLT_GATE_COUNT_ALARM_LIMITS["hlt2"][1]
+hlt2_LOLO = HLT_GATE_COUNT_ALARM_LIMITS["hlt2"][2]
+hlt2_HIHI = HLT_GATE_COUNT_ALARM_LIMITS["hlt2"][3]
+
+hlt4_LO = HLT_GATE_COUNT_ALARM_LIMITS["hlt4"][0]
+hlt4_HI = HLT_GATE_COUNT_ALARM_LIMITS["hlt4"][1]
+hlt4_LOLO = HLT_GATE_COUNT_ALARM_LIMITS["hlt4"][2]
+hlt4_HIHI = HLT_GATE_COUNT_ALARM_LIMITS["hlt4"][3]
+
+
 
 # CRT FEB-specific limits.
 # Overrides global limits for the FEBs and metrics specified
@@ -244,6 +264,34 @@ def introduction():
         else:
             continue
 
+    #HLT gate counts
+    hlt_gc_values = get_hlt_p_values()
+    hlt_2_hi = 0
+    hlt_2_hihi = 0
+    hlt_2_lo = 0
+    hlt_2_lolo = 0
+    hlt_4_hi = 0
+    hlt_4_hihi = 0
+    hlt_4_lo = 0
+    hlt_4_lolo = 0
+    if (hlt_gc_values[2] < hlt2_LOLO):
+        hlt_2_lolo = 1
+    if (hlt_gc_values[2] < hlt2_LO):
+        hlt_2_lo = 1
+    if (hlt_gc_values[2] > hlt2_HIHI):
+        hlt_2_hihi = 1
+    if (hlt_gc_values[2] > hlt2_HI):
+        hlt_2_hi = 1
+    if (hlt_gc_values[4] < hlt4_LOLO):
+        hlt_4_lolo = 1
+    if (hlt_gc_values[4] < hlt4_LO):
+        hlt_4_lo = 1
+    if (hlt_gc_values[4] > hlt4_HIHI):
+        hlt_4_hihi = 1
+    if (hlt_gc_values[4] > hlt4_HI):
+        hlt_4_hi = 1
+
+
     # crts
     crt_config = online_metrics.get_group_config("online", "CRT_board", front_end_abort=True)
     crt_channels = [CRT_MAPS[k] for k in CRTS]
@@ -314,6 +362,14 @@ def introduction():
       "imon_hihi": imon_n_hihi,
       "imon_lo": imon_n_lo,
       "imon_lolo": imon_n_lolo,
+      "hlt_2_hi": hlt_2_hi,
+      "hlt_2_hihi": hlt_2_hihi,
+      "hlt_2_lo": hlt_2_lo,
+      "hlt_2_lolo": hlt_2_lolo,
+      "hlt_4_hi": hlt_4_hi,
+      "hlt_4_hihi": hlt_4_hihi,
+      "hlt_4_lo": hlt_4_lo,
+      "hlt_4_lolo": hlt_4_lolo,  
       "timing_config": timing_config,
       "timing_metrics": TIMING_METRICS_STREAMS,
       "timing_alarms_min": [TIMING_BEAM_nCRTT1_MIN, TIMING_BEAM_nBES_MIN, TIMING_BEAM_nRWM_MIN, TIMING_BEAM_nFTRIG_MIN, TIMING_BEAM_nETRIG_MIN, TIMING_BEAM_RWM_BES_diff_MIN, TIMING_BEAM_ETRIG_BES_diff_MIN, TIMING_BEAM_FTRIG_ETRIG_diff_MIN,
@@ -1213,7 +1269,110 @@ def Timing_Metric_View():
     }
     return render_template('sbnd/timing_metrics.html',**render_args)
 
+@app.route('/hlt_gate_count')
+def hlt_gate_count():
+    imgs = get_hlt_images()
+    return render_template('sbnd/hlt_gate_count.html', img_hlt2=imgs.get(2), img_hlt4=imgs.get(4))
 
+
+
+
+
+
+    '''
+    from minargon.metrics import redis_api
+    import matplotlib
+    matplotlib.use('agg')
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import io, base64
+
+    # Parameters
+    n_data = 1000
+
+    # Extracting data from Redis
+    r = online_metrics.r_databases["online"]
+
+    hlt2_stream_name = 'HLT_ID:2:HLT_gate_count:nozero'
+    hlt4_stream_name = 'HLT_ID:4:HLT_gate_count:nozero'
+
+    data = redis_api.get_streams(r, [hlt2_stream_name, hlt4_stream_name], n_data=n_data)
+
+    hlt2_t, hlt2_gc = map(
+        np.array,
+        zip(*data[hlt2_stream_name])
+    )
+    hlt4_t, hlt4_gc = map(
+        np.array,
+        zip(*data[hlt4_stream_name])
+    )
+
+    imgs = {}
+
+
+    def plot_gate_counts(values, times, hlt_id):
+
+        length = len(values)
+
+        times = np.array(times, dtype=float)
+        values = values[values > 0]
+
+        max_times = {
+            2: 24*3600,
+            4: 2*24*3600
+        }
+
+        # Take only data from the last day
+        dt = time.time() - times/1000
+        values = values[dt < max_times[hlt_id]]
+
+        max_val = np.max(values) if len(values) > 0 else 100
+        max_val = max(100, max_val)
+
+        bins = np.arange(-0.5, max_val + 1.5, 1) 
+        bin_centers = bins[:-1] + 0.5
+
+        pk = None # Probability function using the MLE of p
+        
+        # Compute MLE and its error assuming geometric distribution
+        # ---- P(X=k) = p(1-p)**(k-1) ----
+
+        label = None
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+
+        if len(values) > 0:
+            p_mle = 1 / np.mean(values)
+            error_p = p_mle * np.sqrt((1 - p_mle) / len(values))
+            pk = p_mle * (1 - p_mle) ** (bin_centers - 1)
+            label = rf'$p(1-p)^{{k-1}}$ | p=${p_mle:.3f} \pm {error_p:.3f}$'
+            ax.plot(bin_centers, pk, lw=1, color='red', label=label)
+
+        ax.hist(values, bins=bins, density=True, label=f'Data (N={len(values)})')
+
+        n_days = max_times[hlt_id]/(3600*24)
+        
+        title = f"HLT{hlt_id} | last {n_days:.0f} days" if n_days > 1 else f"HLT{hlt_id} | last day"
+
+
+        ax.set_title(title)
+        ax.set_xlabel(f"Gate Count ")
+        #ax.set_xlabel(f"{values}")
+        ax.set_ylabel("Density")
+        plt.tight_layout()
+        plt.legend()
+
+        temp_data = io.BytesIO()
+        plt.savefig(temp_data, format="JPEG", dpi=150)
+        plt.close(fig)
+        imgs[hlt_id] = base64.b64encode(temp_data.getvalue()).decode('utf-8')
+
+    plot_gate_counts(hlt2_gc, hlt2_t, 2)
+    plot_gate_counts(hlt4_gc, hlt4_t, 4)
+        
+
+    return render_template('sbnd/hlt_gate_count.html', img_hlt2=imgs.get(2), img_hlt4=imgs.get(4))
+    '''
 
 
 
