@@ -1,0 +1,28 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}Gate Count Distribution{% endblock %}
+{% block body %}
+{{ super() }}
+
+<div class="container" style="margin-top: 60px;">
+<div class="row">
+<h1 class="hcenter">
+  Gate Count Distribution
+</h1>
+</div>
+
+<br>
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12 hcenter">
+      <img src="data:image/jpeg;base64,{{ img_hlt2 }}">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12 hcenter">
+      <img src="data:image/jpeg;base64,{{ img_hlt4 }}">
+    </div>
+  </div>
+</div>
+
+{% endblock %}
