@@ -45,6 +45,8 @@
     <p>TPC Status: <span id="TPCDisplayValue">{{ TPC_value }}</span>; Alarm TPC Status > 0</p>
     <span id="TPCValue" TPC-value="{{ TPC_value }}" style="display: none;"></span>
 
+    <span id="HLTValue" HLT-value="-1" style="display: none;"></span>
+
     <p id="alarmReason">Checking alarm status...</p>
 
     <span id="isAlarmDisabled"></span> 
@@ -127,6 +129,7 @@
             checkAutoReset();
             let HVValue = parseInt(document.getElementById("HVValue").getAttribute("HV-value"));
             let TPCValue = parseInt(document.getElementById("TPCValue").getAttribute("TPC-value"));
+            let HLTValue = parseInt(document.getElementById("HLTValue").getAttribute("HLT-value"));
 
             let alarmReasonElement = document.getElementById("alarmReason");
 
@@ -141,22 +144,24 @@
                     alarmReason = "Alarm triggered: High Voltage Status > 0.";
                 } else if (TPCValue > 0) {
                     alarmReason = "Alarm triggered: TPC Status > 0.";
+                } else if (HLTValue > 0) {                                                                 
+                    alarmReason = "Alarm triggered: HLT2/HLT4 gate count out of limits.";
                 } else if (daqStatus !== "running") {
                     alarmReason = "Alarm triggered: DAQ Status is not running.";
-                }
+                } 
             }
 
 	    //delete the following line when resetting the alarm
-            alarmReason = "Alarm is manually disabled while TPC is off.";
+            // alarmReason = "Alarm is manually disabled while TPC is off.";
 
             localStorage.setItem("alarmReason", alarmReason);
             alarmReasonElement.textContent = alarmReason;
 
             //to reset the alarm, enable the following four lines
-            //if ((HVValue > 0 || TPCValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
-            //    document.getElementById("alarmSound").play();
-            //    alarmTriggered = true;
-            //} 
+            if ((HVValue > 0 || TPCValue > 0 || HLTValue > 0 || daqStatus !== "running") && !alarmTriggered && !alarmDisabled) {
+               document.getElementById("alarmSound").play();
+               alarmTriggered = true;
+            } 
             
         }
 
@@ -507,6 +512,10 @@
     <th style="width: 31%;"><a href="{{url_for('Timing_status')}}">Timing Status:</a></th>
     <th><span id="Timing-Status"> </span></th>
   </tr>
+  <tr>
+  <th style="width: 31%;"><a href="{{url_for('hlt_gate_count')}}">HLT Gate Count Status:</a></th>
+  <th><span id="HLT-Status"> </span></th>
+</tr>
   </table>
 </div>
 </div>
@@ -857,6 +866,42 @@ var TPC_status = 0;
 //For audible alarm
 document.getElementById("TPCValue").setAttribute("TPC-value", TPC_status);
 updateDisplay();
+
+
+//HLT gate couts
+// HLT2 / HLT4 gate count (flags: 0 = inside limit, 1 = outside)
+var HLT_status = 0;
+var hlt_flags = {
+  "HLT2": {hi: {{hlt_2_hi}}, hihi: {{hlt_2_hihi}}, lo: {{hlt_2_lo}}, lolo: {{hlt_2_lolo}}},
+  "HLT4": {hi: {{hlt_4_hi}}, hihi: {{hlt_4_hihi}}, lo: {{hlt_4_lo}}, lolo: {{hlt_4_lolo}}}
+};
+
+var hlt_bad = [];    // HIHI / LOLO -> red + alarm
+var hlt_warn = [];   // HI / LO     -> orange only
+Object.keys(hlt_flags).forEach(function(name) {
+  var f = hlt_flags[name];
+  if (f.hihi)      { hlt_bad.push(name + " too high"); }
+  else if (f.lolo) { hlt_bad.push(name + " too low"); }
+  else if (f.hi)   { hlt_warn.push(name + " high"); }
+  else if (f.lo)   { hlt_warn.push(name + " low"); }
+});
+
+if (hlt_bad.length > 0) {
+  $("#HLT-Status").text("NOT OK. " + hlt_bad.concat(hlt_warn).join(", "));
+  $("#HLT-Status").css({"color": "red"});
+  HLT_status = 1;
+}
+else if (hlt_warn.length > 0) {
+  $("#HLT-Status").text("WARNING. " + hlt_warn.join(", "));
+  $("#HLT-Status").css({"color": "orange"});
+}
+else {
+  $("#HLT-Status").text("OK");
+  $("#HLT-Status").css({"color": "green"});
+}
+
+// For audible alarm
+document.getElementById("HLTValue").setAttribute("HLT-value", HLT_status);
 
 
 //CRTs
