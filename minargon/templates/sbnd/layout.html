@@ -87,7 +87,7 @@
             {% endif %}
         {%- endmacro %}
         <nav class="navbar navbar-expand-md bg-maroon navbar-dark fixed-top">
-          <a class="navbar-brand" href="{{ url_for('index') }}">
+          <a class="navbar-brand" href="{{ url_for('introduction') }}">
             <img src="{{ url_for('static', filename='images/SBND-color.png') }}" width="30" height="30" class="d-inline-block align-top" alt="">
             &nbsp;SBND Monitoring
           </a>
@@ -138,6 +138,16 @@
 						  </li>
 
               <li class='dropdown nav-item'>
+							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>X-ARAPUCA<b class='caret'></b></a>
+						    <ul class='dropdown-menu bg-maroon'>
+									{{ nav_link('XARAPUCA_status', 'Status') }}
+									{{ nav_link('XARAPUCA', 'APSAIA Metrics', group='APSAIA') }}
+									{{ nav_link('XARAPUCA', 'ARARA Metrics', group='ARARA') }}
+									{{ nav_link('XARAPUCA_snapshot', 'Waveforms') }}
+								</ul>
+						  </li>
+
+              <li class='dropdown nav-item'>
 				   <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
 				   <ul class='dropdown-menu bg-maroon'>  
 				  		{{ nav_link('PTB_status', 'Status') }}
@@ -164,6 +174,7 @@
                 </ul>
               </li>
               {{ nav_link('Trigger_Board_Monitor', 'Trigger Board') }}
+              {{ nav_link('hlt_gate_count', 'HLT Gate Count') }}
             </ul>
           </li>
 

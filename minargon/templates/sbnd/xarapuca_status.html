@@ -1,0 +1,170 @@
+{% extends "layout.html" | front_ended %}
+{% block title %}X-ARAPUCA Alarms{% endblock %}
+{% block body %}
+{{ super() }}
+<div class="container">
+
+{% if eventmeta_key %}
+<div class="row">
+<table class="hcenter" style="width: 50%; text-align: center;">
+  <tr>
+    <th>Run: <span id="run-number"></span></th>
+    <th>Subrun: <span id="subrun-number"></span></th>
+    <th>Event: <span id="event-number"></span></th>
+    <th>Timestamp: <span id="timestamp"></span></th>
+  </tr>
+</table>
+</div>
+{% endif %}
+
+<div class="row">
+<h4 class="hcenter">
+Limits on baseline are between {{baseline_min}} and {{baseline_max}}.
+Limits on rms are between {{rms_min}} and {{rms_max}}.
+</h4>
+</div>
+<br>
+
+<div class="row">
+{% for group in groups %}
+  <div class="col-lg-6 col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h4 style="margin: 0;">{{ group.label }}</h4>
+        <small id="xara-count-{{ loop.index0 }}">Waiting for data...</small>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <table class="table table-striped" id="xara-table-{{ loop.index0 }}" style="margin: 0;">
+          <thead>
+            <tr>
+              <th> Bad Channels </th>
+              <th> RMS </th>
+              <th> Baseline </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+</div>
+
+</div>
+{%endblock%}
+{% block script %}
+<script defer type="module">
+import * as Config from "{{ url_for('static', filename='js/minargon/config.js') }}";
+import * as Data from "{{ url_for('static', filename='js/minargon/Data.js') }}";
+import * as Poll from "{{ url_for('static', filename='js/minargon/poll.js') }}";
+
+var board_slots = {{ board_slots|tojson }};
+var channels_per_board = {{ channels_per_board }};
+var snapshot_url = "{{ url_for('XARAPUCA_snapshot') }}";
+
+// setup the poll for each group (APSAIA, ARARA)
+{% for group in groups %}
+{
+  const table_id = "#xara-table-{{ loop.index0 }}";
+  const count_id = "#xara-count-{{ loop.index0 }}";
+  const channels = {{ group.channels|tojson }};
+  const group_config = {{ group.config|tojson|safe }};
+
+  // Setup the config
+  const config_controller = new Config.GroupConfigController(group_config, undefined, ["rms", "baseline"], channels, 0, 25);
+
+  // Use the config to get the DataLink
+  const data_link = config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+
+  // Turn that DataLink into a DataBuffer
+  const group_poll = new Data.D3DataPoll(data_link, 60*1000 /* 1 minute */);
+  const buffer = new Data.D3DataBuffer(group_poll, 5, [
+    function(data) {
+      var rms_data = data.slice(0, channels.length);
+      var baseline_data = data.slice(channels.length);
+
+      var baselines = [];
+      var rmss = [];
+      var isbad = [];
+      var n_reporting = 0;
+
+      for (var i = 0; i < channels.length; i++) {
+        var this_baseline_data = baseline_data[i];
+        var baseline = 0.;
+        for (var j = 0; j < this_baseline_data.size; j++) {
+          baseline = baseline + this_baseline_data.get(j)[1] / this_baseline_data.size;
+        }
+
+        var this_rms_data = rms_data[i];
+        var rms = 0.;
+        for (var j = 0; j < this_rms_data.size; j++) {
+          rms = rms + this_rms_data.get(j)[1] / this_rms_data.size;
+        }
+
+        baselines.push(baseline);
+        rmss.push(rms);
+
+        var has_data = this_rms_data.size > 0;
+        if (has_data) n_reporting += 1;
+
+        var bad = has_data && ( (baseline < {{ baseline_min }}) || (baseline > {{ baseline_max }}) || (rms < {{ rms_min }}) || (rms > {{ rms_max }}) );
+        if (bad) {
+          isbad.push(i);
+        }
+      }
+
+      var table_html = `
+        <thead>
+        <tr>
+          <th> Bad Channels </th>
+          <th> RMS </th>
+          <th> Baseline </th>
+        </tr>
+        </thead>
+        <tbody>`;
+
+      var cred = 'style="background-color: red"';
+      for (var i = 0; i < isbad.length; i++) {
+        var ind = isbad[i];
+        var ch = channels[ind];
+        var slot = board_slots[Math.floor(ch / channels_per_board)];
+        var board_ch = ch % channels_per_board;
+
+        table_html += `
+          <tr>
+            <th ` + cred + `><a href="` + snapshot_url + `?channel=` + ch + `">` + ch + `</a> <small>(slot ` + slot + `, ch ` + board_ch + `)</small></th>
+            <td>` + rmss[ind].toFixed(2) + `</td>
+            <td>` + baselines[ind].toFixed(2) + `</td>
+          </tr>`;
+      }
+
+      if (n_reporting == 0) {
+        table_html += `<tr><td colspan="3">No data received for this group. Check that the X-ARAPUCA monitor is running and publishing to Redis.</td></tr>`;
+      } else if (isbad.length == 0) {
+        table_html += `<tr><td colspan="3">No bad channels.</td></tr>`;
+      }
+      table_html += "</tbody>";
+
+      $(table_id).html(table_html);
+      $(count_id).html(isbad.length + " flagged, " + n_reporting + " of " + channels.length + " channels reporting");
+    }
+  ]);
+
+  buffer.start();
+}
+{% endfor %}
+
+{% if eventmeta_key %}
+var poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/{{eventmeta_key}}/run,subrun,event,time");
+poll.add_callback(function(data) {
+    $("#run-number").html(data.run);
+    $("#subrun-number").html(data.subrun);
+    $("#event-number").html(data.event);
+    var time = moment(new Date(parseInt(data.time)));
+    $("#timestamp").html(time.format("MM/DD HH:mm:ss"));
+});
+poll.run();
+{% endif %}
+
+</script>
+{% endblock %}
