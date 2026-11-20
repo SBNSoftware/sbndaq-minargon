@@ -128,12 +128,15 @@ def pvTree(connection):
 def pvTree_cryo(connection):
     return render_template('common/pvTree_cryo.html', data=ignition_api.pv_internal(connection, "pv_single_stream", front_end_abort=True))
 
-def timeseries_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None, db="online"):
+def timeseries_view(args, instance_name, view_ident="", link_function="undefined", eventmeta_key=None, hw_select=None, db="online", channels=None, config_hook=None):
     # TODO: what to do with this?
     initial_datum = args.get('data', None)
-    
+
     # get the config for this group from redis
     config = online_metrics.get_group_config(db, instance_name, front_end_abort=True)
+    # optionally let the caller adjust the config (e.g. override metric display ranges)
+    if config_hook is not None:
+        config = config_hook(config)
     if initial_datum is None:
         if len(config["metric_list"]) > 0:
             initial_datum = config["metric_list"][0]
@@ -149,7 +152,10 @@ def timeseries_view(args, instance_name, view_ident="", link_function="undefined
         if channel_map is None:
             channel_map = "undefined"
     else:
-        channels = "undefined"
+        # an explicit channel list restricts the view to those instances;
+        # otherwise every instance in the redis group config is shown
+        if channels is None:
+            channels = "undefined"
         channel_map = "undefined"
 
     # setup the title

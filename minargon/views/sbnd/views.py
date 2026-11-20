@@ -48,6 +48,40 @@ NOISY_SHORT_CH = sorted([3048, 4405])
 PMTS = ["PMT"]
 PMT_CHANNELS = [list(range(126))]
 
+# X-ARAPUCA (CAEN V1740B, 64 channels per board).
+# Channel ids are the contiguous ids written to Redis by CAENV1740StreamsSBND:
+#   channel = boardIndex*64 + board_channel, boardIndex = position of the slot in XARAPUCA_BOARD_SLOTS.
+# Redis groups are per board: APSAIA = slot 7, ARARA = slots 13, 16, 19.
+# Only the first 32 APSAIA channels (0-31) are displayed; ARARA shows all of its channels.
+XARAPUCA_BOARD_SLOTS = [7, 13, 16, 19]
+XARAPUCA_CHANNELS_PER_BOARD = 64
+XARAPUCAS = ["APSAIA", "ARARA"]
+XARAPUCA_CHANNELS = [list(range(0, 32)), list(range(64, 256))]
+# Plot display ranges per group and metric, overriding the display_range in the Redis group
+# config (which comes from the fcl). A group or metric not listed here keeps the fcl range.
+XARAPUCA_DISPLAY_RANGES = {
+  "APSAIA": {
+    "baseline": [0, 1000],
+    "rms": [0, 2],
+  },
+  "ARARA": {
+    "baseline": [3300, 3700],
+    "rms": [0, 2],
+  },
+}
+
+def xarapuca_apply_display_ranges(config):
+    group_ranges = XARAPUCA_DISPLAY_RANGES.get(config.get("group"), {})
+    for metric, display_range in group_ranges.items():
+        if metric in config["metric_config"]:
+            config["metric_config"][metric]["display_range"] = list(display_range)
+    return config
+
+XARAPUCA_LABELS = {
+  "APSAIA": "APSAIA - slot 7, channels 0-31",
+  "ARARA": "ARARA - slots 13, 16, 19, channels 64-255",
+}
+
 CRT_MAPS = {
 "North Wall": sorted([88, 152, 156, 153, 159, 134, 135, 238, 155, 151, 150, 136, 157, 158, 182, 149, 73, 58]),
 "South Wall": sorted([60, 56, 169, 166, 24, 57, 33, 34, 61, 171, 59, 176, 170, 168, 172, 173]),
@@ -141,6 +175,14 @@ PMT_RMS_ALARM_MAX = 3.2
 
 PMT_BASELINE_ALARM_MIN = 14230
 PMT_BASELINE_ALARM_MAX = 14270
+
+# TODO(TUNE): placeholder X-ARAPUCA alarm limits. They span the full V1740B range
+# (12-bit, 0-4095 ADC), so nothing alarms until real limits are chosen.
+XARAPUCA_RMS_ALARM_MIN = 0.
+XARAPUCA_RMS_ALARM_MAX = 50.
+
+XARAPUCA_BASELINE_ALARM_MIN = 0
+XARAPUCA_BASELINE_ALARM_MAX = 4095
 
 TPC_RMS_ALARM_MAX = 15
 
@@ -674,6 +716,66 @@ def PMT_snapshot():
       "view_ind_opts": {"PMT": PMT_CHANNELS},
     }
     return render_template("sbnd/pmt_snapshot.html", **template_args)
+
+# X-ARAPUCAs
+@app.route('/XARAPUCA_status')
+def XARAPUCA_status():
+    # one entry per Redis group (APSAIA, ARARA), each with its own config
+    groups = []
+    for name, channels in zip(XARAPUCAS, XARAPUCA_CHANNELS):
+        groups.append({
+          "name": name,
+          "label": XARAPUCA_LABELS[name],
+          "channels": channels,
+          "config": online_metrics.get_group_config("online", name, front_end_abort=True),
+        })
+
+    render_args = {
+      "groups": groups,
+      "board_slots": XARAPUCA_BOARD_SLOTS,
+      "channels_per_board": XARAPUCA_CHANNELS_PER_BOARD,
+      "rms_min": XARAPUCA_RMS_ALARM_MIN,
+      "rms_max": XARAPUCA_RMS_ALARM_MAX,
+      "baseline_min": XARAPUCA_BASELINE_ALARM_MIN,
+      "baseline_max": XARAPUCA_BASELINE_ALARM_MAX,
+      "eventmeta_key": EVENTMETA_KEY
+    }
+    return render_template('sbnd/xarapuca_status.html', **render_args)
+
+@app.route('/XARAPUCA/<group>')
+def XARAPUCA(group):
+    if group not in XARAPUCAS:
+        abort(404)
+    channels = XARAPUCA_CHANNELS[XARAPUCAS.index(group)]
+    return timeseries_view(request.args, group, "", "xaraLink", channels=channels,
+                           config_hook=xarapuca_apply_display_ranges)
+
+@app.route('/XARAPUCA_snapshot')
+def XARAPUCA_snapshot():
+    this_channel = request.args.get("channel", 0, type=int)
+
+    # the group is determined by the channel number
+    group = None
+    for name, channels in zip(XARAPUCAS, XARAPUCA_CHANNELS):
+        if this_channel in channels:
+            group = name
+    if group is None:
+        abort(404)
+
+    config = xarapuca_apply_display_ranges(
+        online_metrics.get_group_config("online", group, front_end_abort=True))
+
+    board_index = this_channel // XARAPUCA_CHANNELS_PER_BOARD
+    template_args = {
+      "channel": this_channel,
+      "group": group,
+      "label": XARAPUCA_LABELS[group],
+      "slot": XARAPUCA_BOARD_SLOTS[board_index],
+      "board_channel": this_channel % XARAPUCA_CHANNELS_PER_BOARD,
+      "config": config,
+      "view_ind": {"channel": this_channel},
+    }
+    return render_template("sbnd/xarapuca_snapshot.html", **template_args)
 
 # Penn Trigger Board
 @app.route('/PTB_status')

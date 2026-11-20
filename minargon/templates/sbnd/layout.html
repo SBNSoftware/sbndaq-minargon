@@ -138,6 +138,16 @@
 						  </li>
 
               <li class='dropdown nav-item'>
+							<a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>X-ARAPUCA<b class='caret'></b></a>
+						    <ul class='dropdown-menu bg-maroon'>
+									{{ nav_link('XARAPUCA_status', 'Status') }}
+									{{ nav_link('XARAPUCA', 'APSAIA Metrics', group='APSAIA') }}
+									{{ nav_link('XARAPUCA', 'ARARA Metrics', group='ARARA') }}
+									{{ nav_link('XARAPUCA_snapshot', 'Waveforms') }}
+								</ul>
+						  </li>
+
+              <li class='dropdown nav-item'>
 				   <a href='#' class='nav-link dropdown-toggle' data-toggle='dropdown'>Trigger<b class='caret'></b></a>
 				   <ul class='dropdown-menu bg-maroon'>  
 				  		{{ nav_link('PTB_status', 'Status') }}
