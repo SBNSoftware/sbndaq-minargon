@@ -1,8 +1,4 @@
 """HLT2/HLT4 gate count helpers.
-
-Public API:
-    get_hlt_p_values() -> {hlt_id: p or None}      (introduction page)
-    get_hlt_images()   -> {hlt_id: base64 JPEG}    (hlt_gate_count page)
 """
 from __future__ import absolute_import
 
@@ -21,9 +17,8 @@ HLT_STREAMS = {
     2: 'HLT_ID:2:HLT_gate_count:nozero',
     4: 'HLT_ID:4:HLT_gate_count:nozero',
 }
-HLT_WINDOW_S = {2: 24 * 3600, 4: 2 * 24 * 3600}   # time window used for each HLT
-HLT_MIN_N = 30                                    # minimum number of gates to trust the MLE
-HLT_N_DATA = 1000                                 # entries read from Redis per stream
+HLT_WINDOW_S = {2: 24 * 3600, 4: 2 * 24 * 3600}                                     
+HLT_N_DATA = 1000                                 
 
 
 # ----------------------------------------------------------------------------
@@ -50,10 +45,10 @@ def _fetch_values():
 def _mle(values):
     """MLE of p and its error for P(X=k) = p(1-p)^(k-1). Returns (None, None) if empty."""
     if len(values) == 0:
-        return None, None
+        return None, None, 0
     p = 1.0 / np.mean(values)
     err = p * np.sqrt((1 - p) / len(values))
-    return float(p), float(err)
+    return float(p), float(err), len(values)
 
 
 def _plot(values, hlt_id):
@@ -67,12 +62,12 @@ def _plot(values, hlt_id):
 
     fig, ax = plt.subplots(figsize=(8, 4))
     try:
-        p, err = _mle(values)
+        p, err, n = _mle(values)
         if p is not None:
             pk = p * (1 - p) ** (bin_centers - 1)
             label = r'$p(1-p)^{{k-1}}$ | p=${:.3f} \pm {:.3f}$'.format(p, err) #for python 2.7
             ax.plot(bin_centers, pk, lw=1, color='red', label=label)
-            ax.hist(values, bins=bins, density=True, label='Data (N=%d)' % len(values))
+            ax.hist(values, bins=bins, density=True, label='Data (N=%d)' % n)
             ax.legend()
         else:
             ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
@@ -93,19 +88,23 @@ def _plot(values, hlt_id):
 # Main functions
 # ----------------------------------------------------------------------------
 def get_hlt_p_values():
-    """Return {hlt_id: p} for each stream; p is None if there is no data, too few gates (< HLT_MIN_N) or Redis fails."""
+    """Return ({hlt_id: p}, {hlt_id: n}) for each stream.
+
+    p is None and n is 0 if there is no data or Redis fails.
+    """
     try:
         values = _fetch_values()
     except Exception:
-        return {hlt_id: None for hlt_id in HLT_STREAMS}
+        return ({hlt_id: None for hlt_id in HLT_STREAMS},
+                {hlt_id: 0 for hlt_id in HLT_STREAMS})
 
-    out = {}
+    out_p = {}
+    out_entries = {}
     for hlt_id in HLT_STREAMS:
-        p = None
-        if len(values[hlt_id]) >= HLT_MIN_N:
-            p, _ = _mle(values[hlt_id])
-        out[hlt_id] = p
-    return out
+        p, _, n = _mle(values[hlt_id])
+        out_p[hlt_id] = p
+        out_entries[hlt_id] = n
+    return out_p, out_entries
 
 
 def get_hlt_images():
