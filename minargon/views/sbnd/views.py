@@ -288,6 +288,7 @@ XARAPUCA_ALARM_LIMITS = {
       (13, 44): {"rms": [0.85, 1.1]},    # minargon channel 108: lower limit 0.85
       (13, 58): {"rms": [0.9, 1.15]},    # minargon channel 122: upper limit 1.15
       (19, 49): {"rms": [0.9, 1.15]},    # minargon channel 241: upper limit 1.15
+      (19, 29): {"rms": [0.85, 1.1]},    # minargon channel 221: lower limit 0.85
 
       # empty channels, never alarm (minargon channel in the comment)
       (13, 55): {"ignore": True, "reason": "empty channel"},   # 119
