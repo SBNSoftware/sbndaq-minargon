@@ -1073,11 +1073,12 @@ var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
 
 //PMTs
 var baseline_sum = 0;
-var BAD_PMTS = new Set();
+var PMT_DISCONNECTED = false;   // set by the PMT metadata freshness check at the bottom of this script
 var pmt_config = {{pmt_config|tojson|safe}};
 
 {% for pmt in pmts %}
   {% set pmt_channels = pmt_channels[loop.index0]|tojson %}
+  {% set pmt_group_limits = pmt_limits[loop.index0]|tojson %}
   {
   var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefined, ["rms", "baseline"], {{pmt_channels}}, 0, 25, "", undefined, undefined);
   var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
@@ -1086,6 +1087,8 @@ var pmt_config = {{pmt_config|tojson|safe}};
     function(data) {
       var badPMTs = [];
       var pmt_channels = {{pmt_channels}};
+      // per-channel alarm limits, same order as pmt_channels: {ignore, baseline: [lo, hi], rms: [lo, hi]}
+      var pmt_channel_limits = {{pmt_group_limits}};
       var rms_data = data.slice(0, pmt_channels.length);
       var baseline_data = data.slice(pmt_channels.length);
 
@@ -1112,20 +1115,31 @@ var pmt_config = {{pmt_config|tojson|safe}};
         rmss.push(rms);
         baseline_sum += baseline;
 
-        var bad = (this_rms_data.size > 0) && ( (baseline < {{pmt_baseline_min}}) || (baseline > {{pmt_baseline_max}}) || (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}));
-        
-        if (bad && i < 120)  { // only 120 channels, the rest above are clock channels
-          badPMTs.push(i);
+        // ignored channels (for example the clock channels) are never flagged
+        var lim = pmt_channel_limits[i];
+        var bad = (this_rms_data.size > 0) && !lim.ignore && (
+          (baseline < lim.baseline[0]) || (baseline > lim.baseline[1]) ||
+          (rms < lim.rms[0]) || (rms > lim.rms[1]) );
+
+        if (bad) {
+          badPMTs.push(pmt_channels[i]);
         }
       }
 
-      if (baseline_sum == 0){
+      if (PMT_DISCONNECTED) {
+        return;   // the freshness check has marked the feed as disconnected, so don't overwrite that
+      }
+      else if (baseline_sum == 0){
         $("#PMT-Status").text("NO DATA");
         $("#PMT-Status").css({"color": "orange"});
       }
-      else if (BAD_PMTS.size > 0) {
-        let bad_pmts_str = "NOT OK. Bad boards: " + Array.from(BAD_PMTS).join(" ");
-        $("#PMT-Status").html(bad_pmts_str);
+      else if (badPMTs.length > 0) {
+        let n_shown = 6;
+        let bad_pmts_str = "NOT OK. Bad channels: " + badPMTs.slice(0, n_shown).join(" ");
+        if (badPMTs.length > n_shown) {
+          bad_pmts_str += " +" + (badPMTs.length - n_shown) + " more";
+        }
+        $("#PMT-Status").text(bad_pmts_str);
         $("#PMT-Status").css({"color": "orange"});
       }
       else {
@@ -1338,8 +1352,12 @@ poll.add_callback(function(data) {
     //}
     $("#run-number").html(data.run);
     $("#timestamp").html(PMTtime.format("MM/DD HH:mm:ss"));
-    var dqm_recent = is_recent(time, 300*1000);
-    var delta = (time_delta(time) / 1000.).toFixed(0);
+    if (!PMTtime.isValid()) {
+      return;   // no PMT metadata, so say nothing about freshness
+    }
+    var dqm_recent = is_recent(PMTtime, 300*1000);
+    var delta = (time_delta(PMTtime) / 1000.).toFixed(0);
+    PMT_DISCONNECTED = !dqm_recent;
     if (!dqm_recent) {
       $("#PMT-Status").text("Disconnected (" + delta + "s)");
       $("#PMT-Status").css({"color": "orange"});
