@@ -305,7 +305,7 @@ def introduction():
             continue
 
     #HLT gate counts
-    hlt_gc_values = get_hlt_p_values()
+    hlt_gc_values, hlt_gc_entries = get_hlt_p_values()
     hlt_2_hi = 0
     hlt_2_hihi = 0
     hlt_2_lo = 0
@@ -314,22 +314,26 @@ def introduction():
     hlt_4_hihi = 0
     hlt_4_lo = 0
     hlt_4_lolo = 0
-    if (hlt_gc_values[2] < hlt2_LOLO):
-        hlt_2_lolo = 1
-    if (hlt_gc_values[2] < hlt2_LO):
-        hlt_2_lo = 1
-    if (hlt_gc_values[2] > hlt2_HIHI):
-        hlt_2_hihi = 1
-    if (hlt_gc_values[2] > hlt2_HI):
-        hlt_2_hi = 1
-    if (hlt_gc_values[4] < hlt4_LOLO):
-        hlt_4_lolo = 1
-    if (hlt_gc_values[4] < hlt4_LO):
-        hlt_4_lo = 1
-    if (hlt_gc_values[4] > hlt4_HIHI):
-        hlt_4_hihi = 1
-    if (hlt_gc_values[4] > hlt4_HI):
-        hlt_4_hi = 1
+
+    if hlt_gc_entries[2] >= 30:
+        if (hlt_gc_values[2] < hlt2_LOLO):
+            hlt_2_lolo = 1
+        if (hlt_gc_values[2] < hlt2_LO):
+            hlt_2_lo = 1
+        if (hlt_gc_values[2] > hlt2_HIHI):
+            hlt_2_hihi = 1
+        if (hlt_gc_values[2] > hlt2_HI):
+            hlt_2_hi = 1
+
+    if hlt_gc_entries[4] >= 30:
+        if (hlt_gc_values[4] < hlt4_LOLO):
+            hlt_4_lolo = 1
+        if (hlt_gc_values[4] < hlt4_LO):
+            hlt_4_lo = 1
+        if (hlt_gc_values[4] > hlt4_HIHI):
+            hlt_4_hihi = 1
+        if (hlt_gc_values[4] > hlt4_HI):
+            hlt_4_hi = 1
 
 
     # crts
