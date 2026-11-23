@@ -17,12 +17,6 @@
 </div>
 {% endif %}
 
-<div class="row">
-<h4 class="hcenter">
-Limits on baseline are between {{baseline_min}} and {{baseline_max}}.
-Limits on rms are between {{rms_min}} and {{rms_max}}.
-</h4>
-</div>
 <br>
 
 <div class="row">
@@ -31,6 +25,8 @@ Limits on rms are between {{rms_min}} and {{rms_max}}.
     <div class="card">
       <div class="card-header">
         <h4 style="margin: 0;">{{ group.label }}</h4>
+        <div><small>Default limits: baseline {{ group.default_limits.baseline[0] }} - {{ group.default_limits.baseline[1] }},
+          rms {{ group.default_limits.rms[0] }} - {{ group.default_limits.rms[1] }}</small></div>
         <small id="xara-count-{{ loop.index0 }}">Waiting for data...</small>
       </div>
       <div class="card-body" style="padding: 0;">
@@ -40,10 +36,46 @@ Limits on rms are between {{rms_min}} and {{rms_max}}.
               <th> Bad Channels </th>
               <th> RMS </th>
               <th> Baseline </th>
+              <th> Alarming </th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
+      </div>
+      <div class="card-footer">
+        {% if group.custom or group.ignored %}
+        <details>
+          <summary style="cursor: pointer;"><small><strong>Channel exceptions</strong>
+            ({{ group.custom|length }} custom limits, {{ group.ignored|length }} ignored)</small></summary>
+        {% if group.custom %}
+        <div><small><strong>Custom limits:</strong></small></div>
+        <ul style="margin: 0 0 0.5rem 0; padding-left: 1.5rem;">
+          {% for item in group.custom %}
+          <li><small>{{ item }}</small></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if group.ignored %}
+        <div><small><strong>Ignored (never alarm):</strong></small></div>
+        <ul style="margin: 0 0 0.5rem 0; padding-left: 1.5rem;">
+          {% for item in group.ignored %}
+          <li><small>{{ item }}</small></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        </details>
+        {% endif %}
+        {% if group.unrecognized %}
+        <div class="text-danger"><small><strong>Unrecognized exceptions (check XARAPUCA_ALARM_LIMITS in views.py):</strong></small></div>
+        <ul class="text-danger" style="margin: 0 0 0.5rem 0; padding-left: 1.5rem;">
+          {% for item in group.unrecognized %}
+          <li><small>{{ item }}</small></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if not (group.custom or group.ignored or group.unrecognized) %}
+        <div><small>No channel exceptions.</small></div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -68,6 +100,8 @@ var snapshot_url = "{{ url_for('XARAPUCA_snapshot') }}";
   const table_id = "#xara-table-{{ loop.index0 }}";
   const count_id = "#xara-count-{{ loop.index0 }}";
   const channels = {{ group.channels|tojson }};
+  // per-channel alarm limits, same order as channels: {ignore, baseline: [lo, hi], rms: [lo, hi]}
+  const limits = {{ group.limits|tojson }};
   const group_config = {{ group.config|tojson|safe }};
 
   // Setup the config
@@ -86,6 +120,8 @@ var snapshot_url = "{{ url_for('XARAPUCA_snapshot') }}";
       var baselines = [];
       var rmss = [];
       var isbad = [];
+      var baseline_alarm = [];   // parallel to channels: is the baseline out of its limits?
+      var rms_alarm = [];        // parallel to channels: is the rms out of its limits?
       var n_reporting = 0;
 
       for (var i = 0; i < channels.length; i++) {
@@ -107,8 +143,12 @@ var snapshot_url = "{{ url_for('XARAPUCA_snapshot') }}";
         var has_data = this_rms_data.size > 0;
         if (has_data) n_reporting += 1;
 
-        var bad = has_data && ( (baseline < {{ baseline_min }}) || (baseline > {{ baseline_max }}) || (rms < {{ rms_min }}) || (rms > {{ rms_max }}) );
-        if (bad) {
+        var lim = limits[i];
+        var bad_baseline = has_data && !lim.ignore && ( (baseline < lim.baseline[0]) || (baseline > lim.baseline[1]) );
+        var bad_rms = has_data && !lim.ignore && ( (rms < lim.rms[0]) || (rms > lim.rms[1]) );
+        baseline_alarm.push(bad_baseline);
+        rms_alarm.push(bad_rms);
+        if (bad_baseline || bad_rms) {
           isbad.push(i);
         }
       }
@@ -119,29 +159,37 @@ var snapshot_url = "{{ url_for('XARAPUCA_snapshot') }}";
           <th> Bad Channels </th>
           <th> RMS </th>
           <th> Baseline </th>
+          <th> Alarming </th>
         </tr>
         </thead>
         <tbody>`;
 
       var cred = 'style="background-color: red"';
+      var chigh = 'background-color: #f5b7b1; font-weight: bold;';   // highlights the value that is out of limits
       for (var i = 0; i < isbad.length; i++) {
         var ind = isbad[i];
         var ch = channels[ind];
         var slot = board_slots[Math.floor(ch / channels_per_board)];
         var board_ch = ch % channels_per_board;
+        var lim = limits[ind];
+
+        var alarming = (rms_alarm[ind] && baseline_alarm[ind]) ? "RMS + baseline" : (rms_alarm[ind] ? "RMS" : "Baseline");
+        var rms_style = rms_alarm[ind] ? 'style="' + chigh + '"' : '';
+        var baseline_style = baseline_alarm[ind] ? 'style="' + chigh + '"' : '';
 
         table_html += `
           <tr>
             <th ` + cred + `><a href="` + snapshot_url + `?channel=` + ch + `">` + ch + `</a> <small>(slot ` + slot + `, ch ` + board_ch + `)</small></th>
-            <td>` + rmss[ind].toFixed(2) + `</td>
-            <td>` + baselines[ind].toFixed(2) + `</td>
+            <td ` + rms_style + ` title="limits: ` + lim.rms[0] + ` - ` + lim.rms[1] + `">` + rmss[ind].toFixed(2) + `</td>
+            <td ` + baseline_style + ` title="limits: ` + lim.baseline[0] + ` - ` + lim.baseline[1] + `">` + baselines[ind].toFixed(2) + `</td>
+            <td><strong>` + alarming + `</strong></td>
           </tr>`;
       }
 
       if (n_reporting == 0) {
-        table_html += `<tr><td colspan="3">No data received for this group. Check that the X-ARAPUCA monitor is running and publishing to Redis.</td></tr>`;
+        table_html += `<tr><td colspan="4">No data received for this group. Check that the X-ARAPUCA monitor is running and publishing to Redis.</td></tr>`;
       } else if (isbad.length == 0) {
-        table_html += `<tr><td colspan="3">No bad channels.</td></tr>`;
+        table_html += `<tr><td colspan="4">No bad channels.</td></tr>`;
       }
       table_html += "</tbody>";
 

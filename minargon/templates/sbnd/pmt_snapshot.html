@@ -32,6 +32,22 @@
         <div id="fft"></div>
     </div>
     </div>
+<div class="row">
+    <div class="col-lg-8 col-md-12 order-1" style="padding:0">
+        <div id="baseline-time"></div>
+        <div id="rms-time"></div>
+    </div>
+    <div class="col-lg-4 col-md-8 col-sm-12 order-2 hcenter">
+        <div class="card">
+            <div class="card-header">Baseline / RMS Time Range</div>
+            <div class="card-body">
+                <form class="form" role="form">
+                    {{ stream_options.time_range("start", "end", "toggle") }}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 {%endblock%}
 {% block script %}
@@ -55,6 +71,26 @@ var cubism = config_controller.addCubismController("#timeseries", 25)
   .set();
 
 config_controller.runAll();
+
+// Baseline and rms over time for this channel, as two plots that share one time range control
+// (the card above the script). Each plot has its own controller with the metric fixed, and it
+// follows the stream dropdown. The y-axis uses the metric's display range.
+function add_time_plot(metric, target) {
+  if (!(metric in config.metric_config)) {
+    return;   // this metric is not published for the group
+  }
+  var time_controller = new Config.GroupConfigController(config, undefined, [metric], [{{channel}}], 0)
+      .streamController("#form-stream");
+  var time_plot = time_controller.addPlotlyController(target)
+      .timeRangeController("#start", "#end", "#toggle");
+  var display_range = config.metric_config[metric].display_range;
+  if (display_range) {   // skip when the metric has no display range
+    time_plot.setYRanges([display_range]);
+  }
+  time_controller.runAll();
+}
+add_time_plot("baseline", "baseline-time");
+add_time_plot("rms", "rms-time");
 
 
 </script> 

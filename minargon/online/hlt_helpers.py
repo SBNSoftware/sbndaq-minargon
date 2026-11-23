@@ -65,7 +65,7 @@ def _plot(values, hlt_id):
         p, err, n = _mle(values)
         if p is not None:
             pk = p * (1 - p) ** (bin_centers - 1)
-            label = r'$p(1-p)^{k-1}$ | p=$%.3f \pm %.3f$' % (p, err)
+            label = r'$p(1-p)^{{k-1}}$ | p=${:.3f} \pm {:.3f}$'.format(p, err) #for python 2.7
             ax.plot(bin_centers, pk, lw=1, color='red', label=label)
             ax.hist(values, bins=bins, density=True, label='Data (N=%d)' % n)
             ax.legend()

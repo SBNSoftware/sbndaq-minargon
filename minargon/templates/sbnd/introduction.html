@@ -152,7 +152,7 @@
             }
 
 	    //delete the following line when resetting the alarm
-            // alarmReason = "Alarm is manually disabled while TPC is off.";
+            //alarmReason = "Alarm is manually disabled while TPC is off.";
 
             localStorage.setItem("alarmReason", alarmReason);
             alarmReasonElement.textContent = alarmReason;
@@ -499,6 +499,10 @@
   <tr>
     <th style="width: 31%;"><a href="{{url_for('PMT_status')}}">PMT Status:</a></th>
     <th><span id="PMT-Status"> </span></th>
+  </tr>
+  <tr>
+    <th style="width: 31%;"><a href="{{url_for('XARAPUCA_status')}}">X-ARAPUCA Status:</a></th>
+    <th><span id="XARAPUCA-Status"> </span></th>
   </tr>
   <tr>
     <th style="width: 31%;"><a href="{{url_for('CRT_status')}}">CRT Status:</a></th>
@@ -1110,11 +1114,12 @@ var OFF_CRT_FEBS = new Set(crt_off_febs_list.map(Number));
 
 //PMTs
 var baseline_sum = 0;
-var BAD_PMTS = new Set();
+var PMT_DISCONNECTED = false;   // set by the PMT metadata freshness check at the bottom of this script
 var pmt_config = {{pmt_config|tojson|safe}};
 
 {% for pmt in pmts %}
   {% set pmt_channels = pmt_channels[loop.index0]|tojson %}
+  {% set pmt_group_limits = pmt_limits[loop.index0]|tojson %}
   {
   var pmt_config_controller = new Config.GroupConfigController(pmt_config, undefined, ["rms", "baseline"], {{pmt_channels}}, 0, 25, "", undefined, undefined);
   var pmt_data_link = pmt_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
@@ -1123,6 +1128,8 @@ var pmt_config = {{pmt_config|tojson|safe}};
     function(data) {
       var badPMTs = [];
       var pmt_channels = {{pmt_channels}};
+      // per-channel alarm limits, same order as pmt_channels: {ignore, baseline: [lo, hi], rms: [lo, hi]}
+      var pmt_channel_limits = {{pmt_group_limits}};
       var rms_data = data.slice(0, pmt_channels.length);
       var baseline_data = data.slice(pmt_channels.length);
 
@@ -1149,20 +1156,31 @@ var pmt_config = {{pmt_config|tojson|safe}};
         rmss.push(rms);
         baseline_sum += baseline;
 
-        var bad = (this_rms_data.size > 0) && ( (baseline < {{pmt_baseline_min}}) || (baseline > {{pmt_baseline_max}}) || (rms < {{pmt_rms_min}}) || (rms > {{pmt_rms_max}}));
-        
-        if (bad && i < 120)  { // only 120 channels, the rest above are clock channels
-          badPMTs.push(i);
+        // ignored channels (for example the clock channels) are never flagged
+        var lim = pmt_channel_limits[i];
+        var bad = (this_rms_data.size > 0) && !lim.ignore && (
+          (baseline < lim.baseline[0]) || (baseline > lim.baseline[1]) ||
+          (rms < lim.rms[0]) || (rms > lim.rms[1]) );
+
+        if (bad) {
+          badPMTs.push(pmt_channels[i]);
         }
       }
 
-      if (baseline_sum == 0){
+      if (PMT_DISCONNECTED) {
+        return;   // the freshness check has marked the feed as disconnected, so don't overwrite that
+      }
+      else if (baseline_sum == 0){
         $("#PMT-Status").text("NO DATA");
         $("#PMT-Status").css({"color": "orange"});
       }
-      else if (BAD_PMTS.size > 0) {
-        let bad_pmts_str = "NOT OK. Bad boards: " + Array.from(BAD_PMTS).join(" ");
-        $("#PMT-Status").html(bad_pmts_str);
+      else if (badPMTs.length > 0) {
+        let n_shown = 6;
+        let bad_pmts_str = "NOT OK. Bad channels: " + badPMTs.slice(0, n_shown).join(" ");
+        if (badPMTs.length > n_shown) {
+          bad_pmts_str += " +" + (badPMTs.length - n_shown) + " more";
+        }
+        $("#PMT-Status").text(bad_pmts_str);
         $("#PMT-Status").css({"color": "orange"});
       }
       else {
@@ -1174,6 +1192,133 @@ var pmt_config = {{pmt_config|tojson|safe}};
   pmt_buffer.start();
   }
 {% endfor %}
+
+// X-ARAPUCAs: a single status line covering both groups (APSAIA, ARARA). Each group is checked
+// against the same per-channel alarm limits as the X-ARAPUCA status page, including custom limits
+// and ignored channels. The line is OK only when every group has reported and is fine; otherwise
+// it lists the groups that have a problem.
+{
+  const xara_status_id = "#XARAPUCA-Status";
+  // per group: state is "pending" (no data processed yet), "ok", "bad" or "nodata";
+  // detail describes the bad channels; disconnected is null or the age of the monitor metadata in s
+  const xara_groups = {};
+
+  const xara_render = function() {
+    var problems = [];
+    var pending = false;
+    for (var name in xara_groups) {
+      var g = xara_groups[name];
+      if (g.disconnected !== null) {
+        problems.push(name + " Disconnected (" + g.disconnected + "s)");
+      }
+      else if (g.state == "nodata") {
+        problems.push(name + " NO DATA");
+      }
+      else if (g.state == "bad") {
+        problems.push(name + " NOT OK (" + g.detail + ")");
+      }
+      else if (g.state == "pending") {
+        pending = true;
+      }
+    }
+
+    var text;
+    var color;
+    if (problems.length > 0) {
+      text = problems.join("; ");
+      color = "orange";
+    }
+    else if (pending) {
+      text = "Waiting for data...";
+      color = "orange";
+    }
+    else {
+      text = "OK";
+      color = "green";
+    }
+    $(xara_status_id).text(text);
+    $(xara_status_id).css({"color": color});
+  };
+
+{% for group in xarapuca_groups %}
+  {
+    const xara_name = {{ group.name|tojson }};
+    const xara_channels = {{ group.channels|tojson }};
+    const xara_limits = {{ group.limits|tojson }};   // parallel to xara_channels: {ignore, baseline: [lo, hi], rms: [lo, hi]}
+    const xara_config = {{ group.config|tojson|safe }};
+    xara_groups[xara_name] = {state: "pending", detail: "", disconnected: null};
+
+    const xara_config_controller = new Config.GroupConfigController(xara_config, undefined, ["rms", "baseline"], xara_channels, 0, 25, "", undefined, undefined);
+    const xara_data_link = xara_config_controller.data_link(0, ["rms", "baseline"], undefined, 1);
+    const xara_poll = new Data.D3DataPoll(xara_data_link, 60*1000 /* 1 minute */);
+    const xara_buffer = new Data.D3DataBuffer(xara_poll, 1, [
+      function(data) {
+        var rms_data = data.slice(0, xara_channels.length);
+        var baseline_data = data.slice(xara_channels.length);
+
+        var bad_channels = [];
+        var n_reporting = 0;
+
+        for (var i = 0; i < xara_channels.length; i++) {
+          var this_baseline_data = baseline_data[i];
+          var baseline = 0.;
+          for (var j = 0; j < this_baseline_data.size; j++) {
+            baseline = baseline + this_baseline_data.get(j)[1] / this_baseline_data.size;
+          }
+
+          var this_rms_data = rms_data[i];
+          var rms = 0.;
+          for (var j = 0; j < this_rms_data.size; j++) {
+            rms = rms + this_rms_data.get(j)[1] / this_rms_data.size;
+          }
+
+          var has_data = this_rms_data.size > 0;
+          if (has_data) n_reporting += 1;
+
+          var lim = xara_limits[i];
+          var bad = has_data && !lim.ignore && (
+            (baseline < lim.baseline[0]) || (baseline > lim.baseline[1]) ||
+            (rms < lim.rms[0]) || (rms > lim.rms[1]) );
+          if (bad) {
+            bad_channels.push(xara_channels[i]);
+          }
+        }
+
+        var g = xara_groups[xara_name];
+        if (n_reporting == 0) {
+          g.state = "nodata";
+          g.detail = "";
+        }
+        else if (bad_channels.length > 0) {
+          var n_shown = 6;
+          var shown = bad_channels.slice(0, n_shown).join(", ");
+          var more = (bad_channels.length > n_shown) ? " +" + (bad_channels.length - n_shown) + " more" : "";
+          g.state = "bad";
+          g.detail = bad_channels.length + " bad channel" + (bad_channels.length == 1 ? "" : "s") + ": " + shown + more;
+        }
+        else {
+          g.state = "ok";
+          g.detail = "";
+        }
+        xara_render();
+      }
+    ]);
+    xara_buffer.start();
+
+    // check that the monitor is still running: the snapshot event metadata of one channel of this group
+    const xara_meta_poll = new Poll.Poll($SCRIPT_ROOT + "/online/hget/snapshot:waveform:{{ group.name }}:{{ group.meta_channel }}/time");
+    xara_meta_poll.add_callback(function(meta) {
+      var meta_time = parseInt(meta.time);
+      if (isNaN(meta_time)) {
+        return;   // no metadata for this channel, so say nothing about freshness
+      }
+      xara_groups[xara_name].disconnected = is_recent(meta_time, 300*1000) ? null : (time_delta(meta_time) / 1000.).toFixed(0);
+      xara_render();
+    });
+    xara_meta_poll.run();
+  }
+{% endfor %}
+}
 
 // Timing
 var timing_config = {{timing_config|tojson|safe}};
@@ -1248,8 +1393,12 @@ poll.add_callback(function(data) {
     //}
     $("#run-number").html(data.run);
     $("#timestamp").html(PMTtime.format("MM/DD HH:mm:ss"));
-    var dqm_recent = is_recent(time, 300*1000);
-    var delta = (time_delta(time) / 1000.).toFixed(0);
+    if (!PMTtime.isValid()) {
+      return;   // no PMT metadata, so say nothing about freshness
+    }
+    var dqm_recent = is_recent(PMTtime, 300*1000);
+    var delta = (time_delta(PMTtime) / 1000.).toFixed(0);
+    PMT_DISCONNECTED = !dqm_recent;
     if (!dqm_recent) {
       $("#PMT-Status").text("Disconnected (" + delta + "s)");
       $("#PMT-Status").css({"color": "orange"});

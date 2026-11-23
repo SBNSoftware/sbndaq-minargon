@@ -64,7 +64,7 @@ XARAPUCA_CHANNELS = [list(range(0, 32)), list(range(64, 256))]
 XARAPUCA_DISPLAY_RANGES = {
   "APSAIA": {
     "baseline": [0, 1000],
-    "rms": [0, 2],
+    "rms": [0, 3],
   },
   "ARARA": {
     "baseline": [3300, 3700],
@@ -196,13 +196,181 @@ PMT_RMS_ALARM_MAX = 3.2
 PMT_BASELINE_ALARM_MIN = 14230
 PMT_BASELINE_ALARM_MAX = 14270
 
-# TODO(TUNE): placeholder X-ARAPUCA alarm limits. They span the full V1740B range
-# (12-bit, 0-4095 ADC), so nothing alarms until real limits are chosen.
-XARAPUCA_RMS_ALARM_MIN = 0.
-XARAPUCA_RMS_ALARM_MAX = 50.
+# PMT alarm limits for the status page, per group (same structure as XARAPUCA_ALARM_LIMITS,
+# but exceptions are keyed by the PMT channel number).
+#   "default":  limits applied to every channel in the group (the PMT_*_ALARM_* values above).
+#   "channels": exceptions, keyed by PMT channel, e.g. 42. Each is either
+#                 {"ignore": True}                       -> never alarm on this channel, or
+#                 {"baseline": [lo, hi], "rms": [lo, hi]} -> custom limits (list only the ones that
+#                                                            differ; the rest use the default).
+#               An optional "reason" string is shown next to the exception on the status page.
+# The status page lists every exception in the footer so muted channels stay visible.
+# PMTs that are turned off (voltage 0 in proposed_voltage_v2.xlsx). Keys are the DQM ID (the
+# minargon channel number), values are the PMT simulation ID of the proposed voltage table.
+# The mapping comes from PMT_to_Digitizers.pdf.
+PMT_OFF = {
+  2: 71, 15: 39, 29: 64, 49: 87, 50: 86, 51: 141, 53: 115, 55: 85,
+  58: 138, 64: 197, 72: 223, 73: 222, 77: 221, 87: 217, 99: 302, 104: 245,
+}
 
-XARAPUCA_BASELINE_ALARM_MIN = 0
-XARAPUCA_BASELINE_ALARM_MAX = 4095
+PMT_ALARM_LIMITS = {
+  "PMT": {
+    "default": {"baseline": [PMT_BASELINE_ALARM_MIN, PMT_BASELINE_ALARM_MAX],
+                "rms": [PMT_RMS_ALARM_MIN, PMT_RMS_ALARM_MAX]},
+    "channels": dict(
+      # only 120 channels are PMTs, the rest (120-125) are clock channels
+      [(channel, {"ignore": True, "reason": "clock channel"}) for channel in range(120, 126)] +
+      # PMTs that are turned off, never alarm
+      [(channel, {"ignore": True, "reason": "PMT off, sim ID %s" % sim_id}) for channel, sim_id in PMT_OFF.items()] +
+      # channels with different limits (the upper bound stays at the default)
+      [(43, {"rms": [0.6, PMT_RMS_ALARM_MAX]}),
+       (71, {"rms": [0, PMT_RMS_ALARM_MAX]})]
+    ),
+  },
+}
+
+def pmt_alarm_info(group):
+    # Resolve the alarm limits of every channel in the group (same order as PMT_CHANNELS)
+    # plus the lists shown in the status page footer.
+    cfg = PMT_ALARM_LIMITS[group]
+    default = cfg["default"]
+    channels = PMT_CHANNELS[PMTS.index(group)]
+
+    overrides = {}
+    unrecognized = []
+    for channel, exception in cfg["channels"].items():
+        if channel not in channels:
+            unrecognized.append("channel %s (not a PMT channel)" % channel)
+            continue
+        overrides[channel] = exception
+
+    limits = []
+    custom = []
+    ignored = []
+    for channel in channels:
+        exception = overrides.get(channel, {})
+        reason = exception.get("reason")
+        suffix = (" (%s)" % reason) if reason else ""
+        if exception.get("ignore"):
+            ignored.append("channel %s%s" % (channel, suffix))
+        elif channel in overrides:
+            parts = []
+            for metric in ("baseline", "rms"):
+                if metric in exception:
+                    parts.append("%s %s-%s" % (metric, exception[metric][0], exception[metric][1]))
+            custom.append("channel %s: %s%s" % (channel, ", ".join(parts), suffix))
+        limits.append({
+          "ignore": bool(exception.get("ignore")),
+          "baseline": list(exception.get("baseline", default["baseline"])),
+          "rms": list(exception.get("rms", default["rms"])),
+        })
+
+    return {"limits": limits, "default": default, "custom": custom,
+            "ignored": ignored, "unrecognized": unrecognized}
+
+# X-ARAPUCA alarm limits for the status page, per group.
+#   "default":  limits applied to every displayed channel in the group.
+#   "channels": exceptions, keyed by (slot, board_channel), e.g. (13, 40). Each is either
+#                 {"ignore": True}                       -> never alarm on this channel, or
+#                 {"baseline": [lo, hi], "rms": [lo, hi]} -> custom limits (list only the ones that
+#                                                            differ; the rest use the default).
+#               An optional "reason" string is shown next to the exception on the status page.
+# The status page lists every exception in each group's footer so muted channels stay visible.
+XARAPUCA_ALARM_LIMITS = {
+  "APSAIA": {
+    "default": {"baseline": [420, 480], "rms": [0.9, 1.7]},
+    "channels": {
+      # dead channels, never alarm (minargon channel = board channel for slot 7)
+      (7, 4):  {"ignore": True, "reason": "dead channel"},
+      (7, 5):  {"ignore": True, "reason": "dead channel"},
+      (7, 18): {"ignore": True, "reason": "dead channel"},
+
+      # channels with different baseline limits
+      (7, 0):  {"baseline": [390, 480]},   # low limit 390
+      (7, 16): {"baseline": [350, 480]},   # low limit 350
+      (7, 27): {"baseline": [425, 825]},
+
+      # channels with different rms limits
+      (7, 6):  {"rms": [1.8, 2.2]},
+      (7, 7):  {"rms": [1.8, 2.2]},
+      (7, 28): {"rms": [0.8, 1.7]},    # low limit 0.8
+    },
+  },
+  "ARARA": {
+    "default": {"baseline": [3450, 3550], "rms": [0.9, 1.1]},
+    "channels": {
+      # these channels look at the trigger signals, so their rms is different
+      (13, 59): {"rms": [0.35, 0.55], "reason": "trigger signal"},   # minargon channel 123
+      (16, 3):  {"rms": [0.35, 0.55], "reason": "trigger signal"},   # minargon channel 131
+      (19, 3):  {"rms": [0.35, 0.55], "reason": "trigger signal"},   # minargon channel 195
+
+      # channels with one end of the default rms window moved
+      (13, 44): {"rms": [0.85, 1.1]},    # minargon channel 108: lower limit 0.85
+      (13, 58): {"rms": [0.9, 1.15]},    # minargon channel 122: upper limit 1.15
+      (19, 49): {"rms": [0.9, 1.15]},    # minargon channel 241: upper limit 1.15
+      (19, 29): {"rms": [0.85, 1.1]},    # minargon channel 221: lower limit 0.85
+
+      # empty channels, never alarm (minargon channel in the comment)
+      (13, 55): {"ignore": True, "reason": "empty channel"},   # 119
+      (16, 7):  {"ignore": True, "reason": "empty channel"},   # 135
+      (16, 11): {"ignore": True, "reason": "empty channel"},   # 139
+      (16, 15): {"ignore": True, "reason": "empty channel"},   # 143
+      (16, 23): {"ignore": True, "reason": "empty channel"},   # 151
+      (16, 27): {"ignore": True, "reason": "empty channel"},   # 155
+      (16, 35): {"ignore": True, "reason": "empty channel"},   # 163
+      (16, 47): {"ignore": True, "reason": "empty channel"},   # 175
+      (16, 51): {"ignore": True, "reason": "empty channel"},   # 179
+      (16, 55): {"ignore": True, "reason": "empty channel"},   # 183
+      (16, 59): {"ignore": True, "reason": "empty channel"},   # 187
+      (16, 63): {"ignore": True, "reason": "empty channel"},   # 191
+      (19, 15): {"ignore": True, "reason": "empty channel"},   # 207
+    },
+  },
+}
+
+def xarapuca_alarm_info(group):
+    # Resolve the alarm limits of every displayed channel in the group (same order as
+    # XARAPUCA_CHANNELS) plus the lists shown in the status page footer.
+    cfg = XARAPUCA_ALARM_LIMITS[group]
+    default = cfg["default"]
+    channels = XARAPUCA_CHANNELS[XARAPUCAS.index(group)]
+
+    overrides = {}
+    unrecognized = []
+    for (slot, board_channel), exception in cfg["channels"].items():
+        label = "slot %s ch %s" % (slot, board_channel)
+        if slot not in XARAPUCA_BOARD_SLOTS or not (0 <= board_channel < XARAPUCA_CHANNELS_PER_BOARD):
+            unrecognized.append(label)
+            continue
+        channel = XARAPUCA_BOARD_SLOTS.index(slot) * XARAPUCA_CHANNELS_PER_BOARD + board_channel
+        if channel not in channels:
+            unrecognized.append(label + " (not displayed in this group)")
+            continue
+        overrides[channel] = (label, exception)
+
+    limits = []
+    custom = []
+    ignored = []
+    for channel in channels:
+        label, exception = overrides.get(channel, (None, {}))
+        reason = exception.get("reason")
+        suffix = (" (%s)" % reason) if reason else ""
+        if exception.get("ignore"):
+            ignored.append(label + suffix)
+        elif label is not None:
+            parts = []
+            for metric in ("baseline", "rms"):
+                if metric in exception:
+                    parts.append("%s %s-%s" % (metric, exception[metric][0], exception[metric][1]))
+            custom.append(label + ": " + ", ".join(parts) + suffix)
+        limits.append({
+          "ignore": bool(exception.get("ignore")),
+          "baseline": list(exception.get("baseline", default["baseline"])),
+          "rms": list(exception.get("rms", default["rms"])),
+        })
+
+    return {"limits": limits, "default": default, "custom": custom,
+            "ignored": ignored, "unrecognized": unrecognized}
 
 TPC_RMS_ALARM_MAX = 15
 
@@ -346,6 +514,22 @@ def introduction():
 
     # pmts
     pmt_config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+    # per-channel alarm limits, one list per PMT group (same limits as the PMT status page)
+    pmt_limits = [pmt_alarm_info(name)["limits"] for name in PMTS]
+
+    # x-arapucas (one status line per group, same alarm limits as the X-ARAPUCA status page)
+    xarapuca_groups = []
+    for name, channels in zip(XARAPUCAS, XARAPUCA_CHANNELS):
+        alarm_info = xarapuca_alarm_info(name)
+        # channel whose snapshot event metadata time is used to check the monitor is still running
+        meta_channel = next((ch for ch, lim in zip(channels, alarm_info["limits"]) if not lim["ignore"]), channels[0])
+        xarapuca_groups.append({
+          "name": name,
+          "channels": channels,
+          "limits": alarm_info["limits"],
+          "meta_channel": meta_channel,
+          "config": online_metrics.get_group_config("online", name, front_end_abort=True),
+        })
 
     # timing
     timing_config = online_metrics.get_group_config("online", "SPECTDC_Streams_Timing", front_end_abort=True)
@@ -378,10 +562,8 @@ def introduction():
       "pmts": PMTS,
       "pmt_config": pmt_config,
       "pmt_channels": PMT_CHANNELS,
-      "pmt_rms_min": PMT_RMS_ALARM_MIN,
-      "pmt_rms_max": PMT_RMS_ALARM_MAX,
-      "pmt_baseline_min": PMT_BASELINE_ALARM_MIN,
-      "pmt_baseline_max": PMT_BASELINE_ALARM_MAX,
+      "pmt_limits": pmt_limits,
+      "xarapuca_groups": xarapuca_groups,
       "events": ["0"],
       "event_config": event_config,
       "event_channels": [[0]],
@@ -736,16 +918,23 @@ def PMT_status():
     #   for j in dc:
     #     channels[i].remove(j)
 
-    config = online_metrics.get_group_config("online", "PMT", front_end_abort=True)
+    # one entry per PMT group, each with its own config and resolved per-channel alarm limits
+    groups = []
+    for name, channels in zip(PMTS, PMT_CHANNELS):
+        alarm_info = pmt_alarm_info(name)
+        groups.append({
+          "name": name,
+          "channels": channels,
+          "config": online_metrics.get_group_config("online", name, front_end_abort=True),
+          "limits": alarm_info["limits"],
+          "default_limits": alarm_info["default"],
+          "custom": alarm_info["custom"],
+          "ignored": alarm_info["ignored"],
+          "unrecognized": alarm_info["unrecognized"],
+        })
 
     render_args = {
-      "config": config,
-      "channels": PMT_CHANNELS,
-      "pmts": PMTS,
-      "rms_min": PMT_RMS_ALARM_MIN,
-      "rms_max": PMT_RMS_ALARM_MAX,
-      "baseline_min": PMT_BASELINE_ALARM_MIN,
-      "baseline_max": PMT_BASELINE_ALARM_MAX,
+      "groups": groups,
       "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/pmt_status.html', **render_args)
@@ -783,21 +972,23 @@ def XARAPUCA_status():
     # one entry per Redis group (APSAIA, ARARA), each with its own config
     groups = []
     for name, channels in zip(XARAPUCAS, XARAPUCA_CHANNELS):
+        alarm_info = xarapuca_alarm_info(name)
         groups.append({
           "name": name,
           "label": XARAPUCA_LABELS[name],
           "channels": channels,
           "config": online_metrics.get_group_config("online", name, front_end_abort=True),
+          "limits": alarm_info["limits"],
+          "default_limits": alarm_info["default"],
+          "custom": alarm_info["custom"],
+          "ignored": alarm_info["ignored"],
+          "unrecognized": alarm_info["unrecognized"],
         })
 
     render_args = {
       "groups": groups,
       "board_slots": XARAPUCA_BOARD_SLOTS,
       "channels_per_board": XARAPUCA_CHANNELS_PER_BOARD,
-      "rms_min": XARAPUCA_RMS_ALARM_MIN,
-      "rms_max": XARAPUCA_RMS_ALARM_MAX,
-      "baseline_min": XARAPUCA_BASELINE_ALARM_MIN,
-      "baseline_max": XARAPUCA_BASELINE_ALARM_MAX,
       "eventmeta_key": EVENTMETA_KEY
     }
     return render_template('sbnd/xarapuca_status.html', **render_args)
